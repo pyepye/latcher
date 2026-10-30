@@ -1,13 +1,13 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { Middleware } from '@latcher/base';
+import type { MiddlewareCore } from '@latcher/base';
 
 import type { KafkaFilters, KafkaRequest, KafkaRouteDefinition } from './types.js';
 
 export interface InternalRoute {
   filters: KafkaFilters;
   valueSchema?: StandardSchemaV1;
-  middleware: Middleware<KafkaRequest, void>[];
+  middleware: MiddlewareCore<KafkaRequest, void>[];
   handler: (request: KafkaRequest) => Promise<void>;
 }
 
@@ -17,7 +17,7 @@ export interface RouteInput<
 > {
   filters: KafkaFilters;
   valueSchema?: TValueSchema;
-  middleware?: Middleware<KafkaRequest<NoInfer<TValue>>, void>[];
+  middleware?: MiddlewareCore<KafkaRequest<NoInfer<TValue>>, void>[];
 }
 
 export interface RouteBuilder<TValue> {

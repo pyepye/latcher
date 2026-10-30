@@ -1,6 +1,6 @@
 import type { Context, SecretsManagerRotationEventStep } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import type {
@@ -47,7 +47,7 @@ export function defineRoute(config: {
   };
 }
 
-export class SecretsManagerMatcher implements EventTypeMatcher<SecretsManagerEvent, undefined> {
+export class SecretsManagerMatcher implements EventTypeMatcherCore<SecretsManagerEvent, undefined> {
   private routes: SecretsManagerRouteDefinition[] = [];
   private routesOrdered = false;
   private middleware: SecretsManagerMiddleware[] = [];

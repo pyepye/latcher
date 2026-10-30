@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -43,7 +43,7 @@ export function defineConfigScheduledRoute<
   };
 }
 
-export class ConfigScheduledMatcher implements EventTypeMatcher<ConfigEvent, ConfigResponse> {
+export class ConfigScheduledMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigResponse> {
   private routes: InternalConfigScheduledRoute[] = [];
   private routesOrdered = false;
   private middleware: ConfigScheduledMiddleware[] = [];

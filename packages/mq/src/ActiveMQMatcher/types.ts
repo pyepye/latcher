@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // --- AWS Event Types (not in @types/aws-lambda) ---
 
@@ -87,7 +87,7 @@ export interface ActiveMQFilters {
 export type ActiveMQMiddleware<
   TBody = unknown,
   TMessageType extends ActiveMQMessageType | undefined = undefined,
-> = Middleware<MessageTypeToRequest<TMessageType, TBody>, void>;
+> = MiddlewareCore<MessageTypeToRequest<TMessageType, TBody>, void>;
 
 // --- Route Definition Types ---
 

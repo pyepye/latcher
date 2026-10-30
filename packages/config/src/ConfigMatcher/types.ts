@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 import type { ConfigEvent } from '../types.js';
 
@@ -112,10 +112,10 @@ export interface ConfigOversizedRequest<TParams = Record<string, string>> {
   context: Context;
 }
 
-export type ConfigMiddleware<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> = Middleware<
-  ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>,
-  void
->;
+export type ConfigMiddleware<
+  TConfig = Record<string, unknown> | null,
+  TParams = Record<string, string>,
+> = MiddlewareCore<ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>, void>;
 
 // Takes both shapes, so a handler written for one will not assign to a route whose filters can
 // deliver the other. Narrow on request.configurationItem inside the handler

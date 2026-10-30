@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export interface KafkaRecordHeader {
   [headerKey: string]: number[];
@@ -82,7 +82,7 @@ export interface KafkaRequest<TValue = unknown> {
 
 export type KafkaResponse = undefined;
 
-export type KafkaMiddleware<TValue = unknown> = Middleware<KafkaRequest<TValue>, void>;
+export type KafkaMiddleware<TValue = unknown> = MiddlewareCore<KafkaRequest<TValue>, void>;
 
 export interface KafkaRouteDefinition<TValue = unknown> {
   filters: KafkaFilters;

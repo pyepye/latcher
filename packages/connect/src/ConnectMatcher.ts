@@ -1,6 +1,6 @@
 import type { ConnectContactFlowResult, Context } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import type {
@@ -29,7 +29,7 @@ export function defineRoute(config: {
   };
 }
 
-export class ConnectMatcher implements EventTypeMatcher<ConnectEvent, ConnectContactFlowResult> {
+export class ConnectMatcher implements EventTypeMatcherCore<ConnectEvent, ConnectContactFlowResult> {
   private routes: ConnectRouteDefinition[] = [];
   private routesOrdered = false;
   private middleware: ConnectMiddleware[] = [];

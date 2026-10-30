@@ -2,7 +2,7 @@ import type { Context, KinesisStreamBatchResponse, KinesisStreamEvent, KinesisSt
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, MiddlewareCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -19,7 +19,7 @@ import type { KinesisFilters, KinesisMatcherOptions, KinesisRequest, KinesisRout
 interface InternalRoute {
   filters: KinesisFilters;
   dataSchema?: StandardSchemaV1;
-  middleware: Middleware<KinesisRequest, void>[];
+  middleware: MiddlewareCore<KinesisRequest, void>[];
   handler: (request: KinesisRequest) => Promise<void>;
 }
 
@@ -29,7 +29,7 @@ interface RouteInput<
 > {
   filters: KinesisFilters;
   dataSchema?: TDataSchema;
-  middleware?: Middleware<KinesisRequest<NoInfer<TData>>, void>[];
+  middleware?: MiddlewareCore<KinesisRequest<NoInfer<TData>>, void>[];
 }
 
 interface RouteBuilder<TData> {
@@ -52,11 +52,13 @@ export function defineRoute<
   };
 }
 
-export class KinesisMatcher implements EventTypeMatcher<KinesisStreamEvent, undefined | KinesisStreamBatchResponse> {
+export class KinesisMatcher
+  implements EventTypeMatcherCore<KinesisStreamEvent, undefined | KinesisStreamBatchResponse>
+{
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: Middleware<KinesisRequest, void>[];
+  private middleware: MiddlewareCore<KinesisRequest, void>[];
 
   constructor(options?: KinesisMatcherOptions) {
     this.batchItemFailures = options?.batchItemFailures ?? false;

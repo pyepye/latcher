@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -67,7 +67,7 @@ export function defineRoute<
   };
 }
 
-export class EventBridgeMatcher implements EventTypeMatcher<EventBridgeEventEnvelope, void> {
+export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEventEnvelope, void> {
   private routes: InternalEventBridgeRoute[] = [];
   private routesOrdered = false;
   private middleware: EventBridgeMiddleware[] = [];

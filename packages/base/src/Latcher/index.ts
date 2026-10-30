@@ -1,3 +1,3 @@
 export type { LambdaMiddleware, LatcherOptions } from './Latcher.js';
 export { createLatcher, Latcher } from './Latcher.js';
-export type { EventTypeMatcher } from './types.js';
+export type { EventTypeMatcher, EventTypeMatcherCore, EventTypeMatcherTypes } from './types.js';

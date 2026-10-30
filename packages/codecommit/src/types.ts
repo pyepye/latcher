@@ -1,6 +1,6 @@
 import type { Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // AWS CodeCommit Lambda trigger event types
 // No @types/aws-lambda types exist for CodeCommit
@@ -45,7 +45,7 @@ export interface CodeCommitRequest {
 
 export type CodeCommitResponse = undefined;
 
-export type CodeCommitMiddleware = Middleware<CodeCommitRequest, void>;
+export type CodeCommitMiddleware = MiddlewareCore<CodeCommitRequest, void>;
 
 export type CodeCommitRecordHandler = (request: CodeCommitRequest) => Promise<void>;
 

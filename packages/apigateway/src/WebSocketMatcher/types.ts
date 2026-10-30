@@ -6,7 +6,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { Middleware } from '@latcher/base';
+import type { MiddlewareCore } from '@latcher/base';
 
 export interface WebSocketEvent
   extends APIGatewayProxyWebsocketEventV2WithRequestContext<APIGatewayEventWebsocketRequestContextV2> {
@@ -74,7 +74,7 @@ export type WebSocketHandler<TBody = unknown> = (
   request: WebSocketRequest<TBody>,
 ) => Promise<WebSocketConnectResponse> | Promise<void>;
 
-export type WebSocketMiddleware<TBody = unknown> = Middleware<WebSocketRequest<TBody>, WebSocketConnectResponse>;
+export type WebSocketMiddleware<TBody = unknown> = MiddlewareCore<WebSocketRequest<TBody>, WebSocketConnectResponse>;
 
 export interface WebSocketConnectRouteDefinition {
   filters?: Omit<WebSocketFilters, 'eventType'>;

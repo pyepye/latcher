@@ -3,27 +3,28 @@ import type { Context } from 'aws-lambda';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 import { NoRouteMatchedError } from '../errors';
-import type { EventTypeMatcher } from '../Latcher';
+import type { EventTypeMatcherCore } from '../Latcher';
 import { handleEventWithMiddleware } from '../middleware';
 import { isKnownEventSource, isObject, orderRoutesBySpecificity, validateSchema } from '../utils';
 import type {
   EventFilterInput,
   EventFilters,
-  EventHandler,
-  EventMatcherMiddleware,
-  EventRouteDefinition,
+  EventHandlerCore,
+  EventMatcherMiddlewareCore,
+  EventMatcherOptionsCore,
+  EventRouteDefinitionCore,
 } from './types.js';
 
 interface InternalEventRoute {
   filters: { custom?: (input: EventFilterInput) => boolean | Promise<boolean> };
   eventSchema?: StandardSchemaV1;
-  middleware: EventMatcherMiddleware<unknown, unknown>[];
-  handler: EventHandler<unknown, unknown>;
+  middleware: EventMatcherMiddlewareCore<unknown, unknown>[];
+  handler: EventHandlerCore<unknown, unknown>;
 }
 
 interface EventRouteInput<TEventSchema extends StandardSchemaV1 | undefined = undefined, TResponse = unknown> {
   filters: EventFilters;
-  middleware?: EventMatcherMiddleware<
+  middleware?: EventMatcherMiddlewareCore<
     TEventSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TEventSchema> : unknown,
     TResponse
   >[];
@@ -32,22 +33,18 @@ interface EventRouteInput<TEventSchema extends StandardSchemaV1 | undefined = un
 
 interface EventRouteBuilder<TPayload, TResponse = unknown> {
   handle<TActualResponse extends TResponse>(
-    handler: EventHandler<TPayload, TActualResponse>,
-  ): EventRouteDefinition<TPayload, TActualResponse>;
+    handler: EventHandlerCore<TPayload, TActualResponse>,
+  ): EventRouteDefinitionCore<TPayload, TActualResponse>;
 }
 
-export interface EventMatcherOptions<TResponse = unknown> {
-  middleware?: EventMatcherMiddleware<unknown, TResponse>[];
-}
-
-export class EventMatcher<TResponse = unknown> implements EventTypeMatcher<unknown, TResponse> {
+export class EventMatcher<TResponse = unknown> implements EventTypeMatcherCore<unknown, TResponse> {
   private routes: InternalEventRoute[] = [];
   private routesOrdered = false;
-  private middleware: EventMatcherMiddleware<unknown, TResponse>[];
+  private middleware: EventMatcherMiddlewareCore<unknown, TResponse>[];
   private readonly matchedRoutes = new WeakMap<Record<string, unknown>, InternalEventRoute>();
   readonly matchTier = 'fallback'; // Latcher sorts this last:
 
-  constructor(options?: EventMatcherOptions<TResponse>) {
+  constructor(options?: EventMatcherOptionsCore<TResponse>) {
     this.middleware = options?.middleware ?? [];
   }
 
@@ -58,12 +55,14 @@ export class EventMatcher<TResponse = unknown> implements EventTypeMatcher<unkno
     return matched !== undefined;
   }
 
-  route<TPayload, TRouteResponse extends TResponse>(definition: EventRouteDefinition<TPayload, TRouteResponse>): this {
+  route<TPayload, TRouteResponse extends TResponse>(
+    definition: EventRouteDefinitionCore<TPayload, TRouteResponse>,
+  ): this {
     // Casts needed: storing typed route in general storage (contravariance)
-    const handler = definition.handler as EventHandler<unknown, unknown>;
+    const handler = definition.handler as EventHandlerCore<unknown, unknown>;
     const { filters } = definition;
     // @ts-expect-error - storing typed middleware in untyped internal collection (contravariance)
-    const middleware: EventMatcherMiddleware<unknown, unknown>[] = definition.middleware ?? [];
+    const middleware: EventMatcherMiddlewareCore<unknown, unknown>[] = definition.middleware ?? [];
     this.routes.push({
       filters,
       eventSchema: definition.eventSchema,
@@ -84,8 +83,8 @@ export class EventMatcher<TResponse = unknown> implements EventTypeMatcher<unkno
 
     const request = { event: validatedEvent, context };
 
-    const allMiddleware = [...this.middleware, ...route.middleware] as EventMatcherMiddleware<unknown, TResponse>[];
-    return handleEventWithMiddleware(allMiddleware, request, route.handler as EventHandler<unknown, TResponse>);
+    const allMiddleware = [...this.middleware, ...route.middleware] as EventMatcherMiddlewareCore<unknown, TResponse>[];
+    return handleEventWithMiddleware(allMiddleware, request, route.handler as EventHandlerCore<unknown, TResponse>);
   }
 
   private orderRoutes(): void {
@@ -129,14 +128,17 @@ export function defineEventRoute<
   type ResolvedPayload = TEventSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TEventSchema> : TPayload;
   return {
     handle<TActualResponse extends TResponse>(
-      handler: EventHandler<ResolvedPayload, TActualResponse>,
-    ): EventRouteDefinition<ResolvedPayload, TActualResponse> {
+      handler: EventHandlerCore<ResolvedPayload, TActualResponse>,
+    ): EventRouteDefinitionCore<ResolvedPayload, TActualResponse> {
       // Cast needed: generic type narrowing from builder input to route definition
-      const eventSchema = config.eventSchema as EventRouteDefinition<ResolvedPayload, TActualResponse>['eventSchema'];
+      const eventSchema = config.eventSchema as EventRouteDefinitionCore<
+        ResolvedPayload,
+        TActualResponse
+      >['eventSchema'];
       return {
         filters: config.filters,
         eventSchema,
-        middleware: config.middleware as EventMatcherMiddleware<ResolvedPayload, TActualResponse>[] | undefined,
+        middleware: config.middleware as EventMatcherMiddlewareCore<ResolvedPayload, TActualResponse>[] | undefined,
         handler,
       };
     },
@@ -144,7 +146,7 @@ export function defineEventRoute<
 }
 
 export function createEventMatcher<TResponse = unknown>(
-  options?: EventMatcherOptions<TResponse>,
+  options?: EventMatcherOptionsCore<TResponse>,
 ): EventMatcher<TResponse> {
   return new EventMatcher<TResponse>(options);
 }

@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   handleEventWithMiddleware,
   isObject,
@@ -84,7 +84,7 @@ export function defineWebSocketRoute<
   };
 }
 
-export class WebSocketMatcher implements EventTypeMatcher<WebSocketEvent, WebSocketResult> {
+export class WebSocketMatcher implements EventTypeMatcherCore<WebSocketEvent, WebSocketResult> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private middleware: WebSocketMiddleware[];

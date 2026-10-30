@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   handleEventWithMiddleware,
   isKnownEventSource,
@@ -83,7 +83,7 @@ export function defineRoute(config: {
   } as TaskTokenRouteBuilder<unknown> | RegularRouteBuilder<unknown>;
 }
 
-export class StepFunctionsMatcher implements EventTypeMatcher<unknown, unknown> {
+export class StepFunctionsMatcher implements EventTypeMatcherCore<unknown, unknown> {
   readonly matchTier = 'catchAll';
   private routes: InternalRoute[] = [];
   private routesOrdered = false;

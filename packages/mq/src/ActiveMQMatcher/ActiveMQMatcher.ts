@@ -1,6 +1,6 @@
 import type { Context } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -44,7 +44,7 @@ export function defineActiveMQRoute<
   };
 }
 
-export class ActiveMQMatcher implements EventTypeMatcher<ActiveMQEvent, undefined> {
+export class ActiveMQMatcher implements EventTypeMatcherCore<ActiveMQEvent, undefined> {
   private routes: ActiveMQInternalRoute[] = [];
   private routesOrdered = false;
   private middleware: ActiveMQMiddleware[];

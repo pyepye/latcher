@@ -2,7 +2,7 @@ import type { SNSMessageAttributes as AWSSNSMessageAttributes, Context, SNSEvent
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export type SNSRawMessageAttributes = AWSSNSMessageAttributes;
 export type SNSMessageAttributeValue = string | Buffer;
@@ -17,7 +17,7 @@ export interface SNSRequest<TBody = unknown, TMessageAttributes = SNSMessageAttr
 
 export type SNSResponse = undefined;
 
-export type SNSMiddleware<TBody = unknown, TMessageAttributes = SNSMessageAttributes> = Middleware<
+export type SNSMiddleware<TBody = unknown, TMessageAttributes = SNSMessageAttributes> = MiddlewareCore<
   SNSRequest<TBody, TMessageAttributes>,
   void
 >;

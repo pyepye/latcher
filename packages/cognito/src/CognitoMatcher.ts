@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -187,7 +187,7 @@ type CognitoResponse = CognitoEvent;
 // CognitoMatcher class
 // =============================================================================
 
-export class CognitoMatcher implements EventTypeMatcher<CognitoEvent, CognitoResponse> {
+export class CognitoMatcher implements EventTypeMatcherCore<CognitoEvent, CognitoResponse> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private middleware: CognitoMiddleware[] = [];

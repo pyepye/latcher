@@ -2,7 +2,7 @@ import type { SQSRecord as AWSSQSRecord, Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export type SQSMessageAttributeValue = string | string[] | number | Buffer;
 export type SQSMessageAttributes = Record<string, SQSMessageAttributeValue>;
@@ -21,7 +21,7 @@ export type SQSRecordHandler<TBody = unknown, TMessageAttributes = SQSMessageAtt
   request: SQSRequest<TBody, TMessageAttributes>,
 ) => Promise<void>;
 
-export type SQSMiddleware<TBody = unknown, TMessageAttributes = SQSMessageAttributes> = Middleware<
+export type SQSMiddleware<TBody = unknown, TMessageAttributes = SQSMessageAttributes> = MiddlewareCore<
   SQSRequest<TBody, TMessageAttributes>,
   void
 >;

@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -65,7 +65,7 @@ export function defineRabbitMQRoute<
   };
 }
 
-export class RabbitMQMatcher implements EventTypeMatcher<RabbitMQEvent, undefined> {
+export class RabbitMQMatcher implements EventTypeMatcherCore<RabbitMQEvent, undefined> {
   private routes: RabbitMQInternalRoute[] = [];
   private routesOrdered = false;
   private middleware: RabbitMQMiddleware[];

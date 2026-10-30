@@ -8,7 +8,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // =============================================================================
 // Known AWS Event Detail Types
@@ -86,7 +86,7 @@ export interface EventBridgeRequest<TDetail = unknown> {
   context: Context;
 }
 
-export type EventBridgeMiddleware<TDetail = unknown> = Middleware<EventBridgeRequest<TDetail>, void>;
+export type EventBridgeMiddleware<TDetail = unknown> = MiddlewareCore<EventBridgeRequest<TDetail>, void>;
 
 export type EventBridgeHandler<TDetail = unknown> = (request: EventBridgeRequest<TDetail>) => Promise<void>;
 

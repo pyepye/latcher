@@ -1,6 +1,6 @@
 import type { AppSyncAuthorizerEvent, Context } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import { isAppSyncAuthorizerResponse } from './response.js';
@@ -24,7 +24,9 @@ export function defineAuthorizerRoute(config?: AppSyncAuthorizerRouteInput): App
   };
 }
 
-export class AppSyncAuthorizerMatcher implements EventTypeMatcher<AppSyncAuthorizerEvent, AppSyncAuthorizerResponse> {
+export class AppSyncAuthorizerMatcher
+  implements EventTypeMatcherCore<AppSyncAuthorizerEvent, AppSyncAuthorizerResponse>
+{
   private routes: InternalAuthorizerRoute[] = [];
   private routesOrdered = false;
   private middleware: AppSyncAuthorizerMiddleware[];

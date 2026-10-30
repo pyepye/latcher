@@ -173,7 +173,7 @@ Exported from `@latcher/base`.
 
 | Type | Description |
 | --- | --- |
-| `EventTypeMatcher<TEvent, TResult>` | What every matcher satisfies, and what the `matchers` array holds |
+| `EventTypeMatcher<{ event, result }>` | What every matcher satisfies, and what the `matchers` array holds |
 | `LatcherOptions` | Options for `new Latcher` and `createLatcher` |
 | `LambdaMiddleware` | A global middleware function, `(event, context, next) => Promise<unknown>` |
 
@@ -215,7 +215,7 @@ const jobMatcher = {
 
     return { ran: event.jobName }
   },
-} satisfies EventTypeMatcher<JobEvent, { ran: string }>
+} satisfies EventTypeMatcher<{ event: JobEvent; result: { ran: string } }>
 
 const latcher = new Latcher({ matchers: [sqsMatcher, jobMatcher] })
 ```

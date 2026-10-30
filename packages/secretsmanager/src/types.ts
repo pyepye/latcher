@@ -1,6 +1,6 @@
 import type { Context, SecretsManagerRotationEvent, SecretsManagerRotationEventStep } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // Secrets Manager sends a fourth key that `SecretsManagerRotationEvent` does not type.
 // `PutSecretValue` needs it when a rotation assumes a role or crosses accounts.
@@ -22,7 +22,7 @@ export interface SecretsManagerRequest {
 
 export type SecretsManagerResponse = undefined;
 
-export type SecretsManagerMiddleware = Middleware<SecretsManagerRequest, void>;
+export type SecretsManagerMiddleware = MiddlewareCore<SecretsManagerRequest, void>;
 
 export type SecretsManagerHandler = (request: SecretsManagerRequest) => Promise<SecretsManagerResponse>;
 

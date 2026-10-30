@@ -1,6 +1,6 @@
 import type { Context, S3BatchResult } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { handleEventWithMiddleware, isObject } from '@latcher/base';
 
 import type { S3BatchResponse } from './batchResponse.js';
@@ -14,7 +14,7 @@ import type {
   S3BatchRouteDefinition,
 } from './types/index.js';
 
-export class S3BatchMatcher implements EventTypeMatcher<S3BatchAnyEvent, S3BatchResult> {
+export class S3BatchMatcher implements EventTypeMatcherCore<S3BatchAnyEvent, S3BatchResult> {
   private batchRoute: S3BatchRouteDefinition | undefined;
   private middleware: S3BatchMiddleware[] = [];
 

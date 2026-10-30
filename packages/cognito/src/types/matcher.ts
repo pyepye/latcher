@@ -14,7 +14,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 import type {
   CognitoFilterInput,
@@ -142,7 +142,7 @@ export type EventForTrigger<TTrigger extends CognitoTriggerSource> = TriggerEven
 // Route definition types
 // =============================================================================
 
-export type CognitoMiddleware<TUserAttributes = UserAttributes> = Middleware<
+export type CognitoMiddleware<TUserAttributes = UserAttributes> = MiddlewareCore<
   CognitoRequest<TUserAttributes>,
   CognitoEvent
 >;

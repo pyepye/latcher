@@ -258,18 +258,18 @@ source.
 
 ## Types
 
-`Middleware<TRequest, TResponse>` comes from `base` and is the shape of all matcher and route
+`Middleware<{ request, response }>` comes from `base` and is the shape of all matcher and route
 middleware.
 
 ```ts
-type Middleware<TRequest, TResponse> = (
+type Middleware<{ request: TRequest; response: TResponse }> = (
   request: TRequest,
   next: (request: TRequest) => Promise<TResponse>,
 ) => Promise<TResponse>
 ```
 
 Every package exports an alias with its own request and response filled in, so `SQSMiddleware` is
-`Middleware<SQSRequest, void>` and `CognitoMiddleware` is `Middleware<CognitoRequest, CognitoEvent>`.
+`Middleware<{ request: SQSRequest; response: void }>` and `CognitoMiddleware` is `Middleware<{ request: CognitoRequest; response: CognitoEvent }>`.
 Reach for the alias, since the base type leaves you naming both parameters yourself.
 
 Each alias also takes the payload type, so `SQSMiddleware<Order>` reads `request.body` as an `Order`.

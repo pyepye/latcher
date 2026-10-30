@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { Middleware } from '@latcher/base';
+import type { MiddlewareCore } from '@latcher/base';
 
 import type {
   DocumentDBFilters,
@@ -116,6 +116,6 @@ export interface InternalRoute {
   documentKeySchema?: StandardSchemaV1;
   fullDocumentSchema?: StandardSchemaV1;
   fullDocumentBeforeChangeSchema?: StandardSchemaV1;
-  middleware: Middleware<DocumentDBRequest, void>[];
+  middleware: MiddlewareCore<DocumentDBRequest, void>[];
   handler: (request: DocumentDBRequest) => Promise<void>;
 }

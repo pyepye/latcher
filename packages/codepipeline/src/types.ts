@@ -3,7 +3,7 @@ import type { Artifact, CodePipelineEvent, Context, Credentials } from 'aws-lamb
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export interface CodePipelineRequest<TUserParameters = unknown> {
   jobId: string;
@@ -25,7 +25,7 @@ export interface CodePipelineSuccessResult {
 // biome-ignore lint/suspicious/noConfusingVoidType: a handler may return nothing, meaning no output variables
 export type CodePipelineResponse = CodePipelineSuccessResult | void;
 
-export type CodePipelineMiddleware<TUserParameters = unknown> = Middleware<
+export type CodePipelineMiddleware<TUserParameters = unknown> = MiddlewareCore<
   CodePipelineRequest<TUserParameters>,
   CodePipelineResponse
 >;

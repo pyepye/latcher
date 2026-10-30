@@ -1,6 +1,6 @@
 import type { CloudWatchLogsDecodedData, CloudWatchLogsEvent, Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export type CloudWatchLogsMessageType = 'DATA_MESSAGE' | 'CONTROL_MESSAGE';
 
@@ -18,7 +18,7 @@ export interface CloudWatchLogsFilters {
 
 export type CloudWatchLogsEventFilters = Omit<CloudWatchLogsFilters, 'messageType'>;
 
-export type CloudWatchLogsMiddleware = Middleware<CloudWatchLogsRequest, void>;
+export type CloudWatchLogsMiddleware = MiddlewareCore<CloudWatchLogsRequest, void>;
 
 export interface CloudWatchLogsRouteDefinition {
   filters: CloudWatchLogsFilters;

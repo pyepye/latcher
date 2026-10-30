@@ -1,6 +1,6 @@
 import type { Context, SESEvent, SESEventRecord, SESMail, SESReceipt } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import type {
@@ -41,7 +41,7 @@ export function defineRoute(config: RouteInput): RouteBuilder {
   };
 }
 
-export class SESMatcher implements EventTypeMatcher<SESEvent, SESResult> {
+export class SESMatcher implements EventTypeMatcherCore<SESEvent, SESResult> {
   private routes: SESRouteDefinition[] = [];
   private routesOrdered = false;
   private middleware: SESMiddleware[];

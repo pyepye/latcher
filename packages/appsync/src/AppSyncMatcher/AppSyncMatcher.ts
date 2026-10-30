@@ -2,7 +2,7 @@ import type { AppSyncResolverEvent, Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -69,7 +69,7 @@ export interface AppSyncMatcherOptions {
   batchItemFailures?: boolean;
 }
 
-export class AppSyncMatcher implements EventTypeMatcher<ResolverEventInput, unknown> {
+export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, unknown> {
   private routes: InternalResolverRoute[] = [];
   private routesOrdered = false;
   private middleware: AppSyncResolverMiddleware[];

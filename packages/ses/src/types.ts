@@ -1,6 +1,6 @@
 import type { Context, SESEventRecord, SESMail, SESReceipt } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export type SESReceiptStatusValue = 'PASS' | 'FAIL' | 'GRAY' | 'PROCESSING_FAILED' | 'DISABLED';
 
@@ -26,7 +26,7 @@ export interface SESResult {
 // biome-ignore lint/suspicious/noConfusingVoidType: a handler may return nothing, meaning CONTINUE
 export type SESResponse = SESDisposition | SESResult | void;
 
-export type SESMiddleware = Middleware<SESRequest, SESResponse>;
+export type SESMiddleware = MiddlewareCore<SESRequest, SESResponse>;
 
 export type SESRecordHandler = (request: SESRequest) => Promise<SESResponse>;
 

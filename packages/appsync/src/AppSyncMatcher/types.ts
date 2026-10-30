@@ -2,7 +2,7 @@ import type { AppSyncIdentity, AppSyncResolverEvent, Context } from 'aws-lambda'
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // ─── Resolver Types ──────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ export interface AppSyncResolverFilters {
   custom?: (input: AppSyncResolverFilterInput) => boolean | Promise<boolean>;
 }
 
-export type AppSyncResolverMiddleware<TArgs = Record<string, unknown>> = Middleware<
+export type AppSyncResolverMiddleware<TArgs = Record<string, unknown>> = MiddlewareCore<
   AppSyncResolverRequest<TArgs>,
   unknown
 >;
@@ -91,6 +91,6 @@ export interface AppSyncResolverRouteBuilder<TArgs> {
 export interface InternalResolverRoute {
   filters: AppSyncResolverFilters;
   argumentsSchema?: StandardSchemaV1;
-  middleware: Middleware<AppSyncResolverRequest, unknown>[];
+  middleware: MiddlewareCore<AppSyncResolverRequest, unknown>[];
   handler: (request: AppSyncResolverRequest) => Promise<unknown>;
 }

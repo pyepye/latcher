@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -57,7 +57,7 @@ const CHANGE_MESSAGE_TYPES: Set<string> = new Set([
   'OversizedConfigurationItemChangeNotification',
 ]);
 
-export class ConfigMatcher implements EventTypeMatcher<ConfigEvent, ConfigResponse> {
+export class ConfigMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigResponse> {
   private routes: InternalConfigRoute[] = [];
   private routesOrdered = false;
   private middleware: ConfigMiddleware[] = [];

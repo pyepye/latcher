@@ -2,10 +2,10 @@ import type { Context, Handler } from 'aws-lambda';
 
 import { NoRouteMatchedError } from '../errors';
 import { logger as log } from '../logger';
-import type { EventTypeMatcher } from './types.js';
+import type { EventTypeMatcherCore } from './types.js';
 
 export interface LatcherOptions {
-  matchers: EventTypeMatcher[];
+  matchers: EventTypeMatcherCore[];
   middleware?: LambdaMiddleware[];
 }
 
@@ -16,7 +16,7 @@ export type LambdaMiddleware = (
 ) => Promise<unknown>;
 
 export class Latcher {
-  private matchers: EventTypeMatcher[];
+  private matchers: EventTypeMatcherCore[];
   private middleware: LambdaMiddleware[];
 
   constructor(options: LatcherOptions) {

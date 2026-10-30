@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, JsonValue, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, JsonValue, MiddlewareCore } from '@latcher/base';
 
 export type AppSyncEventsOperation = 'PUBLISH' | 'SUBSCRIBE';
 
@@ -90,7 +90,7 @@ export interface AppSyncEventsFilters {
 
 // Middleware is invariant in its request and also registers matcher-wide, where no route's schema
 // applies, so it sees the unvalidated payload.
-export type AppSyncEventsMiddleware = Middleware<AppSyncEventsRequest, unknown>;
+export type AppSyncEventsMiddleware = MiddlewareCore<AppSyncEventsRequest, unknown>;
 
 export interface AppSyncEventsRouteDefinition<TPayload = JsonValue> {
   filters: AppSyncEventsFilters;

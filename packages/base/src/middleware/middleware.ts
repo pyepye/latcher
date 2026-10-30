@@ -1,10 +1,22 @@
-export type Middleware<TRequest, TResponse> = (
+import type { TypeArg, TypeArgs } from '../utils/typeArgs.js';
+
+export type MiddlewareCore<TRequest, TResponse> = (
   request: TRequest,
   next: (request: unknown) => Promise<TResponse>,
 ) => Promise<TResponse>;
 
+export interface MiddlewareTypes {
+  request: unknown;
+  response: unknown;
+}
+
+export type Middleware<T extends TypeArgs<T, MiddlewareTypes>> = MiddlewareCore<
+  TypeArg<T, 'request', MiddlewareTypes>,
+  TypeArg<T, 'response', MiddlewareTypes>
+>;
+
 export async function handleEventWithMiddleware<TRequest, TResponse>(
-  middleware: Middleware<TRequest, TResponse>[],
+  middleware: MiddlewareCore<TRequest, TResponse>[],
   request: TRequest,
   handler: (request: TRequest) => Promise<TResponse>,
 ): Promise<TResponse> {

@@ -1,6 +1,6 @@
 import type { Context } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import { isAppSyncEventsAuthorizerResponse } from './response.js';
@@ -45,7 +45,7 @@ export function defineEventsAuthorizerRoute<TOperation extends AppSyncEventsAuth
 }
 
 export class AppSyncEventsAuthorizerMatcher
-  implements EventTypeMatcher<AppSyncEventsAuthorizerEvent, AppSyncEventsAuthorizerResponse>
+  implements EventTypeMatcherCore<AppSyncEventsAuthorizerEvent, AppSyncEventsAuthorizerResponse>
 {
   private routes: InternalEventsAuthorizerRoute[] = [];
   private routesOrdered = false;

@@ -1,6 +1,6 @@
 import type { Context, S3Event, S3EventRecord } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import type { FiltersToRequest, InternalRoute, RouteBuilder, RouteInput } from './routeTypes.js';
@@ -65,7 +65,7 @@ function isS3TestEvent(event: unknown): event is S3TestEvent {
 // S3Matcher Class
 // =============================================================================
 
-export class S3Matcher implements EventTypeMatcher<S3Event | S3TestEvent, undefined> {
+export class S3Matcher implements EventTypeMatcherCore<S3Event | S3TestEvent, undefined> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private testEventRoute: S3TestEventRouteDefinition | undefined;

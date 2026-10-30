@@ -2,7 +2,7 @@ import type { Context, FirehoseRecordMetadata, FirehoseTransformationEventRecord
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 import type { FirehoseResponseResult } from './response.js';
 
@@ -33,7 +33,7 @@ export interface FirehoseRequest<TData = unknown> {
 
 export type FirehoseResponse = FirehoseResponseResult;
 
-export type FirehoseMiddleware<TData = unknown> = Middleware<FirehoseRequest<TData>, FirehoseResponse>;
+export type FirehoseMiddleware<TData = unknown> = MiddlewareCore<FirehoseRequest<TData>, FirehoseResponse>;
 
 export interface FirehoseRouteDefinition<TData = unknown> {
   filters: FirehoseFilters;

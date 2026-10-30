@@ -2,7 +2,7 @@ import type { Context, SNSEvent, SNSEventRecord } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, FilterStringMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -27,7 +27,7 @@ interface InternalRoute {
   filters: SNSFilters;
   bodySchema?: StandardSchemaV1;
   messageAttributesSchema?: StandardSchemaV1;
-  middleware: Middleware<SNSRequest, void>[];
+  middleware: MiddlewareCore<SNSRequest, void>[];
   handler: SNSRecordHandler;
 }
 
@@ -42,7 +42,7 @@ interface RouteInput<
   filters: SNSFilters;
   bodySchema?: TBodySchema;
   messageAttributesSchema?: TMessageAttributesSchema;
-  middleware?: Middleware<SNSRequest<TBody, TMessageAttributes>, void>[];
+  middleware?: MiddlewareCore<SNSRequest<TBody, TMessageAttributes>, void>[];
 }
 
 interface RouteBuilder<TBody, TMessageAttributes> {
@@ -65,10 +65,10 @@ export function defineRoute<
   };
 }
 
-export class SNSMatcher implements EventTypeMatcher<SNSEvent, undefined> {
+export class SNSMatcher implements EventTypeMatcherCore<SNSEvent, undefined> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: Middleware<SNSRequest, void>[];
+  private middleware: MiddlewareCore<SNSRequest, void>[];
 
   constructor(options?: SNSMatcherOptions) {
     this.middleware = options?.middleware ?? [];

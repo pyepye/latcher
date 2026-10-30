@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // --- AWS Event Types (not in @types/aws-lambda) ---
 
@@ -81,7 +81,7 @@ export interface RabbitMQFilters {
 
 // --- Route Definition Types ---
 
-export type RabbitMQMiddleware<TBody = unknown> = Middleware<RabbitMQRequest<TBody>, void>;
+export type RabbitMQMiddleware<TBody = unknown> = MiddlewareCore<RabbitMQRequest<TBody>, void>;
 
 export interface RabbitMQRouteDefinition<TBody = unknown> {
   filters: RabbitMQFilters;

@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 import { SchemaValidationError } from '../errors/SchemaValidationError.js';
+import type { TypeArg, TypeArgs } from './typeArgs.js';
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
@@ -65,16 +66,24 @@ export async function validateSchema<TData, TSchema extends StandardSchemaV1 | u
 }
 
 // TODO: Remove this type and replace with whatever StandardSchema returns
-export type ValidationResult<T> =
+export type ValidationResultCore<T> =
   | { success: true; data: T }
   | { success: false; issues: ReadonlyArray<StandardSchemaV1.Issue> };
+
+export interface ValidationResultTypes {
+  data: unknown;
+}
+
+export type ValidationResult<T extends TypeArgs<T, ValidationResultTypes>> = ValidationResultCore<
+  TypeArg<T, 'data', ValidationResultTypes>
+>;
 
 // TODO: If this is only used by HTTP then move it
 //       Figure out if we need the success response in this way
 export async function validateSchemaResult<T>(
   data: T,
   schema: StandardSchemaV1 | undefined,
-): Promise<ValidationResult<T>> {
+): Promise<ValidationResultCore<T>> {
   if (!schema) {
     return { success: true, data };
   }

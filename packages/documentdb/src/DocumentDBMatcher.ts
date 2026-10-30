@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, MiddlewareCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -72,13 +72,13 @@ export function defineRoute<
   };
 }
 
-export class DocumentDBMatcher implements EventTypeMatcher<DocumentDBEvent, undefined> {
+export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, undefined> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: Middleware<DocumentDBRequest, void>[];
+  private middleware: MiddlewareCore<DocumentDBRequest, void>[];
 
   constructor(options?: DocumentDBMatcherOptions) {
-    this.middleware = (options?.middleware ?? []) as Middleware<DocumentDBRequest, void>[];
+    this.middleware = (options?.middleware ?? []) as MiddlewareCore<DocumentDBRequest, void>[];
   }
 
   canHandleEvent(event: unknown): event is DocumentDBEvent {

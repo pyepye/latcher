@@ -1,6 +1,6 @@
 import type { Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export type AppSyncEventsAuthorizerOperation = 'EVENT_CONNECT' | 'EVENT_PUBLISH' | 'EVENT_SUBSCRIBE';
 
@@ -66,7 +66,7 @@ export interface AppSyncEventsAuthorizerFilters {
   custom?: (input: AppSyncEventsAuthorizerFilterInput) => boolean | Promise<boolean>;
 }
 
-export type AppSyncEventsAuthorizerMiddleware<TRequest = AppSyncEventsAuthorizerRequest> = Middleware<
+export type AppSyncEventsAuthorizerMiddleware<TRequest = AppSyncEventsAuthorizerRequest> = MiddlewareCore<
   TRequest,
   AppSyncEventsAuthorizerResponse
 >;

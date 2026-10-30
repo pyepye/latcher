@@ -1,6 +1,6 @@
 import type { AppSyncAuthorizerEvent, AppSyncAuthorizerResult, Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export type AppSyncAuthorizerResponse = AppSyncAuthorizerResult<Record<string, unknown>>;
 
@@ -31,7 +31,7 @@ export interface AppSyncAuthorizerFilters {
 
 export type AppSyncAuthorizerHandler = (request: AppSyncAuthorizerRequest) => Promise<AppSyncAuthorizerResponse>;
 
-export type AppSyncAuthorizerMiddleware = Middleware<AppSyncAuthorizerRequest, AppSyncAuthorizerResponse>;
+export type AppSyncAuthorizerMiddleware = MiddlewareCore<AppSyncAuthorizerRequest, AppSyncAuthorizerResponse>;
 
 export interface AppSyncAuthorizerRouteDefinition {
   filters?: AppSyncAuthorizerFilters;

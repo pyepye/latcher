@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, MiddlewareCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -45,11 +45,11 @@ export function defineRoute<
   };
 }
 
-export class KafkaMatcher implements EventTypeMatcher<KafkaEvent, undefined | KafkaBatchResponse> {
+export class KafkaMatcher implements EventTypeMatcherCore<KafkaEvent, undefined | KafkaBatchResponse> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: Middleware<KafkaRequest, void>[];
+  private middleware: MiddlewareCore<KafkaRequest, void>[];
 
   constructor(options?: KafkaMatcherOptions) {
     this.batchItemFailures = options?.batchItemFailures ?? false;

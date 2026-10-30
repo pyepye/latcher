@@ -1,7 +1,7 @@
 import { gunzipSync } from 'node:zlib';
 import type { CloudWatchLogsDecodedData, CloudWatchLogsEvent, CloudWatchLogsEventData, Context } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import type {
@@ -35,7 +35,7 @@ export function defineRoute(config: {
   };
 }
 
-export class CloudWatchLogsMatcher implements EventTypeMatcher<CloudWatchLogsEvent, undefined> {
+export class CloudWatchLogsMatcher implements EventTypeMatcherCore<CloudWatchLogsEvent, undefined> {
   private routes: CloudWatchLogsRouteDefinition[] = [];
   private routesOrdered = false;
   private middleware: CloudWatchLogsMiddleware[] = [];

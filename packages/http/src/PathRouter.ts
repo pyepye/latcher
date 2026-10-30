@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { Middleware } from '@latcher/base';
+import type { MiddlewareCore } from '@latcher/base';
 
 import type { AuthPreset } from './auth.js';
 import type {
@@ -34,7 +34,7 @@ export interface InternalRoute<TAuth = unknown> {
   registrationIndex: number; // position the route was registered in, which ranking does not disturb
   custom?: (input: HTTPFilterInput<unknown, TAuth>) => boolean | Promise<boolean>;
   handler: (request: ApiRequest<unknown, unknown, TAuth, unknown>) => Promise<HandlerResponse<ResponseBody>>;
-  middleware: Middleware<
+  middleware: MiddlewareCore<
     ApiRequest<Record<string, string>, Record<string, string | undefined>, TAuth>,
     HandlerResponse<ResponseBody>
   >[];
@@ -83,7 +83,7 @@ interface NoBodyRouteConfig<
   TEvent,
 > extends BaseRouteConfig<TPathString, TQuery, TRawAuth, TRouteAuth, TResponse, TKind, TContentType, TEvent> {
   handler: ApiHandler<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
-  middleware?: Middleware<
+  middleware?: MiddlewareCore<
     ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, TEvent>,
     HandlerResponse<NoInfer<TResponse>>
   >[];
@@ -104,7 +104,7 @@ interface BodyRouteConfig<
   TEvent,
 > extends BaseRouteConfig<TPathString, TQuery, TRawAuth, TRouteAuth, TResponse, TKind, TContentType, TEvent> {
   handler: ApiHandler<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
-  middleware?: Middleware<
+  middleware?: MiddlewareCore<
     ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, TEvent>,
     HandlerResponse<NoInfer<TResponse>>
   >[];

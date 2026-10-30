@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { Middleware } from '@latcher/base';
+import type { MiddlewareCore } from '@latcher/base';
 
 import type { AuthPreset } from './auth.js';
 import type { HTTPException } from './HTTPException.js';
@@ -273,7 +273,7 @@ export type HTTPMiddleware<
   TEvent = unknown,
 > = [TResponse] extends [AnyResponseKind]
   ? AnyKindMiddleware<ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>>
-  : Middleware<ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>, HandlerResponse<TResponse>>;
+  : MiddlewareCore<ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>, HandlerResponse<TResponse>>;
 
 // A handler with no return statement returns Promise<void>, which is allowed only where the response can be undefined
 type NoReturn<TResponse> = undefined extends TResponse ? Promise<void> : never;

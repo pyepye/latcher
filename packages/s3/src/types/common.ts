@@ -1,6 +1,6 @@
 import type { Context, S3EventRecord } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 import type { S3IntelligentTieringEventName } from './intelligentTiering.js';
 import type { S3LifecycleExpirationEventName, S3LifecycleTransitionEventName } from './lifecycle.js';
@@ -62,7 +62,7 @@ export interface S3BaseRequest {
   context: Context;
 }
 
-export type S3Middleware = Middleware<S3BaseRequest, void>;
+export type S3Middleware = MiddlewareCore<S3BaseRequest, void>;
 
 // =============================================================================
 // Route Definition

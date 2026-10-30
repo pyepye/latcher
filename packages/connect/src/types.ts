@@ -1,6 +1,6 @@
 import type { ConnectContactFlowEvent, ConnectContactFlowResult, Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // The Connect service model, not the narrower unions aws-lambda carries. A contact can arrive on any
 // of these, so a filter has to be able to name them.
@@ -43,7 +43,7 @@ export interface ConnectRequest {
 
 export type ConnectResponse = ConnectContactFlowResult;
 
-export type ConnectMiddleware = Middleware<ConnectRequest, ConnectResponse>;
+export type ConnectMiddleware = MiddlewareCore<ConnectRequest, ConnectResponse>;
 
 export type ConnectHandler = (request: ConnectRequest) => Promise<ConnectResponse>;
 

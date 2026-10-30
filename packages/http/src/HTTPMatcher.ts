@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, MiddlewareCore } from '@latcher/base';
 import { handleEventWithMiddleware, logger, validateSchemaResult } from '@latcher/base';
 
 import type { AuthPreset } from './auth.js';
@@ -78,7 +78,10 @@ interface RouteInput<
   };
   auth?: AuthPreset<TRawAuth, TRouteAuth>;
   responseType?: ResponseTypeOption<TKind, TContentType>;
-  middleware?: Middleware<ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, TBody, TEvent>, HandlerResponse<TResponse>>[];
+  middleware?: MiddlewareCore<
+    ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, TBody, TEvent>,
+    HandlerResponse<TResponse>
+  >[];
   querySchema?: TQuerySchema;
   bodySchema?: TBodySchema;
   responseSchema?: TResponseSchema;
@@ -267,7 +270,7 @@ export interface HTTPMatcherOptions<
   auth?: AuthPreset<TAuth, TDefaultAuth>;
   responseType?: ResponseTypeOption<TDefaultKind, TContentType>;
   errors?: TErrors & ErrorFunctions;
-  middleware?: Middleware<MatcherRequest<TAuth, TEvent>, HandlerResponse<ResponseBody>>[];
+  middleware?: MiddlewareCore<MatcherRequest<TAuth, TEvent>, HandlerResponse<ResponseBody>>[];
   cors?: CorsConfig;
 }
 
@@ -279,12 +282,12 @@ export class HTTPMatcher<
   TDefaultKind extends ResponseKind = 'json',
   TErrors extends ErrorFunctions = Record<never, never>,
   TContentType extends string = string,
-> implements EventTypeMatcher<TEvent, TResult>
+> implements EventTypeMatcherCore<TEvent, TResult>
 {
   private router = new PathRouter<TAuth, TDefaultAuth, TDefaultKind, TErrors, TEvent>();
   private defaultAuth: AuthPreset<TAuth, TDefaultAuth> | undefined;
   private response = new Response();
-  private middleware: Middleware<MatcherRequest<TAuth, TEvent>, HandlerResponse<ResponseBody>>[];
+  private middleware: MiddlewareCore<MatcherRequest<TAuth, TEvent>, HandlerResponse<ResponseBody>>[];
   private adapter: HTTPAdapter<TEvent, TResult, TAuth>;
   private corsConfig: CorsConfig | undefined;
   private defaultResponseType: ResolvedResponseType = JSON_RESPONSE_TYPE;

@@ -3,7 +3,7 @@ import type { Context, DynamoDBBatchResponse, DynamoDBRecord, DynamoDBStreamEven
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, FilterStringMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -35,7 +35,7 @@ interface InternalRoute {
   keysSchema?: StandardSchemaV1;
   newImageSchema?: StandardSchemaV1;
   oldImageSchema?: StandardSchemaV1;
-  middleware: Middleware<DynamoDBRequest, void>[];
+  middleware: MiddlewareCore<DynamoDBRequest, void>[];
   handler: (request: DynamoDBRequest) => Promise<void>;
 }
 
@@ -84,7 +84,7 @@ type RouteInput<
 > = {
   filters: DynamoDBRouteInputFilters<TEventNames, TViewTypes>;
   keysSchema?: TKeysSchema;
-  middleware?: Middleware<DynamoDBRequest, void>[];
+  middleware?: MiddlewareCore<DynamoDBRequest, void>[];
 } & NewImageSchemaOption<TEventNames, TNewImageSchema> &
   OldImageSchemaOption<TEventNames, TOldImageSchema>;
 
@@ -147,11 +147,11 @@ export function defineRoute<
   };
 }
 
-export class DynamoDBMatcher implements EventTypeMatcher<DynamoDBStreamEvent, undefined | DynamoDBBatchResponse> {
+export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent, undefined | DynamoDBBatchResponse> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: Middleware<DynamoDBRequest, void>[];
+  private middleware: MiddlewareCore<DynamoDBRequest, void>[];
   private keys: DynamoDBMatcherKeys | undefined;
   private unmarshallOptions: UnmarshallOptions;
 

@@ -8,7 +8,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -66,7 +66,9 @@ export function defineRoute<
   };
 }
 
-export class FirehoseMatcher implements EventTypeMatcher<FirehoseTransformationEvent, FirehoseTransformationResult> {
+export class FirehoseMatcher
+  implements EventTypeMatcherCore<FirehoseTransformationEvent, FirehoseTransformationResult>
+{
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private middleware: FirehoseMiddleware[] = [];

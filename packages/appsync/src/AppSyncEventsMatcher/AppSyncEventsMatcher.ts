@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -43,7 +43,7 @@ export function defineEventsRoute<TPayloadSchema extends StandardSchemaV1 | unde
   };
 }
 
-export class AppSyncEventsMatcher implements EventTypeMatcher<AppSyncEventsEvent, unknown> {
+export class AppSyncEventsMatcher implements EventTypeMatcherCore<AppSyncEventsEvent, unknown> {
   private routes: InternalEventsRoute[] = [];
   private routesOrdered = false;
   private middleware: AppSyncEventsMiddleware[];

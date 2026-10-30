@@ -1,4 +1,4 @@
-import { handleEventWithMiddleware, type Middleware } from './middleware.js';
+import { handleEventWithMiddleware, type Middleware, type MiddlewareCore } from './middleware.js';
 
 interface TestRequest {
   value: string;
@@ -17,7 +17,7 @@ interface NarrowRequest extends TestRequest {
 
 suite('handleEventWithMiddleware', () => {
   test('accepts middleware typed to fewer fields than the handler takes', async () => {
-    const readsValueOnly: Middleware<TestRequest, TestResponse> = async (
+    const readsValueOnly: Middleware<{ request: TestRequest; response: TestResponse }> = async (
       request: TestRequest,
       next: (request: unknown) => Promise<TestResponse>,
     ): Promise<TestResponse> => {
@@ -25,7 +25,7 @@ suite('handleEventWithMiddleware', () => {
       return next(request);
     };
 
-    const middleware: Middleware<NarrowRequest, TestResponse>[] = [readsValueOnly];
+    const middleware: MiddlewareCore<NarrowRequest, TestResponse>[] = [readsValueOnly];
     const handler = vi.fn().mockResolvedValue({ result: 'ok' });
 
     const response = await handleEventWithMiddleware(middleware, { value: 'test', extra: 1 }, handler);

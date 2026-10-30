@@ -2,7 +2,7 @@ import type { Context, DynamoDBRecord, StreamRecord } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // Derive event name type from aws-lambda (excludes undefined)
 export type DynamoDBEventName = NonNullable<DynamoDBRecord['eventName']>;
@@ -55,7 +55,7 @@ export type DynamoDBMiddleware<
   TKeys = Record<string, unknown>,
   TNewItem = Record<string, unknown>,
   TOldItem = Record<string, unknown>,
-> = Middleware<DynamoDBRequest<TKeys, TNewItem, TOldItem>, void>;
+> = MiddlewareCore<DynamoDBRequest<TKeys, TNewItem, TOldItem>, void>;
 
 // Takes the whole union, so a handler written for one eventName will not assign to a route whose
 // filters can deliver another. Narrow on request.eventName inside the handler

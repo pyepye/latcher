@@ -1,6 +1,6 @@
 import type { Context, LexV2Event, LexV2Result } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 
 import type {
@@ -28,7 +28,7 @@ export function defineRoute(config: {
   };
 }
 
-export class LexMatcher implements EventTypeMatcher<LexV2Event, LexV2Result> {
+export class LexMatcher implements EventTypeMatcherCore<LexV2Event, LexV2Result> {
   private routes: LexRouteDefinition[] = [];
   private routesOrdered = false;
   private middleware: LexMiddleware[] = [];

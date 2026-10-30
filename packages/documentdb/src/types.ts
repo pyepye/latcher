@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // DocumentDB operation types (lowercase, unlike DynamoDB's uppercase)
 export type DocumentDBOperationType = 'insert' | 'update' | 'replace' | 'delete';
@@ -103,7 +103,7 @@ export type DocumentDBMiddleware<
   TDocumentKey = Record<string, unknown>,
   TFullDocument = Record<string, unknown>,
   TFullDocumentBeforeChange = Record<string, unknown>,
-> = Middleware<DocumentDBRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>, void>;
+> = MiddlewareCore<DocumentDBRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>, void>;
 
 // Takes the whole union, so a handler written for one operationType will not assign to a route whose
 // filters can deliver another. Narrow on request.operationType inside the handler

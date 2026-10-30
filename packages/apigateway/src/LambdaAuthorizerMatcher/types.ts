@@ -8,7 +8,7 @@ import type {
   Context,
 } from 'aws-lambda';
 
-import type { JsonValue, Middleware } from '@latcher/base';
+import type { JsonValue, MiddlewareCore } from '@latcher/base';
 
 // A repeated header or query param reaches this authorizer as its last value alone: API Gateway sends
 // neither multi-value map on payload format 1.0.
@@ -89,7 +89,7 @@ export type LambdaAuthorizerHandler<TContext extends LambdaAuthorizerContext = L
 
 // Middleware is invariant in its result and also registers matcher-wide, where no route's context
 // applies, so it stays on the widest result.
-export type LambdaAuthorizerMiddleware = Middleware<LambdaAuthorizerRequest, LambdaAuthorizerResult | boolean>;
+export type LambdaAuthorizerMiddleware = MiddlewareCore<LambdaAuthorizerRequest, LambdaAuthorizerResult | boolean>;
 
 export interface LambdaAuthorizerRouteDefinition<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> {
   filters: LambdaAuthorizerFilters;

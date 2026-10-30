@@ -8,7 +8,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher, Middleware } from '@latcher/base';
+import type { EventTypeMatcherCore, MiddlewareCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -34,7 +34,7 @@ interface InternalRoute {
   filters: SQSFilters;
   bodySchema?: StandardSchemaV1;
   messageAttributesSchema?: StandardSchemaV1;
-  middleware: Middleware<SQSRequest, void>[];
+  middleware: MiddlewareCore<SQSRequest, void>[];
   handler: SQSRecordHandler;
 }
 
@@ -49,7 +49,7 @@ interface RouteInput<
   filters: SQSFilters;
   bodySchema?: TBodySchema;
   messageAttributesSchema?: TMessageAttributesSchema;
-  middleware?: Middleware<SQSRequest<TBody, TMessageAttributes>, void>[];
+  middleware?: MiddlewareCore<SQSRequest<TBody, TMessageAttributes>, void>[];
 }
 
 interface RouteBuilder<TBody, TMessageAttributes> {
@@ -78,11 +78,11 @@ function isStringArray(value: unknown): value is string[] {
   return value.every((item) => typeof item === 'string');
 }
 
-export class SQSMatcher implements EventTypeMatcher<SQSEvent, undefined | SQSBatchResponse> {
+export class SQSMatcher implements EventTypeMatcherCore<SQSEvent, undefined | SQSBatchResponse> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: Middleware<SQSRequest, void>[];
+  private middleware: MiddlewareCore<SQSRequest, void>[];
 
   constructor(options?: SQSMatcherOptions) {
     this.batchItemFailures = options?.batchItemFailures ?? false;

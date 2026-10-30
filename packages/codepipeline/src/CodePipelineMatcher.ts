@@ -8,7 +8,7 @@ import type { CodePipelineEvent, Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import {
   filterStringMatcher,
   handleEventWithMiddleware,
@@ -65,7 +65,7 @@ export function defineRoute<
   };
 }
 
-export class CodePipelineMatcher implements EventTypeMatcher<CodePipelineEvent, void> {
+export class CodePipelineMatcher implements EventTypeMatcherCore<CodePipelineEvent, void> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private codePipelineClient: CodePipelineClient;

@@ -1,6 +1,6 @@
 import type { Context } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject } from '@latcher/base';
 
 import type {
@@ -57,7 +57,7 @@ function extractBranchNameFromRef(ref: string): string {
   return ref.replace('refs/heads/', '');
 }
 
-export class CodeCommitMatcher implements EventTypeMatcher<CodeCommitEvent, undefined> {
+export class CodeCommitMatcher implements EventTypeMatcherCore<CodeCommitEvent, undefined> {
   private routes: InternalRoute[] = [];
   private middleware: CodeCommitMiddleware[];
 

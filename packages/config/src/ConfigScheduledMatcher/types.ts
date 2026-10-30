@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 import type { ConfigEvent } from '../types.js';
 
@@ -15,7 +15,7 @@ export interface ConfigScheduledRequest<TParams = Record<string, string>> {
   context: Context;
 }
 
-export type ConfigScheduledMiddleware<TParams = Record<string, string>> = Middleware<
+export type ConfigScheduledMiddleware<TParams = Record<string, string>> = MiddlewareCore<
   ConfigScheduledRequest<TParams>,
   void
 >;

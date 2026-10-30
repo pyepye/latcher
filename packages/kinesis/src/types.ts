@@ -2,7 +2,7 @@ import type { Context, KinesisStreamRecord } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 export interface KinesisFilterInput {
   data: unknown;
@@ -30,7 +30,7 @@ export interface KinesisRequest<TData = unknown> {
 
 export type KinesisResponse = undefined;
 
-export type KinesisMiddleware<TData = unknown> = Middleware<KinesisRequest<TData>, void>;
+export type KinesisMiddleware<TData = unknown> = MiddlewareCore<KinesisRequest<TData>, void>;
 
 export interface KinesisRouteDefinition<TData = unknown> {
   filters: KinesisFilters;

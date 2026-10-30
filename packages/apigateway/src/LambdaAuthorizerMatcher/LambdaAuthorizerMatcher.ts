@@ -6,7 +6,7 @@ import type {
   Context,
 } from 'aws-lambda';
 
-import type { EventTypeMatcher } from '@latcher/base';
+import type { EventTypeMatcherCore } from '@latcher/base';
 import { handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 import { buildValueMaps } from '@latcher/http';
 
@@ -142,7 +142,7 @@ function assertNoFractions(result: LambdaAuthorizerResult): void {
   );
 }
 
-export class LambdaAuthorizerMatcher implements EventTypeMatcher<LambdaAuthorizerEvent, LambdaAuthorizerResult> {
+export class LambdaAuthorizerMatcher implements EventTypeMatcherCore<LambdaAuthorizerEvent, LambdaAuthorizerResult> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private middleware: LambdaAuthorizerMiddleware[];

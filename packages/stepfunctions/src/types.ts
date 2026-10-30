@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { Middleware } from '@latcher/base';
+import type { MiddlewareCore } from '@latcher/base';
 
 export interface StepFunctionsFilterInput {
   event: unknown;
@@ -27,13 +27,13 @@ export interface StepFunctionsTaskTokenRequest<TInput = unknown> {
 }
 
 /** Middleware for a regular route, where `event` holds the validated payload. */
-export type StepFunctionsMiddleware<TResponse = unknown, TInput = unknown> = Middleware<
+export type StepFunctionsMiddleware<TResponse = unknown, TInput = unknown> = MiddlewareCore<
   StepFunctionsRequest<TInput>,
   TResponse
 >;
 
 /** Middleware for a task token route, where `input` holds the validated payload and `event` is raw. */
-export type StepFunctionsTaskTokenMiddleware<TResponse = unknown, TInput = unknown> = Middleware<
+export type StepFunctionsTaskTokenMiddleware<TResponse = unknown, TInput = unknown> = MiddlewareCore<
   StepFunctionsTaskTokenRequest<TInput>,
   TResponse
 >;
