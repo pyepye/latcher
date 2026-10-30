@@ -1,8 +1,4 @@
-import type {
-    AppSyncEventsFilterInput,
-    AppSyncEventsPublishResult,
-    AppSyncEventsRequest,
-} from '@latcher/appsync';
+import type { AppSyncEventsFilterInput, AppSyncEventsPublishResult, AppSyncEventsRequest } from '@latcher/appsync';
 import { isObject, logger } from '@latcher/base';
 
 import { TYPING_EVENT } from '../utils/constants.js';

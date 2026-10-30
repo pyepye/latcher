@@ -3,12 +3,12 @@ import { createMockSchema } from '@latcher/testing';
 import type { ConfigEvent } from '../types.js';
 import { defineRoute } from './ConfigMatcher.js';
 import type {
-    ConfigOversizedRequest,
-    ConfigRequest,
-    ConfigRouteDefinition,
-    ConfigurationItem,
-    ConfigurationItemRelationship,
-    ConfigurationItemSummary,
+  ConfigOversizedRequest,
+  ConfigRequest,
+  ConfigRouteDefinition,
+  ConfigurationItem,
+  ConfigurationItemRelationship,
+  ConfigurationItemSummary,
 } from './types.js';
 
 suite('ConfigRouteDefinition handler', () => {

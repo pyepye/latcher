@@ -1,8 +1,8 @@
 import { HTTPMatcher } from '@latcher/http';
 
 import type { ApiHandler, ApiRequest, HTTPFilterInput, HTTPFilters, HTTPMiddleware, RouteDefinition } from './types.js';
-import type { VPCLatticeEvent } from './vpcLatticeAdapter.js';
 import { createVPCLatticeMatcher, defineRoute } from './VPCLatticeMatcher.js';
+import type { VPCLatticeEvent } from './vpcLatticeAdapter.js';
 import { type VPCLatticeEventV2, vpcLatticeV2Adapter } from './vpcLatticeV2Adapter.js';
 
 type FilterFunction = NonNullable<HTTPFilters['custom']>;

@@ -1,9 +1,9 @@
 import type {
-    Context,
-    S3ObjectCreatedNotificationEventDetail,
-    S3ObjectDeletedNotificationEventDetail,
-    S3ObjectRestoreCompletedNotificationEventDetail,
-    S3ObjectRestoreInitiatedNotificationEventDetail,
+  Context,
+  S3ObjectCreatedNotificationEventDetail,
+  S3ObjectDeletedNotificationEventDetail,
+  S3ObjectRestoreCompletedNotificationEventDetail,
+  S3ObjectRestoreInitiatedNotificationEventDetail,
 } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';

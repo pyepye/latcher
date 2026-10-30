@@ -18,13 +18,13 @@ import { logChange } from './middleware/logChange.js';
 import { withOrderContext } from './middleware/withOrderContext.js';
 import { COLLECTIONS, DATABASES } from './utils/cluster.js';
 import {
-    DocumentKeySchema,
-    OrderSchema,
-    PaymentSchema,
-    PriceHistorySchema,
-    ProductSchema,
-    ShipmentSchema,
-    StockLevelSchema,
+  DocumentKeySchema,
+  OrderSchema,
+  PaymentSchema,
+  PriceHistorySchema,
+  ProductSchema,
+  ShipmentSchema,
+  StockLevelSchema,
 } from './utils/schemas.js';
 
 export const documentDBMatcher = createDocumentDBMatcher({ middleware: [logChange] });

@@ -1,14 +1,14 @@
 import type {
-    AnyHttpMethod,
-    AnyResponseKind,
-    ApiHandler as HTTPApiHandler,
-    ApiRequest as HTTPApiRequest,
-    HTTPFilterInput as HTTPFilterInputBase,
-    HTTPFilters as HTTPFiltersBase,
-    HTTPMiddleware as HTTPMiddlewareBase,
-    RouteDefinition as HTTPRouteDefinition,
-    JsonBody,
-    PathParams,
+  AnyHttpMethod,
+  AnyResponseKind,
+  ApiHandler as HTTPApiHandler,
+  ApiRequest as HTTPApiRequest,
+  HTTPFilterInput as HTTPFilterInputBase,
+  HTTPFilters as HTTPFiltersBase,
+  HTTPMiddleware as HTTPMiddlewareBase,
+  RouteDefinition as HTTPRouteDefinition,
+  JsonBody,
+  PathParams,
 } from '@latcher/http';
 
 import type { VPCLatticeAuth } from './auth.js';

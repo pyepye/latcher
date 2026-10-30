@@ -1,6 +1,5 @@
-import type { AppSyncAuthorizerEvent, AppSyncResolverEvent, Context } from 'aws-lambda';
-
 import type { AppSyncEventsAuthorizerEvent, AppSyncEventsEvent } from '@latcher/appsync';
+import type { AppSyncAuthorizerEvent, AppSyncResolverEvent, Context } from 'aws-lambda';
 
 import { authorizerMatcher } from '../src/authorizerMatcher.js';
 import { eventsAuthorizerMatcher } from '../src/eventsAuthorizerMatcher.js';

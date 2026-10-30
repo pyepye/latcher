@@ -1,5 +1,5 @@
-import type { KinesisStreamRecord } from 'aws-lambda';
 import { createHash } from 'node:crypto';
+import type { KinesisStreamRecord } from 'aws-lambda';
 
 import { aggregate } from 'aws-kinesis-agg';
 import type { MockInstance } from 'vitest';

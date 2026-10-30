@@ -1,7 +1,8 @@
 import type { Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, Middleware } from '@latcher/base';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+import type { FilterStringMatcher, Middleware } from '@latcher/base';
 
 export interface KafkaRecordHeader {
   [headerKey: string]: number[];

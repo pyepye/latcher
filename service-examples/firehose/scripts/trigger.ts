@@ -1,8 +1,8 @@
+import { setTimeout as sleep } from 'node:timers/promises';
 import { CloudWatchLogsClient, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
 import { FirehoseClient, PutRecordBatchCommand } from '@aws-sdk/client-firehose';
 import { KinesisClient, PutRecordsCommand } from '@aws-sdk/client-kinesis';
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
-import { setTimeout as sleep } from 'node:timers/promises';
 
 import { BOT_USER_AGENT_MARKER, EVENT_FRESHNESS_MS } from '../src/config.js';
 

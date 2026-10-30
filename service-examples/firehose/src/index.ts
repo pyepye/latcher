@@ -1,6 +1,5 @@
-import type { FirehoseTransformationResult, Handler } from 'aws-lambda';
-
 import { type LambdaMiddleware, Latcher, logger } from '@latcher/base';
+import type { FirehoseTransformationResult, Handler } from 'aws-lambda';
 
 import { firehoseMatcher } from './firehose.js';
 

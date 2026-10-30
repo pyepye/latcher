@@ -1,6 +1,5 @@
-import type { Context } from 'aws-lambda';
-
 import type { VPCLatticeEvent, VPCLatticeResult } from '@latcher/vpclattice';
+import type { Context } from 'aws-lambda';
 
 import { inventoryMatcher } from '../src/inventoryMatcher.js';
 import { buildSteps, type Expected, type PayloadVersion, type Step } from '../src/ordering/steps.js';

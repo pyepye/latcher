@@ -1,6 +1,5 @@
-import type { Handler } from 'aws-lambda';
-
 import { Latcher } from '@latcher/base';
+import type { Handler } from 'aws-lambda';
 
 import { configMatcher } from './configMatcher.js';
 import { configScheduledMatcher } from './configScheduledMatcher.js';

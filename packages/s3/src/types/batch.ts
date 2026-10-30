@@ -76,4 +76,3 @@ export interface S3BatchRouteDefinition {
 
 export type { S3BatchEvent, S3BatchEventJob, S3BatchEventTask, S3BatchResult, S3BatchResultResult } from 'aws-lambda';
 export type { S3BatchResultResultCode };
-

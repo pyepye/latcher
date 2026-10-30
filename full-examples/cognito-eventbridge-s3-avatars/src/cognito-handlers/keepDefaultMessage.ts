@@ -1,7 +1,6 @@
-import type { CustomMessageTriggerEvent } from 'aws-lambda';
-
 import { logger } from '@latcher/base';
 import type { CustomMessageRequest } from '@latcher/cognito';
+import type { CustomMessageTriggerEvent } from 'aws-lambda';
 
 // Returning the event untouched leaves Cognito's own wording in place.
 export async function keepDefaultMessage({

@@ -4,9 +4,9 @@ import * as base from '@latcher/base';
 import { createMockContext, createMockSchema } from '@latcher/testing';
 
 import { BinaryBody } from './binaryBody.js';
-import { Html } from './html.js';
 import { HTTPException } from './HTTPException.js';
 import { defineRoute, HTTPMatcher } from './HTTPMatcher.js';
+import { Html } from './html.js';
 import { Conflict, Created, Forbidden, NoContent, NotFound, Ok, TemporaryRedirect, Unauthorized } from './Response.js';
 import type {
   ApiRequest,

@@ -1,29 +1,24 @@
 import type {
-    APIGatewayProxyEvent,
-    APIGatewayProxyResult,
-    APIGatewayProxyWithCognitoAuthorizerEvent,
-    APIGatewayProxyWithLambdaAuthorizerEvent,
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  APIGatewayProxyWithCognitoAuthorizerEvent,
+  APIGatewayProxyWithLambdaAuthorizerEvent,
 } from 'aws-lambda';
 
 import { isObject } from '@latcher/base';
-import {
-    buildValueMaps,
-    type FinalizedHTTPResponse,
-    type HTTPAdapter,
-    type NormalizedHTTPEvent,
-} from '@latcher/http';
+import { buildValueMaps, type FinalizedHTTPResponse, type HTTPAdapter, type NormalizedHTTPEvent } from '@latcher/http';
 
 import {
-    type APIGatewayAuth,
-    type APIGatewayAuthorizer,
-    type LambdaAuth,
-    readApiKey,
-    readClaims,
-    readClientCert,
-    readLambdaContext,
-    readScopes,
-    readV1Iam,
-    withExtras,
+  type APIGatewayAuth,
+  type APIGatewayAuthorizer,
+  type LambdaAuth,
+  readApiKey,
+  readClaims,
+  readClientCert,
+  readLambdaContext,
+  readScopes,
+  readV1Iam,
+  withExtras,
 } from './auth.js';
 
 export type APIGatewayV1EventType =

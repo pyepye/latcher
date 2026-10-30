@@ -1,6 +1,5 @@
-import type { Context } from 'aws-lambda';
-
 import type { ConnectEvent } from '@latcher/connect';
+import type { Context } from 'aws-lambda';
 
 import type { Expected, MatcherStep } from '../src/contactFlow/steps.js';
 import { DEPLOYED_INSTANCE_ARN, matcherSteps } from '../src/contactFlow/steps.js';

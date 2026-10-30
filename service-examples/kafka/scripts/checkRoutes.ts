@@ -1,6 +1,5 @@
-import type { Context } from 'aws-lambda';
-
 import type { KafkaMSKEvent, KafkaRecord, KafkaRecordHeader } from '@latcher/kafka';
+import type { Context } from 'aws-lambda';
 
 import {
   CAPTURE_KIND,

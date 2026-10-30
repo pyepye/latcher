@@ -1,6 +1,5 @@
-import type { Handler } from 'aws-lambda';
-
 import { Latcher } from '@latcher/base';
+import type { Handler } from 'aws-lambda';
 
 import { apiMatcher } from './apiMatcher.js';
 import { webSocketMatcher } from './webSocketMatcher.js';

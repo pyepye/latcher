@@ -1,7 +1,6 @@
-import type { PostConfirmationTriggerEvent } from 'aws-lambda';
-
 import { logger } from '@latcher/base';
 import type { PostConfirmationRequest } from '@latcher/cognito';
+import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 
 import { uploadAvatarForUserName } from '../utils/gravatar.js';
 

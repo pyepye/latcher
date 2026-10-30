@@ -1,11 +1,5 @@
 import { logger } from '@latcher/base';
-import {
-    type ApiRequest,
-    type ApiResponse,
-    Conflict,
-    Created,
-    type VPCLatticeAuth,
-} from '@latcher/vpclattice';
+import { type ApiRequest, type ApiResponse, Conflict, Created, type VPCLatticeAuth } from '@latcher/vpclattice';
 
 import { STOCK, type StockItem } from '../utils/inventory.js';
 import type { TNewStockItem } from '../utils/schemas.js';

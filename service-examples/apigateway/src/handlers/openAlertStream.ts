@@ -1,9 +1,9 @@
 import {
-    type WebSocketConnectRequest,
-    type WebSocketConnectResponse,
-    WebSocketForbidden,
-    WebSocketOk,
-    WebSocketUnauthorized,
+  type WebSocketConnectRequest,
+  type WebSocketConnectResponse,
+  WebSocketForbidden,
+  WebSocketOk,
+  WebSocketUnauthorized,
 } from '@latcher/apigateway';
 import { logger } from '@latcher/base';
 

@@ -1,9 +1,9 @@
 import type {
-    APIGatewayEventClientCertificate,
-    APIGatewayEventDefaultAuthorizerContext,
-    APIGatewayEventRequestContextV2,
-    APIGatewayProxyEvent,
-    APIGatewayProxyEventV2,
+  APIGatewayEventClientCertificate,
+  APIGatewayEventDefaultAuthorizerContext,
+  APIGatewayEventRequestContextV2,
+  APIGatewayProxyEvent,
+  APIGatewayProxyEventV2,
 } from 'aws-lambda';
 
 import { createApiGatewayV1Event, createApiGatewayV2Event } from '@latcher/testing';

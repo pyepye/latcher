@@ -1,15 +1,15 @@
 import { Unauthorized } from '@latcher/http';
 
 import type {
-    WebSocketConnectRequest,
-    WebSocketConnectResponse,
-    WebSocketDisconnectRequest,
-    WebSocketFilterInput,
-    WebSocketFilters,
-    WebSocketMessageRequest,
-    WebSocketMessageRouteDefinition,
-    WebSocketRequest,
-    WebSocketRouteDefinition,
+  WebSocketConnectRequest,
+  WebSocketConnectResponse,
+  WebSocketDisconnectRequest,
+  WebSocketFilterInput,
+  WebSocketFilters,
+  WebSocketMessageRequest,
+  WebSocketMessageRouteDefinition,
+  WebSocketRequest,
+  WebSocketRouteDefinition,
 } from './types.js';
 import { createWebSocketMatcher, defineWebSocketRoute } from './WebSocketMatcher.js';
 

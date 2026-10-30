@@ -1,9 +1,4 @@
-import {
-    Allow,
-    Deny,
-    type LambdaAuthorizerRequestRequest,
-    type LambdaAuthorizerResult,
-} from '@latcher/apigateway';
+import { Allow, Deny, type LambdaAuthorizerRequestRequest, type LambdaAuthorizerResult } from '@latcher/apigateway';
 import { logger } from '@latcher/base';
 
 import { SERVICE_TOKEN } from '../utils/constants.js';

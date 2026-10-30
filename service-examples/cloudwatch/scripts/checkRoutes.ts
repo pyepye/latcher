@@ -1,5 +1,5 @@
-import type { CloudWatchLogsDecodedData, CloudWatchLogsEvent, CloudWatchLogsLogEvent, Context } from 'aws-lambda';
 import { gzipSync } from 'node:zlib';
+import type { CloudWatchLogsDecodedData, CloudWatchLogsEvent, CloudWatchLogsLogEvent, Context } from 'aws-lambda';
 
 import { cloudwatchMatcher } from '../src/cloudwatch.js';
 import {

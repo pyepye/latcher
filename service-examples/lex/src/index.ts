@@ -1,6 +1,5 @@
-import type { Handler } from 'aws-lambda';
-
 import { Latcher } from '@latcher/base';
+import type { Handler } from 'aws-lambda';
 
 import { lexMatcher } from './lex.js';
 

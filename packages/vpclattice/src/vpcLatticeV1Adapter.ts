@@ -1,10 +1,10 @@
 import { isObject } from '@latcher/base';
 import {
-    buildValueMaps,
-    type FinalizedHTTPResponse,
-    type HTTPAdapter,
-    type HttpMethod,
-    type NormalizedHTTPEvent,
+  buildValueMaps,
+  type FinalizedHTTPResponse,
+  type HTTPAdapter,
+  type HttpMethod,
+  type NormalizedHTTPEvent,
 } from '@latcher/http';
 
 import type { VPCLatticeAuth } from './auth.js';

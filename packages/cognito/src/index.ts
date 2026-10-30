@@ -1,7 +1,7 @@
 // Matcher exports
 
-export { CognitoMatcher, createCognitoMatcher, defineRoute } from './CognitoMatcher.js';
 export type { CognitoRequest, CognitoRouteDefinition, TypedRouteDefinition } from './CognitoMatcher.js';
+export { CognitoMatcher, createCognitoMatcher, defineRoute } from './CognitoMatcher.js';
 // All type exports
 export type {
   // Common

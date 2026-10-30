@@ -2,17 +2,17 @@ import { defineEventsRoute } from '@latcher/appsync';
 import { logger } from '@latcher/base';
 
 import {
-    PROBE_BARE_CHANNEL,
-    PROBE_BOTH_CHANNEL,
-    PROBE_BOTH_TOP_CHANNEL,
-    PROBE_EMPTY_CHANNEL,
-    PROBE_EMPTY_LIST_CHANNEL,
-    PROBE_ERROR_ONLY_CHANNEL,
-    PROBE_EXTRA_ENTRY_CHANNEL,
-    PROBE_EXTRA_TOP_CHANNEL,
-    PROBE_ID_ONLY_CHANNEL,
-    PROBE_NAMESPACE,
-    PROBE_NOTHING_CHANNEL,
+  PROBE_BARE_CHANNEL,
+  PROBE_BOTH_CHANNEL,
+  PROBE_BOTH_TOP_CHANNEL,
+  PROBE_EMPTY_CHANNEL,
+  PROBE_EMPTY_LIST_CHANNEL,
+  PROBE_ERROR_ONLY_CHANNEL,
+  PROBE_EXTRA_ENTRY_CHANNEL,
+  PROBE_EXTRA_TOP_CHANNEL,
+  PROBE_ID_ONLY_CHANNEL,
+  PROBE_NAMESPACE,
+  PROBE_NOTHING_CHANNEL,
 } from '../utils/constants.js';
 
 // A per-event error reaches the publish response, so reporting what arrived as the error message is

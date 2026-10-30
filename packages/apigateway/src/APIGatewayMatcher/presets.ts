@@ -1,5 +1,6 @@
-import type { AuthCheckResult, AuthPreset } from '@latcher/http';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+import type { AuthCheckResult, AuthPreset } from '@latcher/http';
 
 import type { LambdaAuthorizerContext } from '../LambdaAuthorizerMatcher/types.js';
 import type { APIGatewayAuth, CognitoAuth, IamAuth, JwtAuth, LambdaAuth } from './auth.js';

@@ -1,8 +1,4 @@
-import type {
-    AppSyncEventsOutgoingEvent,
-    AppSyncEventsPublishResult,
-    AppSyncEventsRequest,
-} from '@latcher/appsync';
+import type { AppSyncEventsOutgoingEvent, AppSyncEventsPublishResult, AppSyncEventsRequest } from '@latcher/appsync';
 import { isObject, logger } from '@latcher/base';
 
 // Activity without a body is rejected on its own, and the rest of the batch still broadcasts. That

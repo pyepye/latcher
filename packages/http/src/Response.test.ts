@@ -4,19 +4,19 @@ import { getLogger } from '@latcher/base';
 
 import { Html } from './html.js';
 import {
-    BadRequest,
-    Conflict,
-    Created,
-    Forbidden,
-    InternalServerError,
-    NoContent,
-    NotFound,
-    Ok,
-    PermanentRedirect,
-    Response,
-    TemporaryRedirect,
-    Unauthorized,
-    UnprocessableContent,
+  BadRequest,
+  Conflict,
+  Created,
+  Forbidden,
+  InternalServerError,
+  NoContent,
+  NotFound,
+  Ok,
+  PermanentRedirect,
+  Response,
+  TemporaryRedirect,
+  Unauthorized,
+  UnprocessableContent,
 } from './Response.js';
 
 function thrownBy(action: () => unknown): unknown {

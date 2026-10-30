@@ -1,6 +1,5 @@
-import type { Context } from 'aws-lambda';
-
 import type { EventBridgeEventEnvelope } from '@latcher/eventbridge';
+import type { Context } from 'aws-lambda';
 
 const ACCOUNT = '739650895623';
 const REGION = 'eu-west-2';

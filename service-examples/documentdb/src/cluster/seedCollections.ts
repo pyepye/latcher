@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
-
-import { ObjectId } from 'mongodb';
-
 import { logger } from '@latcher/base';
+import { ObjectId } from 'mongodb';
 
 import { COLLECTIONS, DATABASES } from '../utils/cluster.js';
 import { connectToCluster } from './mongoClient.js';

@@ -3,7 +3,7 @@ import type { MockInstance } from 'vitest';
 import * as base from '@latcher/base';
 import { allEventBuilders, createDynamoDBEvent, createMockSchema, test } from '@latcher/testing';
 
-import { createDynamoDBMatcher, defineRoute, DynamoDBMatcher } from './DynamoDBMatcher.js';
+import { createDynamoDBMatcher, DynamoDBMatcher, defineRoute } from './DynamoDBMatcher.js';
 import type { DynamoDBFilterInput, DynamoDBFilters, DynamoDBInsertRequest, DynamoDBRequest } from './types.js';
 
 type DynamoDBNext = (request: DynamoDBRequest) => Promise<void>;

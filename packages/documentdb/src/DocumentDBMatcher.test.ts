@@ -12,7 +12,7 @@ import {
   test,
 } from '@latcher/testing';
 
-import { createDocumentDBMatcher, defineRoute, DocumentDBMatcher } from './DocumentDBMatcher.js';
+import { createDocumentDBMatcher, DocumentDBMatcher, defineRoute } from './DocumentDBMatcher.js';
 import type { DocumentDBFilterInput, DocumentDBMiddleware, DocumentDBRequest } from './types.js';
 
 type DocumentDBNext = (request: DocumentDBRequest) => Promise<void>;

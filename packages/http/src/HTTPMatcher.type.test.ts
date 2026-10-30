@@ -1,9 +1,9 @@
 import { createMockSchema } from '@latcher/testing';
 
 import { HTTP_STATUS_CODES } from './constants.js';
-import { Html } from './html.js';
 import { HTTPException } from './HTTPException.js';
 import { createDefineRoute, defineRoute, HTTPMatcher } from './HTTPMatcher.js';
+import { Html } from './html.js';
 import { Conflict, Created, NoContent, NotFound, Ok, Response } from './Response.js';
 import type {
   ApiHandler,

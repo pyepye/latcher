@@ -1,5 +1,5 @@
-export { isS3BatchResponse, PermanentFailure, Succeeded, TemporaryFailure } from './batchResponse.js';
 export type { S3BatchResponse } from './batchResponse.js';
+export { isS3BatchResponse, PermanentFailure, Succeeded, TemporaryFailure } from './batchResponse.js';
 export { createS3BatchMatcher, S3BatchMatcher } from './S3BatchMatcher.js';
 export { createS3Matcher, defineRoute, S3Matcher } from './S3Matcher.js';
 // Re-export all types

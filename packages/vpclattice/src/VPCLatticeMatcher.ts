@@ -9,7 +9,7 @@ import type {
   ResponseKind,
   ResponseTypeOption,
 } from '@latcher/http';
-import { HTTPMatcher, createDefineRoute } from '@latcher/http';
+import { createDefineRoute, HTTPMatcher } from '@latcher/http';
 
 import type { VPCLatticeAuth } from './auth.js';
 import type { HTTPMiddleware } from './types.js';

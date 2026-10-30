@@ -1,6 +1,5 @@
-import type { Handler } from 'aws-lambda';
-
 import { Latcher } from '@latcher/base';
+import type { Handler } from 'aws-lambda';
 
 import { kafkaMatcher } from './kafka.js';
 

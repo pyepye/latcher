@@ -1,6 +1,6 @@
+import { setTimeout as sleep } from 'node:timers/promises';
 import { CloudWatchLogsClient, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
 import { KinesisClient, PutRecordCommand } from '@aws-sdk/client-kinesis';
-import { setTimeout as sleep } from 'node:timers/promises';
 
 import { QUARANTINED_DEVICE_KEY } from '../src/config.js';
 

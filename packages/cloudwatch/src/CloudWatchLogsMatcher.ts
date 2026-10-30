@@ -1,5 +1,5 @@
-import type { CloudWatchLogsDecodedData, CloudWatchLogsEvent, CloudWatchLogsEventData, Context } from 'aws-lambda';
 import { gunzipSync } from 'node:zlib';
+import type { CloudWatchLogsDecodedData, CloudWatchLogsEvent, CloudWatchLogsEventData, Context } from 'aws-lambda';
 
 import type { EventTypeMatcher } from '@latcher/base';
 import { filterStringMatcher, handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';

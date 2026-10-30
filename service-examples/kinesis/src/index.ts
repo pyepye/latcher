@@ -1,6 +1,5 @@
-import type { Handler } from 'aws-lambda';
-
 import { type LambdaMiddleware, Latcher, logger } from '@latcher/base';
+import type { Handler } from 'aws-lambda';
 
 import { kinesisMatcher } from './kinesis.js';
 

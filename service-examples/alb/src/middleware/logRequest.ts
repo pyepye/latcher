@@ -1,7 +1,6 @@
-import type { ALBEvent } from 'aws-lambda';
-
 import type { HTTPMiddleware } from '@latcher/alb';
 import { logger } from '@latcher/base';
+import type { ALBEvent } from 'aws-lambda';
 
 // Matcher middleware: runs for every matched route, before any route middleware. `eventForm` says
 // which shape the load balancer sent, and only a multi-value target group fills `multiValueHeaders`.

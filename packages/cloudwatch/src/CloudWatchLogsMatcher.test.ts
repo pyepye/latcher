@@ -1,5 +1,5 @@
-import type { CloudWatchLogsDecodedData } from 'aws-lambda';
 import { gzipSync } from 'node:zlib';
+import type { CloudWatchLogsDecodedData } from 'aws-lambda';
 
 import { allEventBuilders, createCloudWatchLogsEvent, test } from '@latcher/testing';
 

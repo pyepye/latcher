@@ -1,7 +1,7 @@
 import type {
-    AppSyncEventsAuthorizerChannelRequest,
-    AppSyncEventsAuthorizerConnectRequest,
-    AppSyncEventsAuthorizerFilterInput,
+  AppSyncEventsAuthorizerChannelRequest,
+  AppSyncEventsAuthorizerConnectRequest,
+  AppSyncEventsAuthorizerFilterInput,
 } from '@latcher/appsync';
 import { EventsAuthorized, EventsDenied } from '@latcher/appsync';
 import { logger } from '@latcher/base';
