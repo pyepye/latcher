@@ -12,22 +12,22 @@ import {
 } from '@latcher/base';
 
 import type {
-  EventBridgeEventEnvelope,
+  EventBridgeEventEnvelopeCore,
   EventBridgeFilterInput,
   EventBridgeFilters,
-  EventBridgeHandler,
+  EventBridgeHandlerCore,
   EventBridgeMatcherOptions,
-  EventBridgeMiddleware,
-  EventBridgeRequest,
-  EventBridgeRouteDefinition,
+  EventBridgeMiddlewareCore,
+  EventBridgeRequestCore,
+  EventBridgeRouteDefinitionCore,
   LookupDetailType,
 } from './types.js';
 
 interface InternalEventBridgeRoute {
   filters: EventBridgeFilters;
   detailSchema?: StandardSchemaV1;
-  middleware?: EventBridgeMiddleware[];
-  handler: EventBridgeHandler<unknown>;
+  middleware?: EventBridgeMiddlewareCore[];
+  handler: EventBridgeHandlerCore<unknown>;
 }
 
 interface EventBridgeRouteInput<
@@ -41,11 +41,11 @@ interface EventBridgeRouteInput<
     detailType?: TDetailTypes;
   };
   detailSchema?: TDetailSchema;
-  middleware?: EventBridgeMiddleware<NoInfer<TDetail>>[];
+  middleware?: EventBridgeMiddlewareCore<NoInfer<TDetail>>[];
 }
 
 interface EventBridgeRouteBuilder<TDetail> {
-  handle(handler: EventBridgeHandler<TDetail>): EventBridgeRouteDefinition<TDetail>;
+  handle(handler: EventBridgeHandlerCore<TDetail>): EventBridgeRouteDefinitionCore<TDetail>;
 }
 
 export function defineRoute<
@@ -57,26 +57,26 @@ export function defineRoute<
     : LookupDetailType<TSources, TDetailTypes>,
 >(config: EventBridgeRouteInput<TDetailSchema, TSources, TDetailTypes, TDetail>): EventBridgeRouteBuilder<TDetail> {
   return {
-    handle(handler: EventBridgeHandler<TDetail>): EventBridgeRouteDefinition<TDetail> {
+    handle(handler: EventBridgeHandlerCore<TDetail>): EventBridgeRouteDefinitionCore<TDetail> {
       // Cast needed: generic type narrowing from builder input to route definition
-      const filters = config.filters as EventBridgeRouteDefinition<TDetail>['filters'];
-      const detailSchema = config.detailSchema as EventBridgeRouteDefinition<TDetail>['detailSchema'];
-      const middleware = config.middleware as EventBridgeRouteDefinition<TDetail>['middleware'];
+      const filters = config.filters as EventBridgeRouteDefinitionCore<TDetail>['filters'];
+      const detailSchema = config.detailSchema as EventBridgeRouteDefinitionCore<TDetail>['detailSchema'];
+      const middleware = config.middleware as EventBridgeRouteDefinitionCore<TDetail>['middleware'];
       return { filters, detailSchema, middleware, handler };
     },
   };
 }
 
-export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEventEnvelope, void> {
+export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEventEnvelopeCore, void> {
   private routes: InternalEventBridgeRoute[] = [];
   private routesOrdered = false;
-  private middleware: EventBridgeMiddleware[] = [];
+  private middleware: EventBridgeMiddlewareCore[] = [];
 
   constructor(options?: EventBridgeMatcherOptions) {
     this.middleware = options?.middleware ?? [];
   }
 
-  canHandleEvent(event: unknown): event is EventBridgeEventEnvelope {
+  canHandleEvent(event: unknown): event is EventBridgeEventEnvelopeCore {
     if (!isObject(event)) return false;
     if (typeof event.source !== 'string') return false;
     /* v8 ignore next -- @preserve - Guard is for TS. EventBridge always provides source, detail-type, and detail together - checked individually for type narrowing */
@@ -86,10 +86,10 @@ export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEvent
     return true;
   }
 
-  route<TDetail>(definition: EventBridgeRouteDefinition<TDetail>): this {
+  route<TDetail>(definition: EventBridgeRouteDefinitionCore<TDetail>): this {
     // Cast needed: storing a specific handler and middleware chain in general storage (contravariance)
-    const handler = definition.handler as EventBridgeHandler<unknown>;
-    const middleware = definition.middleware as EventBridgeMiddleware[] | undefined;
+    const handler = definition.handler as EventBridgeHandlerCore<unknown>;
+    const middleware = definition.middleware as EventBridgeMiddlewareCore[] | undefined;
     this.routes.push({
       filters: definition.filters,
       detailSchema: definition.detailSchema,
@@ -100,7 +100,7 @@ export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEvent
     return this;
   }
 
-  async handleEvent(event: EventBridgeEventEnvelope, context: Context): Promise<void> {
+  async handleEvent(event: EventBridgeEventEnvelopeCore, context: Context): Promise<void> {
     const route = await this.matchRoute(event);
     if (!route) {
       throw new Error(`No route matched for EventBridge event: ${event.source} / ${event['detail-type']}`);
@@ -112,7 +112,7 @@ export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEvent
       `Schema validation failed for event ${event.id}`,
     );
 
-    const request: EventBridgeRequest = {
+    const request: EventBridgeRequestCore = {
       source: event.source,
       detailType: event['detail-type'],
       detail,
@@ -136,7 +136,7 @@ export class EventBridgeMatcher implements EventTypeMatcherCore<EventBridgeEvent
     this.routesOrdered = true;
   }
 
-  private async matchRoute(event: EventBridgeEventEnvelope): Promise<InternalEventBridgeRoute | undefined> {
+  private async matchRoute(event: EventBridgeEventEnvelopeCore): Promise<InternalEventBridgeRoute | undefined> {
     const filterInput: EventBridgeFilterInput = {
       event,
       source: event.source,

@@ -8,7 +8,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 // =============================================================================
 // Known AWS Event Detail Types
@@ -61,7 +61,7 @@ export type LookupDetailType<
 // Event Types
 // =============================================================================
 
-export interface EventBridgeEventEnvelope<TDetail = unknown> {
+export interface EventBridgeEventEnvelopeCore<TDetail = unknown> {
   version: string;
   id: string;
   source: string;
@@ -73,7 +73,7 @@ export interface EventBridgeEventEnvelope<TDetail = unknown> {
   detail: TDetail;
 }
 
-export interface EventBridgeRequest<TDetail = unknown> {
+export interface EventBridgeRequestCore<TDetail = unknown> {
   source: string;
   detailType: string;
   detail: TDetail;
@@ -82,13 +82,13 @@ export interface EventBridgeRequest<TDetail = unknown> {
   time: string;
   resources: string[];
   id: string;
-  event: EventBridgeEventEnvelope<TDetail>;
+  event: EventBridgeEventEnvelopeCore<TDetail>;
   context: Context;
 }
 
-export type EventBridgeMiddleware<TDetail = unknown> = MiddlewareCore<EventBridgeRequest<TDetail>, void>;
+export type EventBridgeMiddlewareCore<TDetail = unknown> = MiddlewareCore<EventBridgeRequestCore<TDetail>, void>;
 
-export type EventBridgeHandler<TDetail = unknown> = (request: EventBridgeRequest<TDetail>) => Promise<void>;
+export type EventBridgeHandlerCore<TDetail = unknown> = (request: EventBridgeRequestCore<TDetail>) => Promise<void>;
 
 export interface EventBridgeFilterInput {
   event: unknown;
@@ -106,13 +106,40 @@ export interface EventBridgeFilters {
   custom?: (input: EventBridgeFilterInput) => boolean | Promise<boolean>;
 }
 
-export interface EventBridgeRouteDefinition<TDetail = unknown> {
+export interface EventBridgeRouteDefinitionCore<TDetail = unknown> {
   filters: EventBridgeFilters;
   detailSchema?: StandardSchemaV1<unknown, TDetail>;
-  middleware?: EventBridgeMiddleware<NoInfer<TDetail>>[];
-  handler: EventBridgeHandler<TDetail>;
+  middleware?: EventBridgeMiddlewareCore<NoInfer<TDetail>>[];
+  handler: EventBridgeHandlerCore<TDetail>;
 }
 
 export interface EventBridgeMatcherOptions {
-  middleware?: EventBridgeMiddleware[];
+  middleware?: EventBridgeMiddlewareCore[];
 }
+
+export interface EventBridgeTypes {
+  detail?: unknown;
+}
+
+interface EventBridgeDefaults {
+  detail: unknown;
+}
+
+export type EventBridgeEventEnvelope<T extends TypeArgs<T, EventBridgeTypes> = object> = EventBridgeEventEnvelopeCore<
+  TypeArg<T, 'detail', EventBridgeDefaults>
+>;
+
+export type EventBridgeRequest<T extends TypeArgs<T, EventBridgeTypes> = object> = EventBridgeRequestCore<
+  TypeArg<T, 'detail', EventBridgeDefaults>
+>;
+
+export type EventBridgeMiddleware<T extends TypeArgs<T, EventBridgeTypes> = object> = EventBridgeMiddlewareCore<
+  TypeArg<T, 'detail', EventBridgeDefaults>
+>;
+
+export type EventBridgeHandler<T extends TypeArgs<T, EventBridgeTypes> = object> = EventBridgeHandlerCore<
+  TypeArg<T, 'detail', EventBridgeDefaults>
+>;
+
+export type EventBridgeRouteDefinition<T extends TypeArgs<T, EventBridgeTypes> = object> =
+  EventBridgeRouteDefinitionCore<TypeArg<T, 'detail', EventBridgeDefaults>>;

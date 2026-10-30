@@ -5,7 +5,7 @@ import type { TOrderPlaced } from '../utils/schemas.js';
 
 // Route middleware for placed orders. Typed to the route's detail so it slots onto processOrder
 // without widening it.
-export const withOrderContext: EventBridgeMiddleware<TOrderPlaced> = async (request, next) => {
+export const withOrderContext: EventBridgeMiddleware<{ detail: TOrderPlaced }> = async (request, next) => {
   logger.info({
     message: 'Order context loaded',
     orderRef: request.detail.orderRef,

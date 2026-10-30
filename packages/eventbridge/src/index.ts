@@ -10,5 +10,6 @@ export type {
   EventBridgeMiddleware,
   EventBridgeRequest,
   EventBridgeRouteDefinition,
+  EventBridgeTypes,
   ScheduledEventDetail,
 } from './types.js';

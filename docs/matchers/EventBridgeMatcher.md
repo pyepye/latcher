@@ -125,7 +125,7 @@ Handlers take one argument and return nothing.
 import { logger } from '@latcher/base'
 import type { EventBridgeRequest } from '@latcher/eventbridge'
 
-export async function processOrder(request: EventBridgeRequest<Order>): Promise<void> {
+export async function processOrder(request: EventBridgeRequest<{ detail: Order }>): Promise<void> {
   logger.info(`Processing order ${request.detail.orderId} for ${request.detail.total}`)
 }
 ```
@@ -138,13 +138,13 @@ The request is the envelope pulled apart into its fields, plus the raw event and
 | --- | --- | --- |
 | `source` | `string` | The service or app that published the event |
 | `detailType` | `string` | The event's `detail-type`, naming what happened |
-| `detail` | `TDetail` | The event payload. `unknown` until you type it, see [Typed detail](#typed-detail) |
+| `detail` | The `detail` key, default `unknown` | The event payload. `unknown` until you type it, see [Typed detail](#typed-detail) |
 | `account` | `string` | The AWS account ID the event came from |
 | `region` | `string` | The AWS Region the event came from |
 | `time` | `string` | The event timestamp, ISO 8601 |
 | `resources` | `string[]` | ARNs of the resources the event concerns |
 | `id` | `string` | The unique event ID |
-| `event` | `EventBridgeEventEnvelope<TDetail>` | The untouched event from AWS, keeping `detail-type` hyphenated as AWS sends it |
+| `event` | `EventBridgeEventEnvelope<{ detail }>` | The untouched event from AWS, keeping `detail-type` hyphenated as AWS sends it |
 | `context` | `Context` | The Lambda context |
 
 `EventBridgeEventEnvelope` comes from this package. `Context` comes from `aws-lambda`.
@@ -189,7 +189,7 @@ handlers](/docs/handlers#inferred-handlers), where the same source is written bo
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`EventBridgeRequest`](#generic-parameters) and your own type for the detail.
+[`EventBridgeRequest`](#type-arguments) and your own type for the detail.
 
 ```ts
 // handlers/processOrder.ts
@@ -200,7 +200,7 @@ import { z } from 'zod'
 export const OrderSchema = z.object({ orderId: z.string(), total: z.number() })
 type Order = z.infer<typeof OrderSchema>
 
-export async function processOrder({ detail }: EventBridgeRequest<Order>): Promise<void> {
+export async function processOrder({ detail }: EventBridgeRequest<{ detail: Order }>): Promise<void> {
   logger.info(`Processing order ${detail.orderId}`)
 }
 ```
@@ -221,7 +221,7 @@ eventBridgeMatcher.route({
 
 Derive the type from the schema with `z.infer` rather than hand-writing an interface that mirrors it.
 The automatic typing for known AWS events only happens through `defineRoute`, so annotate a known
-event yourself here, `EventBridgeRequest<EC2StateChangeDetail>` for an EC2 state change. See
+event yourself here, `EventBridgeRequest<{ detail: EC2StateChangeDetail }>` for an EC2 state change. See
 [annotated handlers](/docs/handlers#annotated-handlers) for the worked version.
 
 ## Schema validation
@@ -297,7 +297,7 @@ declare module '@latcher/eventbridge' {
 
 Setting a `detailSchema` overrides the map, since the schema validates as well as types. The map
 lookup only runs through `defineRoute`. Through `route()` and an annotated handler, `detail` comes
-from the `detailSchema` or the `EventBridgeRequest<...>` annotation, so name the type yourself there.
+from the `detailSchema` or the `detail` key you pass to `EventBridgeRequest`, so name the type yourself there.
 
 ## Failures and retries
 
@@ -336,9 +336,9 @@ eventBridgeMatcher.route({
 ```
 
 **Route middleware carries the route's detail type.** A route with a `detailSchema` needs
-`EventBridgeMiddleware<Order>`. A `source` and `detailType` pair from the detail type map sets that
-type too. `EventBridgeMiddleware` on its own does not compile on either route. Matcher middleware takes
-no type argument, because it runs for every route.
+`EventBridgeMiddleware<{ detail: Order }>`. A `source` and `detailType` pair from the detail type map sets
+that type too. `EventBridgeMiddleware` on its own does not compile on either route. Matcher middleware
+takes no keys, because it runs for every route.
 
 See [middleware](/docs/middleware) for the execution order and the three levels it attaches at.
 
@@ -348,14 +348,15 @@ All exported from `@latcher/eventbridge`.
 
 | Type | Description |
 | --- | --- |
-| `EventBridgeRequest<TDetail>` | The handler argument |
-| `EventBridgeHandler<TDetail>` | The handler function, returning `Promise<void>` |
+| `EventBridgeRequest<{ detail }>` | The handler argument |
+| `EventBridgeHandler<{ detail }>` | The handler function, returning `Promise<void>` |
 | `EventBridgeFilters` | The `filters` object |
 | `EventBridgeFilterInput` | What `custom` receives |
-| `EventBridgeRouteDefinition<TDetail>` | A full route passed to `route()` |
+| `EventBridgeRouteDefinition<{ detail }>` | A full route passed to `route()` |
 | `EventBridgeMatcherOptions` | Options for `createEventBridgeMatcher` |
-| `EventBridgeMiddleware<TDetail>` | Matcher and route middleware |
-| `EventBridgeEventEnvelope<TDetail>` | The raw event, as `request.event` |
+| `EventBridgeMiddleware<{ detail }>` | Matcher and route middleware |
+| `EventBridgeEventEnvelope<{ detail }>` | The raw event, as `request.event` |
+| `EventBridgeTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `EventBridgeDetailTypeMap` | The source to detail type map you augment for your own events |
 | `EC2StateChangeDetail` | The `detail` for an EC2 state change |
 | `ScheduledEventDetail` | The `detail` for a scheduled rule, an empty object |
@@ -363,17 +364,17 @@ All exported from `@latcher/eventbridge`.
 The `EventBridgeMatcher` class and the `createEventBridgeMatcher` and `defineRoute` functions come from
 the same place.
 
-### Generic parameters
+### Type arguments
 
-The types above that take a parameter all take the same one.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TDetail` | `request.detail` | `unknown` |
+| `detail` | `request.detail` | `unknown` |
 
-Leave it off and `detail` is `unknown`, which is what you get for an event you have not typed. You
+Leave it out and `detail` is `unknown`, which is what you get for an event you have not typed. You
 only need to pass it for [annotated handlers](#annotated-handlers); inference and the detail type map
-cover the rest.
+cover the rest. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 
@@ -428,15 +429,15 @@ import type { EC2StateChangeDetail, EventBridgeRequest, ScheduledEventDetail } f
 
 import type { Order } from '../schemas/order.js'
 
-export async function processOrder({ detail }: EventBridgeRequest<Order>): Promise<void> {
+export async function processOrder({ detail }: EventBridgeRequest<{ detail: Order }>): Promise<void> {
   logger.info(\`Processing order \${detail.orderId} for \${detail.total}\`)
 }
 
-export async function handleEc2StateChange({ detail }: EventBridgeRequest<EC2StateChangeDetail>): Promise<void> {
+export async function handleEc2StateChange({ detail }: EventBridgeRequest<{ detail: EC2StateChangeDetail }>): Promise<void> {
   logger.info(\`Instance \${detail['instance-id']} is now \${detail.state}\`)
 }
 
-export async function handleScheduledRule({ time, resources }: EventBridgeRequest<ScheduledEventDetail>): Promise<void> {
+export async function handleScheduledRule({ time, resources }: EventBridgeRequest<{ detail: ScheduledEventDetail }>): Promise<void> {
   logger.info(\`Scheduled rule \${resources[0]} fired at \${time}\`)
 }`,
   },

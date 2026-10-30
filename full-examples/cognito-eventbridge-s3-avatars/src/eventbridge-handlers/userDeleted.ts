@@ -17,7 +17,7 @@ export const CognitoCloudTrailDetailSchema = z.object({
 
 export type CognitoCloudTrailDetail = z.infer<typeof CognitoCloudTrailDetailSchema>;
 
-export async function userDeleted(request: EventBridgeRequest<CognitoCloudTrailDetail>): Promise<void> {
+export async function userDeleted(request: EventBridgeRequest<{ detail: CognitoCloudTrailDetail }>): Promise<void> {
   const { sub } = request.detail.additionalEventData;
   const bucket = getBucketName();
 
