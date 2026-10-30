@@ -18,17 +18,17 @@ import type {
   SNSMessageAttributes,
   SNSMessageAttributeValue,
   SNSRawMessageAttributes,
-  SNSRecordHandler,
-  SNSRequest,
-  SNSRouteDefinition,
+  SNSRecordHandlerCore,
+  SNSRequestCore,
+  SNSRouteDefinitionCore,
 } from './types.js';
 
 interface InternalRoute {
   filters: SNSFilters;
   bodySchema?: StandardSchemaV1;
   messageAttributesSchema?: StandardSchemaV1;
-  middleware: MiddlewareCore<SNSRequest, void>[];
-  handler: SNSRecordHandler;
+  middleware: MiddlewareCore<SNSRequestCore, void>[];
+  handler: SNSRecordHandlerCore;
 }
 
 interface RouteInput<
@@ -42,11 +42,11 @@ interface RouteInput<
   filters: SNSFilters;
   bodySchema?: TBodySchema;
   messageAttributesSchema?: TMessageAttributesSchema;
-  middleware?: MiddlewareCore<SNSRequest<TBody, TMessageAttributes>, void>[];
+  middleware?: MiddlewareCore<SNSRequestCore<TBody, TMessageAttributes>, void>[];
 }
 
 interface RouteBuilder<TBody, TMessageAttributes> {
-  handle(handler: SNSRecordHandler<TBody, TMessageAttributes>): SNSRouteDefinition<TBody, TMessageAttributes>;
+  handle(handler: SNSRecordHandlerCore<TBody, TMessageAttributes>): SNSRouteDefinitionCore<TBody, TMessageAttributes>;
 }
 
 export function defineRoute<
@@ -59,8 +59,8 @@ export function defineRoute<
 >(config: RouteInput<TBodySchema, TMessageAttributesSchema>): RouteBuilder<TBody, TMessageAttributes> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): SNSRouteDefinition<TBody, TMessageAttributes> {
-      return { ...config, handler } as SNSRouteDefinition<TBody, TMessageAttributes>;
+    handle(handler): SNSRouteDefinitionCore<TBody, TMessageAttributes> {
+      return { ...config, handler } as SNSRouteDefinitionCore<TBody, TMessageAttributes>;
     },
   };
 }
@@ -68,7 +68,7 @@ export function defineRoute<
 export class SNSMatcher implements EventTypeMatcherCore<SNSEvent, undefined> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: MiddlewareCore<SNSRequest, void>[];
+  private middleware: MiddlewareCore<SNSRequestCore, void>[];
 
   constructor(options?: SNSMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -85,7 +85,7 @@ export class SNSMatcher implements EventTypeMatcherCore<SNSEvent, undefined> {
   }
 
   route<TBody, TMessageAttributes = SNSMessageAttributes>(
-    definition: SNSRouteDefinition<TBody, TMessageAttributes>,
+    definition: SNSRouteDefinitionCore<TBody, TMessageAttributes>,
   ): this {
     this.routes.push({
       filters: definition.filters,
@@ -93,7 +93,7 @@ export class SNSMatcher implements EventTypeMatcherCore<SNSEvent, undefined> {
       messageAttributesSchema: definition.messageAttributesSchema,
       // @ts-expect-error Contravariance: typed middleware stored in general InternalRoute, safe because schema validates before calling
       middleware: definition.middleware ?? [],
-      handler: definition.handler as SNSRecordHandler,
+      handler: definition.handler as SNSRecordHandlerCore,
     });
     this.routesOrdered = false;
     return this;
@@ -183,7 +183,7 @@ export class SNSMatcher implements EventTypeMatcherCore<SNSEvent, undefined> {
       `Message attributes validation failed for record ${record.Sns.MessageId}`,
     );
 
-    const request: SNSRequest = {
+    const request: SNSRequestCore = {
       body,
       messageAttributes: validatedMessageAttributes,
       record,

@@ -11,4 +11,5 @@ export type {
   SNSRequest,
   SNSResponse,
   SNSRouteDefinition,
+  SNSTypes,
 } from './types.js';

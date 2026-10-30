@@ -14,7 +14,7 @@ interface OrderAttributes extends SNSMessageAttributes {
   eventType: string;
 }
 
-type OrderRequest = SNSRequest<Order, OrderAttributes & SNSMessageAttributes>;
+type OrderRequest = SNSRequest<{ body: Order; messageAttributes: OrderAttributes & SNSMessageAttributes }>;
 type OrderNext = (request: OrderRequest) => Promise<void>;
 type UntypedNext = (request: SNSRequest) => Promise<void>;
 
@@ -103,7 +103,9 @@ suite('coerced message attributes', () => {
   });
 
   test('accepts an annotated handler for a coerced attribute schema', () => {
-    async function processNotification({ messageAttributes }: SNSRequest<unknown, DryRunAttributes>): Promise<void> {
+    async function processNotification({
+      messageAttributes,
+    }: SNSRequest<{ messageAttributes: DryRunAttributes }>): Promise<void> {
       expectTypeOf(messageAttributes.dryRun).toEqualTypeOf<boolean>();
     }
 
@@ -117,7 +119,7 @@ suite('coerced message attributes', () => {
   });
 
   test('accepts a route middleware typed to a coerced attribute schema', () => {
-    type DryRunRequest = SNSRequest<unknown, DryRunAttributes>;
+    type DryRunRequest = SNSRequest<{ messageAttributes: DryRunAttributes }>;
 
     async function skipDryRun(request: DryRunRequest, next: (request: unknown) => Promise<void>): Promise<void> {
       if (!request.messageAttributes.dryRun) await next(request);
@@ -129,7 +131,7 @@ suite('coerced message attributes', () => {
       middleware: [skipDryRun],
     }).handle(async () => {});
 
-    expectTypeOf(skipDryRun).toMatchTypeOf<SNSMiddleware<unknown, DryRunAttributes>>();
+    expectTypeOf(skipDryRun).toMatchTypeOf<SNSMiddleware<{ messageAttributes: DryRunAttributes }>>();
     expect(definition.middleware).toEqual([skipDryRun]);
   });
 });

@@ -124,7 +124,7 @@ import { logger } from '@latcher/base'
 import type { SNSRequest, SNSResponse } from '@latcher/sns'
 
 export async function processOrder(
-  request: SNSRequest<Order, OrderAttributes>,
+  request: SNSRequest<{ body: Order; messageAttributes: OrderAttributes }>,
 ): Promise<SNSResponse> {
   const { orderId, total } = request.body
   logger.info(`Processing order ${orderId} for ${total}`)
@@ -135,8 +135,8 @@ export async function processOrder(
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `body` | `TBody` | The notification message. JSON is parsed for you. If the message is not valid JSON you get the raw string |
-| `messageAttributes` | `TMessageAttributes` | Message attributes converted to real values. See [Message attribute types](#message-attribute-types) |
+| `body` | The `body` key, default `unknown` | The notification message. JSON is parsed for you. If the message is not valid JSON you get the raw string |
+| `messageAttributes` | The `messageAttributes` key, default `SNSMessageAttributes` | Message attributes converted to real values. See [Message attribute types](#message-attribute-types) |
 | `record` | `SNSEventRecord` | The untouched record from AWS, for `Sns.MessageId`, `Sns.Timestamp` and anything else you need |
 | `context` | `Context` | The Lambda context |
 
@@ -206,7 +206,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`SNSRequest`](#generic-parameters) and your own types.
+[`SNSRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/processOrder.ts
@@ -217,7 +217,7 @@ import { z } from 'zod'
 export const OrderSchema = z.object({ orderId: z.string(), total: z.number() })
 type Order = z.infer<typeof OrderSchema>
 
-export async function processOrder(request: SNSRequest<Order>): Promise<SNSResponse> {
+export async function processOrder(request: SNSRequest<{ body: Order }>): Promise<SNSResponse> {
   logger.info(`Processing order ${request.body.orderId}`)
 }
 ```
@@ -309,8 +309,8 @@ snsMatcher.route({
 })
 ```
 
-A route middleware can name the route's own types, so `SNSMiddleware<Order, OrderAttributes>` reads
-`request.body` as an `Order`. Name both parameters even if you only touch the body, because `next`
+A route middleware can name the route's own types, so `SNSMiddleware<{ body: Order; messageAttributes: OrderAttributes }>`
+reads `request.body` as an `Order`. Name both keys even if you only touch the body, because `next`
 makes the type invariant.
 
 Where an event does carry several records they run in parallel, so pass per-record values on each log
@@ -323,31 +323,32 @@ All exported from `@latcher/sns`.
 
 | Type | Description |
 | --- | --- |
-| `SNSRequest<TBody, TMessageAttributes>` | The handler argument |
+| `SNSRequest<{ body, messageAttributes }>` | The handler argument |
 | `SNSResponse` | Handler return type, `undefined` |
 | `SNSFilters` | The `filters` object |
 | `SNSFilterInput` | What `custom` receives |
-| `SNSRecordHandler<TBody, TMessageAttributes>` | The `handler` function |
-| `SNSRouteDefinition<TBody, TMessageAttributes>` | A full route passed to `route()` |
+| `SNSRecordHandler<{ body, messageAttributes }>` | The `handler` function |
+| `SNSRouteDefinition<{ body, messageAttributes }>` | A full route passed to `route()` |
 | `SNSMatcherOptions` | Options for `createSNSMatcher` |
-| `SNSMiddleware<TBody, TMessageAttributes>` | Matcher and route middleware |
+| `SNSMiddleware<{ body, messageAttributes }>` | Matcher and route middleware |
 | `SNSMessageAttributes` | `Record<string, SNSMessageAttributeValue>` |
 | `SNSMessageAttributeValue` | `string \| Buffer` |
 | `SNSRawMessageAttributes` | The attributes as AWS sends them, before conversion |
+| `SNSTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `SNSMatcher` class and the `createSNSMatcher` and `defineRoute` functions come from the same place.
 
-### Generic parameters
+### Type arguments
 
-The three types above that take parameters take the same two, in the same order.
+The four generic types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TBody` | `request.body` | `unknown` |
-| `TMessageAttributes` | `request.messageAttributes` | `SNSMessageAttributes` |
+| `body` | `request.body` | `unknown` |
+| `messageAttributes` | `request.messageAttributes` | `SNSMessageAttributes` |
 
-Pass just the first and the second falls back to its default, so `SNSRequest<Order>` types the body and
-leaves message attributes loose.
+Leave a key out and it takes its default, so `SNSRequest<{ body: Order }>` types the body and leaves
+message attributes loose. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers both.
 
@@ -408,11 +409,11 @@ import type { SNSRequest, SNSResponse } from '@latcher/sns'
 
 import type { Order } from '../schemas/order.js'
 
-export async function processOrder(request: SNSRequest<Order>): Promise<SNSResponse> {
+export async function processOrder(request: SNSRequest<{ body: Order }>): Promise<SNSResponse> {
   logger.info(\`Processing order \${request.body.orderId}\`)
 }
 
-export async function refundOrder(request: SNSRequest<Order>): Promise<SNSResponse> {
+export async function refundOrder(request: SNSRequest<{ body: Order }>): Promise<SNSResponse> {
   logger.info(\`Refunding order \${request.body.orderId} for \${request.body.total}\`)
 }`,
   },
