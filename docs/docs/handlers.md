@@ -29,7 +29,7 @@ ten messages runs your handler ten times and you write code for a single message
 
 ```ts [SQS]
 // One record at a time, with the message body already parsed
-async function processOrder({ body, messageAttributes, record, context }: SQSRequest<Order>) {
+async function processOrder({ body, messageAttributes, record, context }: SQSRequest<{ body: Order }>) {
   logger.info('Processing order', {
     orderId: body.orderId, // parsed from the message JSON and typed by bodySchema
     dryRun: messageAttributes.dryRun, // a real value, not the raw AWS attribute wrapper
@@ -86,7 +86,7 @@ between matchers than anything else. There are four shapes.
 
 ```ts [SQS]
 // SQSResponse is undefined, so there is nothing to hand back
-async function adjustStock({ body }: SQSRequest<StockChange>): Promise<SQSResponse> {
+async function adjustStock({ body }: SQSRequest<{ body: StockChange }>): Promise<SQSResponse> {
   const remaining = await inventory.adjust(body.sku, body.delta)
 
   if (remaining <= body.reorderAt) {
@@ -325,7 +325,7 @@ import { notifications, orders } from '../services/orders.js'
 type Order = z.infer<typeof OrderSchema>
 type OrderAttributes = z.infer<typeof OrderAttributesSchema>
 
-export async function processOrder(request: SQSRequest<Order, OrderAttributes>): Promise<SQSResponse> {
+export async function processOrder(request: SQSRequest<{ body: Order; messageAttributes: OrderAttributes }>): Promise<SQSResponse> {
   const { body, messageAttributes } = request
 ${HANDLER_BODY}
 }`,
@@ -375,11 +375,106 @@ Open a file: [handlers/processOrder.ts](#annotated-handlers:handlers/processOrde
 <CodeFileViewer :files="annotatedFiles" id="annotated-handlers" default-file="handlers/processOrder.ts" line-numbers collapse-toggle fixed-height />
 
 Same four files, same schemas, same handler body. Both differ in one thing only, which is that
-`SQSRequest<Order, OrderAttributes>` names what `defineRoute` worked out for itself.
+`SQSRequest<{ body: Order; messageAttributes: OrderAttributes }>` names what `defineRoute` worked out for itself.
 
 Derive those types from the schema with `z.infer` rather than writing an interface that mirrors it, so
 the two cannot drift.
 
-Most matchers take the payload first and its attributes second, the way
-`SQSRequest<TBody, TMessageAttributes>` does, and later parameters have defaults so passing only the
-first leaves the rest alone. Each matcher page lists its own parameters in order.
+## Typing a request
+
+The generic types a package exports take one object. Its keys are the names of the properties they type.
+
+```ts
+import type { SQSRequest } from '@latcher/sqs'
+
+type OrderRequest = SQSRequest<{ body: Order; messageAttributes: OrderAttributes }>
+```
+
+Key order does not matter. Each matcher page lists its keys.
+
+### Defaults
+
+A key you leave out takes its default. `SQSRequest<{ body: Order }>` types `body` and leaves
+`messageAttributes` as `SQSMessageAttributes`. `SQSRequest` with no object leaves both at their defaults.
+
+### Known limits
+
+#### Middleware and handler variables
+
+This limit applies to middleware and handlers. The examples use middleware.
+
+This middleware works with all message bodies:
+
+```ts
+const logMiddleware: SQSMiddleware = async (request, next) => {
+  logger.info('Received', { messageId: request.record.messageId })
+  return next(request)
+}
+```
+
+You can use it on a route for `Order` messages:
+
+```ts
+defineRoute({ filters, bodySchema: orderSchema, middleware: [logMiddleware] })
+```
+
+If you put it in a variable, and give the variable the type `SQSMiddleware<{ body: Order }>[]`, you get an
+error:
+
+```ts
+const middleware: SQSMiddleware<{ body: Order }>[] = [logMiddleware]
+// Type 'SQSMiddleware' is not assignable to type 'SQSMiddleware<{ body: Order; }>'.
+```
+
+The middleware is safe to use there. The error comes from how TypeScript compares two forms of the same
+type. To fix it, do not give the variable a type:
+
+```ts
+const middleware = [logMiddleware]
+
+defineRoute({ filters, bodySchema: orderSchema, middleware })
+```
+
+The route still checks each middleware in the list.
+
+A handler typed `SQSRecordHandler`, with no object, has the same limit. Give it to the route, not to a
+variable with the type `SQSRecordHandler<{ body: Order }>`.
+
+#### Generic functions
+
+To write a function that takes all SQS requests, use `SQSRequest` with no object:
+
+```ts
+function logRecord(request: SQSRequest): void {
+  logger.info('Received', { messageId: request.record.messageId })
+}
+```
+
+You can give it an `SQSRequest<{ body: Order }>`.
+
+If the function must return the same type that it gets, it needs a type parameter. Write the type
+parameter as `T extends TypeArgs<T, SQSTypes>`:
+
+```ts
+import type { TypeArgs } from '@latcher/base'
+import type { SQSRequest, SQSTypes } from '@latcher/sqs'
+
+function withTrace<T extends TypeArgs<T, SQSTypes>>(request: SQSRequest<T>): SQSRequest<T> {
+  logger.info('Received', { messageId: request.record.messageId })
+  return request
+}
+```
+
+If you write `T extends SQSTypes`, you get an error:
+
+```text
+Type 'T' does not satisfy the constraint 'TypeArgs<T, SQSTypes>'.
+```
+
+In this function, TypeScript does not know the type of `request.body`. You cannot read a property of
+the body until you check its type. If you try, you get an error:
+
+```ts
+request.body.id
+// Property 'id' does not exist on type 'TypeArg<T, "body", SQSDefaults>'.
+```

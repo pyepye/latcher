@@ -44,7 +44,9 @@ suite('coerced message attributes', () => {
   });
 
   test('accepts an annotated handler for a coerced attribute schema', () => {
-    async function processOrder({ messageAttributes }: SQSRequest<unknown, DryRunAttributes>): Promise<void> {
+    async function processOrder({
+      messageAttributes,
+    }: SQSRequest<{ messageAttributes: DryRunAttributes }>): Promise<void> {
       expectTypeOf(messageAttributes.dryRun).toEqualTypeOf<boolean>();
     }
 
@@ -58,7 +60,7 @@ suite('coerced message attributes', () => {
   });
 
   test('accepts a route middleware typed to a coerced attribute schema', () => {
-    type DryRunRequest = SQSRequest<unknown, DryRunAttributes>;
+    type DryRunRequest = SQSRequest<{ messageAttributes: DryRunAttributes }>;
 
     async function skipDryRun(request: DryRunRequest, next: (request: unknown) => Promise<void>): Promise<void> {
       if (!request.messageAttributes.dryRun) await next(request);
@@ -70,7 +72,7 @@ suite('coerced message attributes', () => {
       middleware: [skipDryRun],
     }).handle(async () => {});
 
-    expectTypeOf(skipDryRun).toMatchTypeOf<SQSMiddleware<unknown, DryRunAttributes>>();
+    expectTypeOf(skipDryRun).toMatchTypeOf<SQSMiddleware<{ messageAttributes: DryRunAttributes }>>();
     expect(definition.middleware).toEqual([skipDryRun]);
   });
 });

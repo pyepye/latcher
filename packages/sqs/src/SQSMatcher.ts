@@ -25,17 +25,17 @@ import type {
   SQSMessageAttributeFilter,
   SQSMessageAttributes,
   SQSMessageAttributeValue,
-  SQSRecordHandler,
-  SQSRequest,
-  SQSRouteDefinition,
+  SQSRecordHandlerCore,
+  SQSRequestCore,
+  SQSRouteDefinitionCore,
 } from './types.js';
 
 interface InternalRoute {
   filters: SQSFilters;
   bodySchema?: StandardSchemaV1;
   messageAttributesSchema?: StandardSchemaV1;
-  middleware: MiddlewareCore<SQSRequest, void>[];
-  handler: SQSRecordHandler;
+  middleware: MiddlewareCore<SQSRequestCore, void>[];
+  handler: SQSRecordHandlerCore;
 }
 
 interface RouteInput<
@@ -49,11 +49,11 @@ interface RouteInput<
   filters: SQSFilters;
   bodySchema?: TBodySchema;
   messageAttributesSchema?: TMessageAttributesSchema;
-  middleware?: MiddlewareCore<SQSRequest<TBody, TMessageAttributes>, void>[];
+  middleware?: MiddlewareCore<SQSRequestCore<TBody, TMessageAttributes>, void>[];
 }
 
 interface RouteBuilder<TBody, TMessageAttributes> {
-  handle(handler: SQSRecordHandler<TBody, TMessageAttributes>): SQSRouteDefinition<TBody, TMessageAttributes>;
+  handle(handler: SQSRecordHandlerCore<TBody, TMessageAttributes>): SQSRouteDefinitionCore<TBody, TMessageAttributes>;
 }
 
 export function defineRoute<
@@ -66,8 +66,8 @@ export function defineRoute<
 >(config: RouteInput<TBodySchema, TMessageAttributesSchema>): RouteBuilder<TBody, TMessageAttributes> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): SQSRouteDefinition<TBody, TMessageAttributes> {
-      return { ...config, handler } as SQSRouteDefinition<TBody, TMessageAttributes>;
+    handle(handler): SQSRouteDefinitionCore<TBody, TMessageAttributes> {
+      return { ...config, handler } as SQSRouteDefinitionCore<TBody, TMessageAttributes>;
     },
   };
 }
@@ -82,7 +82,7 @@ export class SQSMatcher implements EventTypeMatcherCore<SQSEvent, undefined | SQ
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: MiddlewareCore<SQSRequest, void>[];
+  private middleware: MiddlewareCore<SQSRequestCore, void>[];
 
   constructor(options?: SQSMatcherOptions) {
     this.batchItemFailures = options?.batchItemFailures ?? false;
@@ -100,7 +100,7 @@ export class SQSMatcher implements EventTypeMatcherCore<SQSEvent, undefined | SQ
   }
 
   route<TBody, TMessageAttributes = SQSMessageAttributes>(
-    definition: SQSRouteDefinition<TBody, TMessageAttributes>,
+    definition: SQSRouteDefinitionCore<TBody, TMessageAttributes>,
   ): this {
     this.routes.push({
       filters: definition.filters,
@@ -108,7 +108,7 @@ export class SQSMatcher implements EventTypeMatcherCore<SQSEvent, undefined | SQ
       messageAttributesSchema: definition.messageAttributesSchema,
       // @ts-expect-error Contravariance: typed middleware stored in general InternalRoute, safe because schema validates before calling
       middleware: definition.middleware ?? [],
-      handler: definition.handler as SQSRecordHandler,
+      handler: definition.handler as SQSRecordHandlerCore,
     });
     this.routesOrdered = false;
     return this;
@@ -332,7 +332,7 @@ export class SQSMatcher implements EventTypeMatcherCore<SQSEvent, undefined | SQ
       `Message attributes validation failed for record ${record.messageId}`,
     );
 
-    const request: SQSRequest = {
+    const request: SQSRequestCore = {
       body,
       messageAttributes,
       record,

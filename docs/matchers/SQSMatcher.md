@@ -127,7 +127,7 @@ import { logger } from '@latcher/base'
 import type { SQSRequest, SQSResponse } from '@latcher/sqs'
 
 export async function processOrder(
-  request: SQSRequest<Order, OrderAttributes>,
+  request: SQSRequest<{ body: Order; messageAttributes: OrderAttributes }>,
 ): Promise<SQSResponse> {
   const { orderId, total } = request.body
   logger.info(`Processing order ${orderId} for ${total}`)
@@ -211,7 +211,7 @@ import { z } from 'zod'
 export const OrderSchema = z.object({ orderId: z.string(), total: z.number() })
 type Order = z.infer<typeof OrderSchema>
 
-export async function processOrder(request: SQSRequest<Order>): Promise<SQSResponse> {
+export async function processOrder(request: SQSRequest<{ body: Order }>): Promise<SQSResponse> {
   logger.info(`Processing order ${request.body.orderId}`)
 }
 ```
@@ -322,31 +322,32 @@ All exported from `@latcher/sqs`.
 
 | Type | Description |
 | --- | --- |
-| `SQSRequest<TBody, TMessageAttributes>` | The handler argument |
+| `SQSRequest<{ body, messageAttributes }>` | The handler argument |
 | `SQSResponse` | Handler return type, `undefined` |
 | `SQSFilters` | The `filters` object |
 | `SQSFilterInput` | What `custom` receives |
-| `SQSRecordHandler<TBody, TMessageAttributes>` | The `handler` function |
-| `SQSRouteDefinition<TBody, TMessageAttributes>` | A full route passed to `route()` |
+| `SQSRecordHandler<{ body, messageAttributes }>` | The `handler` function |
+| `SQSRouteDefinition<{ body, messageAttributes }>` | A full route passed to `route()` |
 | `SQSMatcherOptions` | Options for `createSQSMatcher` |
-| `SQSMiddleware<TBody, TMessageAttributes>` | Matcher and route middleware |
+| `SQSMiddleware<{ body, messageAttributes }>` | Matcher and route middleware |
 | `SQSMessageAttributes` | `Record<string, SQSMessageAttributeValue>` |
 | `SQSMessageAttributeValue` | `string \| string[] \| number \| Buffer` |
 | `SQSMessageAttributeFilter` | One value in the `messageAttributes` filter |
+| `SQSTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `SQSMatcher` class and the `createSQSMatcher` and `defineRoute` functions come from the same place.
 
-### Generic parameters
+### Type arguments
 
-The three types above that take parameters take the same two, in the same order.
+The four generic types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TBody` | `request.body` | `unknown` |
-| `TMessageAttributes` | `request.messageAttributes` | `SQSMessageAttributes` |
+| `body` | `request.body` | `unknown` |
+| `messageAttributes` | `request.messageAttributes` | `SQSMessageAttributes` |
 
-Pass just the first and the second falls back to its default, so `SQSRequest<Order>` types the body and
-leaves message attributes loose.
+Leave a key out and it takes its default, so `SQSRequest<{ body: Order }>` types the body and leaves
+message attributes loose. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers both.
 
@@ -409,11 +410,11 @@ import type { SQSRequest, SQSResponse } from '@latcher/sqs'
 
 import type { Order } from '../schemas/order.js'
 
-export async function processOrder(request: SQSRequest<Order>): Promise<SQSResponse> {
+export async function processOrder(request: SQSRequest<{ body: Order }>): Promise<SQSResponse> {
   logger.info(\`Processing order \${request.body.orderId}\`)
 }
 
-export async function refundOrder(request: SQSRequest<Order>): Promise<SQSResponse> {
+export async function refundOrder(request: SQSRequest<{ body: Order }>): Promise<SQSResponse> {
   logger.info(\`Refunding order \${request.body.orderId} for \${request.body.total}\`)
 }`,
   },
