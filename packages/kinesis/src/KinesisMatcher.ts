@@ -14,13 +14,13 @@ import {
 } from '@latcher/base';
 
 import { deaggregateRecord, type UserRecord } from './deaggregate.js';
-import type { KinesisFilters, KinesisMatcherOptions, KinesisRequest, KinesisRouteDefinition } from './types.js';
+import type { KinesisFilters, KinesisMatcherOptions, KinesisRequestCore, KinesisRouteDefinitionCore } from './types.js';
 
 interface InternalRoute {
   filters: KinesisFilters;
   dataSchema?: StandardSchemaV1;
-  middleware: MiddlewareCore<KinesisRequest, void>[];
-  handler: (request: KinesisRequest) => Promise<void>;
+  middleware: MiddlewareCore<KinesisRequestCore, void>[];
+  handler: (request: KinesisRequestCore) => Promise<void>;
 }
 
 interface RouteInput<
@@ -29,11 +29,11 @@ interface RouteInput<
 > {
   filters: KinesisFilters;
   dataSchema?: TDataSchema;
-  middleware?: MiddlewareCore<KinesisRequest<NoInfer<TData>>, void>[];
+  middleware?: MiddlewareCore<KinesisRequestCore<NoInfer<TData>>, void>[];
 }
 
 interface RouteBuilder<TData> {
-  handle(handler: (request: KinesisRequest<TData>) => Promise<void>): KinesisRouteDefinition<TData>;
+  handle(handler: (request: KinesisRequestCore<TData>) => Promise<void>): KinesisRouteDefinitionCore<TData>;
 }
 
 export function defineRoute<
@@ -41,12 +41,12 @@ export function defineRoute<
   TData = TDataSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TDataSchema> : unknown,
 >(config: RouteInput<TDataSchema, TData>): RouteBuilder<TData> {
   return {
-    handle(handler: (request: KinesisRequest<TData>) => Promise<void>): KinesisRouteDefinition<TData> {
+    handle(handler: (request: KinesisRequestCore<TData>) => Promise<void>): KinesisRouteDefinitionCore<TData> {
       return {
         filters: config.filters as KinesisFilters,
         dataSchema: config.dataSchema as StandardSchemaV1<unknown, TData> | undefined,
-        middleware: config.middleware as KinesisRouteDefinition<TData>['middleware'],
-        handler: handler as (request: KinesisRequest<TData>) => Promise<void>,
+        middleware: config.middleware as KinesisRouteDefinitionCore<TData>['middleware'],
+        handler: handler as (request: KinesisRequestCore<TData>) => Promise<void>,
       };
     },
   };
@@ -58,7 +58,7 @@ export class KinesisMatcher
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: MiddlewareCore<KinesisRequest, void>[];
+  private middleware: MiddlewareCore<KinesisRequestCore, void>[];
 
   constructor(options?: KinesisMatcherOptions) {
     this.batchItemFailures = options?.batchItemFailures ?? false;
@@ -75,7 +75,7 @@ export class KinesisMatcher
     return firstRecord.eventSource === 'aws:kinesis';
   }
 
-  route<TData>(definition: KinesisRouteDefinition<TData>): this {
+  route<TData>(definition: KinesisRouteDefinitionCore<TData>): this {
     this.routes.push({
       filters: definition.filters,
       dataSchema: definition.dataSchema,
@@ -151,7 +151,7 @@ export class KinesisMatcher
     const validationErrorMessage = `Data validation failed for record ${record.eventID}`;
     const validatedData = await validateSchema(data, route.dataSchema, validationErrorMessage);
 
-    const request: KinesisRequest = {
+    const request: KinesisRequestCore = {
       data: validatedData,
       rawData,
       partitionKey,

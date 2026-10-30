@@ -118,7 +118,7 @@ Handlers take one argument and return nothing.
 import { logger } from '@latcher/base'
 import type { KinesisRequest, KinesisResponse } from '@latcher/kinesis'
 
-export async function onReading(request: KinesisRequest<Reading>): Promise<KinesisResponse> {
+export async function onReading(request: KinesisRequest<{ data: Reading }>): Promise<KinesisResponse> {
   const { deviceId, celsius } = request.data
   logger.info(`Device ${deviceId} reported ${celsius}C at ${request.sequenceNumber}`)
 }
@@ -128,7 +128,7 @@ export async function onReading(request: KinesisRequest<Reading>): Promise<Kines
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `data` | `TData` | The record's data, base64 decoded, read as UTF-8 text and JSON parsed. If it is not valid JSON you get the text |
+| `data` | The `data` key, default `unknown` | The record's data, base64 decoded, read as UTF-8 text and JSON parsed. If it is not valid JSON you get the text |
 | `rawData` | `Buffer` | The record's bytes, base64 decoded and left alone |
 | `partitionKey` | `string` | The partition key the producer wrote the record under, which is what Kinesis shards on |
 | `sequenceNumber` | `string` | Where the record sits in its shard. Unique per shard and increasing, so it makes a good idempotency key. Messages from one aggregated record share it |
@@ -186,7 +186,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`KinesisRequest`](#generic-parameters) and your own types.
+[`KinesisRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/onReading.ts
@@ -197,7 +197,7 @@ import { z } from 'zod'
 export const ReadingSchema = z.object({ deviceId: z.string(), celsius: z.number() })
 type Reading = z.infer<typeof ReadingSchema>
 
-export async function onReading(request: KinesisRequest<Reading>): Promise<KinesisResponse> {
+export async function onReading(request: KinesisRequest<{ data: Reading }>): Promise<KinesisResponse> {
   logger.info(`Device ${request.data.deviceId} reported ${request.data.celsius}C`)
 }
 ```
@@ -304,7 +304,7 @@ export const logInvocation: KinesisMiddleware = async (request, next) => {
   return next(request)
 }
 
-export const withDeviceContext: KinesisMiddleware<Reading> = async (request, next) => {
+export const withDeviceContext: KinesisMiddleware<{ data: Reading }> = async (request, next) => {
   logger.info(`Handling device ${request.data.deviceId}`)
   return next(request)
 }
@@ -322,8 +322,8 @@ kinesisMatcher.route({
 ```
 
 **Route middleware carries the route's data type.** A route with a `dataSchema` needs
-`KinesisMiddleware<Reading>`. `KinesisMiddleware` on its own does not compile there. Matcher middleware
-takes no type argument, because it runs for every route.
+`KinesisMiddleware<{ data: Reading }>`. `KinesisMiddleware` on its own does not compile there. Matcher middleware
+takes no keys, because it runs for every route.
 
 Records are handled one at a time, so `appendKeys` on the shared logger cannot interleave the way it
 does on SQS. Keys are cleared per invocation rather than per record, so one you set for a record stays
@@ -336,27 +336,29 @@ All exported from `@latcher/kinesis`.
 
 | Type | Description |
 | --- | --- |
-| `KinesisRequest<TData>` | The handler argument |
+| `KinesisRequest<{ data }>` | The handler argument |
 | `KinesisResponse` | Handler return type, `undefined` |
 | `KinesisFilters` | The `filters` object |
 | `KinesisFilterInput` | What `custom` receives |
-| `KinesisRouteDefinition<TData>` | A full route passed to `route()` |
+| `KinesisRouteDefinition<{ data }>` | A full route passed to `route()` |
 | `KinesisMatcherOptions` | Options for `createKinesisMatcher` |
-| `KinesisMiddleware<TData>` | Matcher and route middleware |
+| `KinesisMiddleware<{ data }>` | Matcher and route middleware |
+| `KinesisTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `KinesisMatcher` class and the `createKinesisMatcher` and `defineRoute` functions come from the same
 place.
 
-### Generic parameters
+### Type arguments
 
-The three types above that take a parameter take the same one.
+The three generic types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TData` | `request.data` | `unknown` |
+| `data` | `request.data` | `unknown` |
 
-Leave it off and `data` is `unknown`, so `KinesisRequest` on its own is the right annotation for
-middleware that only reads the partition key or the raw record.
+Leave it out and `data` is `unknown`, so `KinesisRequest` on its own is the right annotation for
+middleware that only reads the partition key or the raw record. See [Typing a request](/docs/handlers#typing-a-request)
+for the rules.
 
 You only need this for [annotated handlers](#annotated-handlers). Inference covers it.
 
@@ -414,14 +416,14 @@ import type { Reading, Status } from '../schemas/device.js'
 
 const ALERT_THRESHOLD_C = 80
 
-export async function onReading(request: KinesisRequest<Reading>): Promise<KinesisResponse> {
+export async function onReading(request: KinesisRequest<{ data: Reading }>): Promise<KinesisResponse> {
   const { deviceId, celsius } = request.data
   if (celsius < ALERT_THRESHOLD_C) return
 
   logger.info(\`Device \${deviceId} is running hot at \${celsius}C\`)
 }
 
-export async function onStatusChange(request: KinesisRequest<Status>): Promise<KinesisResponse> {
+export async function onStatusChange(request: KinesisRequest<{ data: Status }>): Promise<KinesisResponse> {
   const { deviceId, status } = request.data
   logger.info(\`Device \${deviceId} went \${status} at sequence \${request.sequenceNumber}\`)
 }`,

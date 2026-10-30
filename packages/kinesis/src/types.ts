@@ -2,7 +2,7 @@ import type { Context, KinesisStreamRecord } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 export interface KinesisFilterInput {
   data: unknown;
@@ -17,7 +17,7 @@ export interface KinesisFilters {
   custom?: (input: KinesisFilterInput) => boolean | Promise<boolean>;
 }
 
-export interface KinesisRequest<TData = unknown> {
+export interface KinesisRequestCore<TData = unknown> {
   data: TData;
   rawData: Buffer;
   partitionKey: string;
@@ -30,16 +30,36 @@ export interface KinesisRequest<TData = unknown> {
 
 export type KinesisResponse = undefined;
 
-export type KinesisMiddleware<TData = unknown> = MiddlewareCore<KinesisRequest<TData>, void>;
+export type KinesisMiddlewareCore<TData = unknown> = MiddlewareCore<KinesisRequestCore<TData>, void>;
 
-export interface KinesisRouteDefinition<TData = unknown> {
+export interface KinesisRouteDefinitionCore<TData = unknown> {
   filters: KinesisFilters;
   dataSchema?: StandardSchemaV1<unknown, TData>;
-  middleware?: KinesisMiddleware<NoInfer<TData>>[];
-  handler: (request: KinesisRequest<TData>) => Promise<void>;
+  middleware?: KinesisMiddlewareCore<NoInfer<TData>>[];
+  handler: (request: KinesisRequestCore<TData>) => Promise<void>;
 }
 
 export interface KinesisMatcherOptions {
   batchItemFailures?: boolean;
-  middleware?: KinesisMiddleware[];
+  middleware?: KinesisMiddlewareCore[];
 }
+
+export interface KinesisTypes {
+  data?: unknown;
+}
+
+interface KinesisDefaults {
+  data: unknown;
+}
+
+export type KinesisRequest<T extends TypeArgs<T, KinesisTypes> = object> = KinesisRequestCore<
+  TypeArg<T, 'data', KinesisDefaults>
+>;
+
+export type KinesisMiddleware<T extends TypeArgs<T, KinesisTypes> = object> = KinesisMiddlewareCore<
+  TypeArg<T, 'data', KinesisDefaults>
+>;
+
+export type KinesisRouteDefinition<T extends TypeArgs<T, KinesisTypes> = object> = KinesisRouteDefinitionCore<
+  TypeArg<T, 'data', KinesisDefaults>
+>;

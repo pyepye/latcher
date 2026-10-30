@@ -7,4 +7,5 @@ export type {
   KinesisRequest,
   KinesisResponse,
   KinesisRouteDefinition,
+  KinesisTypes,
 } from './types.js';
