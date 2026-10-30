@@ -1,5 +1,10 @@
 import { createDynamoDBMatcher } from './DynamoDBMatcher.js';
-import type { DynamoDBInsertRequest, DynamoDBRequest, DynamoDBRouteDefinition } from './types.js';
+import type {
+  DynamoDBInsertRequest,
+  DynamoDBModifyRequest,
+  DynamoDBRequest,
+  DynamoDBRouteDefinition,
+} from './types.js';
 
 suite('route()', () => {
   test('narrows an inferred handler from the eventName filter', () => {
@@ -50,5 +55,17 @@ suite('DynamoDBRouteDefinition handler', () => {
     };
 
     expect(definition.handler).toBeTypeOf('function');
+  });
+
+  test('the keys, newImage and oldImage keys type the request', () => {
+    type Request = DynamoDBModifyRequest<{
+      keys: { pk: string };
+      newImage: { status: 'open' };
+      oldImage: { status: 'closed' };
+    }>;
+
+    expectTypeOf<Request['keys']>().toEqualTypeOf<{ pk: string }>();
+    expectTypeOf<Request['newImage']>().toEqualTypeOf<{ status: 'open' }>();
+    expectTypeOf<Request['oldImage']>().toEqualTypeOf<{ status: 'closed' }>();
   });
 });

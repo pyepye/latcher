@@ -6,7 +6,7 @@ import { OrderSchema, type TOrder } from '../utils/schemas.js';
 
 // A deleted order summary. A REMOVE record carries only the old image, so that is the only schema the
 // route can have and the only image the handler can read.
-export const archiveOrder: DynamoDBRemoveRouteDefinition<Record<string, unknown>, TOrder> = {
+export const archiveOrder: DynamoDBRemoveRouteDefinition<{ oldImage: TOrder }> = {
   filters: {
     eventSourceArn: ORDERS_STREAM_ARN,
     sortKey: 'SUMMARY',

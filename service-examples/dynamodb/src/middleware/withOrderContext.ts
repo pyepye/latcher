@@ -8,7 +8,7 @@ import type { TOrder } from '../utils/schemas.js';
 // record that follows in the same batch.
 // Typed to the route's new image so it slots onto processOrder without widening it. `newImage` is
 // optional here because the middleware type spans all three event names, and a REMOVE has none.
-export const withOrderContext: DynamoDBMiddleware<Record<string, unknown>, TOrder> = async (request, next) => {
+export const withOrderContext: DynamoDBMiddleware<{ newImage: TOrder }> = async (request, next) => {
   logger.appendKeys({ orderId: request.newImage?.orderId });
   await next(request);
 };

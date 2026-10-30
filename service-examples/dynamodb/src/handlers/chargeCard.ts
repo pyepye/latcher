@@ -10,7 +10,7 @@ import { PaymentKeysSchema, PaymentSchema, type TPayment, type TPaymentKeys } fr
 // A declined card is the one route here that fails inside the handler rather than on a schema. The
 // difference shows in the log: the middleware chain has already run, so this record has a
 // `Handling DynamoDB record` line. A record that fails validation has none.
-export const chargeCard: DynamoDBInsertRouteDefinition<TPaymentKeys, TPayment> = {
+export const chargeCard: DynamoDBInsertRouteDefinition<{ keys: TPaymentKeys; newImage: TPayment }> = {
   filters: {
     eventSourceArn: ORDERS_STREAM_ARN,
     sortKey: 'PAYMENT#*',

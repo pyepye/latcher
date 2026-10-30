@@ -2,9 +2,11 @@ export { createDynamoDBMatcher, DynamoDBMatcher, defineRoute } from './DynamoDBM
 export type {
   DynamoDBEventName,
   DynamoDBFilterInput,
+  DynamoDBFilterInputTypes,
   DynamoDBFilters,
   DynamoDBInsertRequest,
   DynamoDBInsertRouteDefinition,
+  DynamoDBInsertTypes,
   DynamoDBKeyValue,
   DynamoDBMatcherKeys,
   DynamoDBMatcherOptions,
@@ -14,8 +16,10 @@ export type {
   DynamoDBRecordHandler,
   DynamoDBRemoveRequest,
   DynamoDBRemoveRouteDefinition,
+  DynamoDBRemoveTypes,
   DynamoDBRequest,
   DynamoDBResponse,
   DynamoDBRouteDefinition,
+  DynamoDBTypes,
   DynamoDBViewType,
 } from './types.js';

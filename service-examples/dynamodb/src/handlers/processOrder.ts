@@ -9,7 +9,7 @@ import { OrderSchema, type TOrder } from '../utils/schemas.js';
 // Registered with `insert`, so the matcher adds the INSERT event name to the filters itself.
 // The logged types show what unmarshalling produced: `total` is a number and `tags` is a Set, so
 // OrderSchema can check them as such rather than coercing strings.
-export const processOrder: DynamoDBInsertRouteDefinition<Record<string, unknown>, TOrder> = {
+export const processOrder: DynamoDBInsertRouteDefinition<{ newImage: TOrder }> = {
   filters: {
     eventSourceArn: ORDERS_STREAM_ARN,
     partitionKey: 'ORDER#*',

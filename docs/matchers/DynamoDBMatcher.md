@@ -162,7 +162,7 @@ import { logger } from '@latcher/base'
 import type { DynamoDBModifyRequest, DynamoDBResponse } from '@latcher/dynamodb'
 
 export async function onOrderChanged(
-  request: DynamoDBModifyRequest<OrderKeys, Order, Order>,
+  request: DynamoDBModifyRequest<{ keys: OrderKeys; newImage: Order; oldImage: Order }>,
 ): Promise<DynamoDBResponse> {
   const { newImage, oldImage } = request
   logger.info(`Order ${newImage.orderId} went from ${oldImage.status} to ${newImage.status}`)
@@ -174,9 +174,9 @@ export async function onOrderChanged(
 | Field | Type | Description |
 | --- | --- | --- |
 | `eventName` | `'INSERT' \| 'MODIFY' \| 'REMOVE'` | Which change the record describes |
-| `keys` | `TKeys` | The record's key attributes, unmarshalled to plain values |
-| `newImage` | `TNewItem` | The item after the change. On INSERT and MODIFY, `undefined` on REMOVE |
-| `oldImage` | `TOldItem` | The item before the change. On MODIFY and REMOVE, `undefined` on INSERT |
+| `keys` | The `keys` key, default `Record<string, unknown>` | The record's key attributes, unmarshalled to plain values |
+| `newImage` | The `newImage` key, default `Record<string, unknown>` | The item after the change. On INSERT and MODIFY, `undefined` on REMOVE |
+| `oldImage` | The `oldImage` key, default `Record<string, unknown>` | The item before the change. On MODIFY and REMOVE, `undefined` on INSERT |
 | `record` | `DynamoDBRecord` | The untouched record from AWS, for `eventID`, `dynamodb.SequenceNumber` and anything else you need |
 | `context` | `Context` | The Lambda context |
 
@@ -251,7 +251,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`DynamoDBModifyRequest`](#generic-parameters) and your own types.
+[`DynamoDBModifyRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/onOrderChanged.ts
@@ -266,7 +266,7 @@ type OrderKeys = z.infer<typeof OrderKeysSchema>
 type Order = z.infer<typeof OrderSchema>
 
 export async function onOrderChanged(
-  request: DynamoDBModifyRequest<OrderKeys, Order, Order>,
+  request: DynamoDBModifyRequest<{ keys: OrderKeys; newImage: Order; oldImage: Order }>,
 ): Promise<DynamoDBResponse> {
   logger.info(`Order ${request.keys.pk} is now ${request.newImage.status}`)
 }
@@ -372,7 +372,7 @@ export const logInvocation: DynamoDBMiddleware = async (request, next) => {
   return next(request)
 }
 
-export const withOrderContext: DynamoDBMiddleware<OrderKeys, Order, Order> = async (request, next) => {
+export const withOrderContext: DynamoDBMiddleware<{ keys: OrderKeys; newImage: Order; oldImage: Order }> = async (request, next) => {
   logger.info(`Handling order ${request.keys.pk}`)
   return next(request)
 }
@@ -389,8 +389,8 @@ dynamoMatcher.modify({
 ```
 
 **Route middleware carries the handler's types.** `onOrderChanged` is annotated
-`DynamoDBModifyRequest<OrderKeys, Order, Order>`, so the route takes its middleware as
-`DynamoDBMiddleware<OrderKeys, Order, Order>` and a plain `DynamoDBMiddleware` will not assign next to
+`DynamoDBModifyRequest<{ keys: OrderKeys; newImage: Order; oldImage: Order }>`, so the route takes its middleware as
+`DynamoDBMiddleware<{ keys: OrderKeys; newImage: Order; oldImage: Order }>` and a plain `DynamoDBMiddleware` will not assign next to
 it. The bare alias is right everywhere else, on the matcher and on a `defineRoute` route, since the
 schemas on their own do not narrow it.
 
@@ -405,49 +405,51 @@ All exported from `@latcher/dynamodb`.
 
 | Type | Description |
 | --- | --- |
-| `DynamoDBRequest<TKeys, TNewItem, TOldItem>` | The handler argument, as a union of the three event shapes |
-| `DynamoDBInsertRequest<TKeys, TNewItem>` | The INSERT branch, with `newImage` guaranteed |
-| `DynamoDBModifyRequest<TKeys, TNewItem, TOldItem>` | The MODIFY branch, with both images guaranteed |
-| `DynamoDBRemoveRequest<TKeys, TOldItem>` | The REMOVE branch, with `oldImage` guaranteed |
+| `DynamoDBRequest<{ keys, newImage, oldImage }>` | The handler argument, as a union of the three event shapes |
+| `DynamoDBInsertRequest<{ keys, newImage }>` | The INSERT branch, with `newImage` guaranteed |
+| `DynamoDBModifyRequest<{ keys, newImage, oldImage }>` | The MODIFY branch, with both images guaranteed |
+| `DynamoDBRemoveRequest<{ keys, oldImage }>` | The REMOVE branch, with `oldImage` guaranteed |
 | `DynamoDBResponse` | Handler return type, `undefined` |
 | `DynamoDBEventName` | `'INSERT' \| 'MODIFY' \| 'REMOVE'` |
 | `DynamoDBViewType` | The stream view types, `'KEYS_ONLY'` through `'NEW_AND_OLD_IMAGES'` |
 | `DynamoDBFilters` | The `filters` object |
 | `DynamoDBFilterInput` | What `custom` receives |
 | `DynamoDBKeyValue` | A partition or sort key value, `string \| number` |
-| `DynamoDBRecordHandler<TKeys, TNewItem, TOldItem>` | The `handler` function, taking every event its route can match |
-| `DynamoDBRouteDefinition<TKeys, TNewItem, TOldItem>` | A full route passed to `route()` |
-| `DynamoDBInsertRouteDefinition<TKeys, TNewItem>` | A route passed to `insert()` |
-| `DynamoDBModifyRouteDefinition<TKeys, TNewItem, TOldItem>` | A route passed to `modify()` |
-| `DynamoDBRemoveRouteDefinition<TKeys, TOldItem>` | A route passed to `remove()` |
+| `DynamoDBRecordHandler<{ keys, newImage, oldImage }>` | The `handler` function, taking every event its route can match |
+| `DynamoDBRouteDefinition<{ keys, newImage, oldImage }>` | A full route passed to `route()` |
+| `DynamoDBInsertRouteDefinition<{ keys, newImage }>` | A route passed to `insert()` |
+| `DynamoDBModifyRouteDefinition<{ keys, newImage, oldImage }>` | A route passed to `modify()` |
+| `DynamoDBRemoveRouteDefinition<{ keys, oldImage }>` | A route passed to `remove()` |
 | `DynamoDBMatcherOptions` | Options for `createDynamoDBMatcher` |
 | `DynamoDBMatcherKeys` | The `keys` option, `{ partitionKey, sortKey? }` |
-| `DynamoDBMiddleware<TKeys, TNewItem, TOldItem>` | Matcher and route middleware |
+| `DynamoDBMiddleware<{ keys, newImage, oldImage }>` | Matcher and route middleware |
+| `DynamoDBTypes` | The keys `DynamoDBRequest`, `DynamoDBMiddleware`, `DynamoDBRecordHandler`, `DynamoDBRouteDefinition`, `DynamoDBModifyRequest` and `DynamoDBModifyRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `DynamoDBInsertTypes` | The keys `DynamoDBInsertRequest` and `DynamoDBInsertRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `DynamoDBRemoveTypes` | The keys `DynamoDBRemoveRequest` and `DynamoDBRemoveRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `DynamoDBFilterInputTypes` | The keys `DynamoDBFilterInput` accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `DynamoDBMatcher` class and the `createDynamoDBMatcher` and `defineRoute` functions come from the
 same place.
 
-### Generic parameters
+### Type arguments
 
-Three parameters, though only the types covering every event take all three.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Types | Parameters |
-| --- | --- |
-| `DynamoDBRequest`, `DynamoDBModifyRequest`, `DynamoDBRouteDefinition`, `DynamoDBModifyRouteDefinition`, `DynamoDBMiddleware` | `<TKeys, TNewItem, TOldItem>` |
-| `DynamoDBInsertRequest`, `DynamoDBInsertRouteDefinition` | `<TKeys, TNewItem>` |
-| `DynamoDBRemoveRequest`, `DynamoDBRemoveRouteDefinition` | `<TKeys, TOldItem>` |
-
-| Parameter | Types | Default |
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TKeys` | `request.keys` | `Record<string, unknown>` |
-| `TNewItem` | `request.newImage` | `Record<string, unknown>` |
-| `TOldItem` | `request.oldImage` | `Record<string, unknown>` |
+| `keys`, `newImage`, `oldImage` | `DynamoDBRequest`, `DynamoDBMiddleware`, `DynamoDBRecordHandler`, `DynamoDBRouteDefinition`, `DynamoDBModifyRequest`, `DynamoDBModifyRouteDefinition` | `Record<string, unknown>` |
+| `keys`, `newImage` | `DynamoDBInsertRequest`, `DynamoDBInsertRouteDefinition` | `Record<string, unknown>` |
+| `keys`, `oldImage` | `DynamoDBRemoveRequest`, `DynamoDBRemoveRouteDefinition` | `Record<string, unknown>` |
+| `newImage`, `oldImage` | `DynamoDBFilterInput` | `Record<string, unknown>` |
 
-**On the REMOVE types the second parameter is the old image.** A removed record has no new image, so
-`DynamoDBRemoveRequest<OrderKeys, Order>` types `oldImage` as `Order`.
+`keys` types `request.keys`, `newImage` types `request.newImage` and `oldImage` types `request.oldImage`.
+Leave a key out and it takes its default, so `DynamoDBModifyRequest<{ keys: OrderKeys }>` types the keys
+and leaves both images loose.
 
-Pass fewer than a type takes and the rest fall back to their defaults, so
-`DynamoDBModifyRequest<OrderKeys>` types the keys and leaves both images loose.
+**On the REMOVE types the key is `oldImage`.** A removed record has no new image, so
+`DynamoDBRemoveRequest<{ keys: OrderKeys; oldImage: Order }>` types `oldImage` as `Order`.
+
+See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers all three.
 
@@ -521,13 +523,13 @@ import type {
 import type { Order, OrderKeys } from '../schemas/order.js'
 
 export async function onOrderInserted(
-  request: DynamoDBInsertRequest<OrderKeys, Order>,
+  request: DynamoDBInsertRequest<{ keys: OrderKeys; newImage: Order }>,
 ): Promise<DynamoDBResponse> {
   logger.info(\`Order created \${request.newImage.orderId}\`)
 }
 
 export async function onOrderStatusChanged(
-  request: DynamoDBModifyRequest<OrderKeys, Order, Order>,
+  request: DynamoDBModifyRequest<{ keys: OrderKeys; newImage: Order; oldImage: Order }>,
 ): Promise<DynamoDBResponse> {
   const { newImage, oldImage } = request
   if (newImage.status === oldImage.status) return
@@ -536,7 +538,7 @@ export async function onOrderStatusChanged(
 }
 
 export async function onOrderRemoved(
-  request: DynamoDBRemoveRequest<OrderKeys, Order>,
+  request: DynamoDBRemoveRequest<{ keys: OrderKeys; oldImage: Order }>,
 ): Promise<DynamoDBResponse> {
   logger.info(\`Order deleted \${request.oldImage.orderId}\`)
 }`,

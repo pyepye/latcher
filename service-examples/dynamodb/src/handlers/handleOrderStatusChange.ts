@@ -7,7 +7,7 @@ import { OrderSchema, type TOrder } from '../utils/schemas.js';
 // An order whose status moved. The custom filter compares the two images, which is the only way to tell
 // a status change from any other edit, and it reads them raw before either schema runs.
 // Registered before recordOrderEdit so a status change wins here.
-export const handleOrderStatusChange: DynamoDBModifyRouteDefinition<Record<string, unknown>, TOrder, TOrder> = {
+export const handleOrderStatusChange: DynamoDBModifyRouteDefinition<{ newImage: TOrder; oldImage: TOrder }> = {
   filters: {
     eventSourceArn: ORDERS_STREAM_ARN,
     sortKey: 'SUMMARY',

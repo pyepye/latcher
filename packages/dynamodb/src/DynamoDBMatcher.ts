@@ -16,13 +16,13 @@ import {
 import type {
   DynamoDBEventName,
   DynamoDBFilters,
-  DynamoDBInsertRouteDefinition,
+  DynamoDBInsertRouteDefinitionCore,
   DynamoDBMatcherKeys,
   DynamoDBMatcherOptions,
-  DynamoDBModifyRouteDefinition,
-  DynamoDBRemoveRouteDefinition,
-  DynamoDBRequest,
-  DynamoDBRouteDefinition,
+  DynamoDBModifyRouteDefinitionCore,
+  DynamoDBRemoveRouteDefinitionCore,
+  DynamoDBRequestCore,
+  DynamoDBRouteDefinitionCore,
   DynamoDBViewType,
 } from './types.js';
 
@@ -35,12 +35,12 @@ interface InternalRoute {
   keysSchema?: StandardSchemaV1;
   newImageSchema?: StandardSchemaV1;
   oldImageSchema?: StandardSchemaV1;
-  middleware: MiddlewareCore<DynamoDBRequest, void>[];
-  handler: (request: DynamoDBRequest) => Promise<void>;
+  middleware: MiddlewareCore<DynamoDBRequestCore, void>[];
+  handler: (request: DynamoDBRequestCore) => Promise<void>;
 }
 
 // Events whose records include newImage / oldImage. Matches the branches of
-// DynamoDBRequest in types.ts
+// DynamoDBRequestCore in types.ts
 type EventsWithNewImage = 'INSERT' | 'MODIFY';
 type EventsWithOldImage = 'MODIFY' | 'REMOVE';
 
@@ -84,20 +84,20 @@ type RouteInput<
 > = {
   filters: DynamoDBRouteInputFilters<TEventNames, TViewTypes>;
   keysSchema?: TKeysSchema;
-  middleware?: MiddlewareCore<DynamoDBRequest, void>[];
+  middleware?: MiddlewareCore<DynamoDBRequestCore, void>[];
 } & NewImageSchemaOption<TEventNames, TNewImageSchema> &
   OldImageSchemaOption<TEventNames, TOldImageSchema>;
 
-// Narrow DynamoDBRequest to the branches that match the filtered eventName(s).
-// Relies on DynamoDBRequest being a discriminated union over eventName in types.ts
+// Narrow DynamoDBRequestCore to the branches that match the filtered eventName(s).
+// Relies on DynamoDBRequestCore being a discriminated union over eventName in types.ts
 type FiltersToRequest<
   TEventNames extends DynamoDBEventName | readonly DynamoDBEventName[] | undefined,
   TKeys,
   TNewItem,
   TOldItem,
 > = TEventNames extends DynamoDBEventName | readonly DynamoDBEventName[]
-  ? Extract<DynamoDBRequest<TKeys, TNewItem, TOldItem>, { eventName: EventNameUnion<TEventNames> }>
-  : DynamoDBRequest<TKeys, TNewItem, TOldItem>;
+  ? Extract<DynamoDBRequestCore<TKeys, TNewItem, TOldItem>, { eventName: EventNameUnion<TEventNames> }>
+  : DynamoDBRequestCore<TKeys, TNewItem, TOldItem>;
 
 interface RouteBuilder<
   TKeys,
@@ -107,7 +107,7 @@ interface RouteBuilder<
 > {
   handle(
     handler: (request: FiltersToRequest<TEventNames, TKeys, TNewItem, TOldItem>) => Promise<void>,
-  ): DynamoDBRouteDefinition<TKeys, TNewItem, TOldItem>;
+  ): DynamoDBRouteDefinitionCore<TKeys, TNewItem, TOldItem>;
 }
 
 export function defineRoute<
@@ -128,20 +128,20 @@ export function defineRoute<
 ): RouteBuilder<TKeys, TNewItem, TOldItem, TEventNames> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): DynamoDBRouteDefinition<TKeys, TNewItem, TOldItem> {
+    handle(handler): DynamoDBRouteDefinitionCore<TKeys, TNewItem, TOldItem> {
       // Casts needed: narrow generic input back to the public route definition shape (contravariance on handler union)
-      const filters = config.filters as DynamoDBRouteDefinition<TKeys, TNewItem, TOldItem>['filters'];
+      const filters = config.filters as DynamoDBRouteDefinitionCore<TKeys, TNewItem, TOldItem>['filters'];
       const keysSchema = config.keysSchema as StandardSchemaV1<unknown, TKeys> | undefined;
       const newImageSchema = config.newImageSchema as StandardSchemaV1<unknown, TNewItem> | undefined;
       const oldImageSchema = config.oldImageSchema as StandardSchemaV1<unknown, TOldItem> | undefined;
-      const middleware = config.middleware as DynamoDBRouteDefinition<TKeys, TNewItem, TOldItem>['middleware'];
+      const middleware = config.middleware as DynamoDBRouteDefinitionCore<TKeys, TNewItem, TOldItem>['middleware'];
       return {
         filters,
         keysSchema,
         newImageSchema,
         oldImageSchema,
         middleware,
-        handler: handler as (request: DynamoDBRequest<TKeys, TNewItem, TOldItem>) => Promise<void>,
+        handler: handler as (request: DynamoDBRequestCore<TKeys, TNewItem, TOldItem>) => Promise<void>,
       };
     },
   };
@@ -151,7 +151,7 @@ export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: MiddlewareCore<DynamoDBRequest, void>[];
+  private middleware: MiddlewareCore<DynamoDBRequestCore, void>[];
   private keys: DynamoDBMatcherKeys | undefined;
   private unmarshallOptions: UnmarshallOptions;
 
@@ -201,7 +201,7 @@ export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent
     },
   ): this;
 
-  route<TKeys, TNewItem, TOldItem>(definition: DynamoDBRouteDefinition<TKeys, TNewItem, TOldItem>): this;
+  route<TKeys, TNewItem, TOldItem>(definition: DynamoDBRouteDefinitionCore<TKeys, TNewItem, TOldItem>): this;
 
   route(definition: {
     filters: DynamoDBFilters;
@@ -221,7 +221,7 @@ export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent
     });
   }
 
-  insert<TKeys, TNewItem>(definition: DynamoDBInsertRouteDefinition<TKeys, TNewItem>): this {
+  insert<TKeys, TNewItem>(definition: DynamoDBInsertRouteDefinitionCore<TKeys, TNewItem>): this {
     return this.addRoute({
       filters: { ...definition.filters, eventName: 'INSERT' },
       keysSchema: definition.keysSchema,
@@ -231,7 +231,7 @@ export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent
     });
   }
 
-  modify<TKeys, TNewItem, TOldItem>(definition: DynamoDBModifyRouteDefinition<TKeys, TNewItem, TOldItem>): this {
+  modify<TKeys, TNewItem, TOldItem>(definition: DynamoDBModifyRouteDefinitionCore<TKeys, TNewItem, TOldItem>): this {
     return this.addRoute({
       filters: { ...definition.filters, eventName: 'MODIFY' },
       keysSchema: definition.keysSchema,
@@ -242,7 +242,7 @@ export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent
     });
   }
 
-  remove<TKeys, TOldItem>(definition: DynamoDBRemoveRouteDefinition<TKeys, TOldItem>): this {
+  remove<TKeys, TOldItem>(definition: DynamoDBRemoveRouteDefinitionCore<TKeys, TOldItem>): this {
     return this.addRoute({
       filters: { ...definition.filters, eventName: 'REMOVE' },
       keysSchema: definition.keysSchema,
@@ -357,7 +357,7 @@ export class DynamoDBMatcher implements EventTypeMatcherCore<DynamoDBStreamEvent
       eventName,
       record,
       context,
-    } as DynamoDBRequest;
+    } as DynamoDBRequestCore;
 
     const allMiddleware = [...this.middleware, ...route.middleware];
     await handleEventWithMiddleware(allMiddleware, request, route.handler);
