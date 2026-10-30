@@ -166,7 +166,7 @@ import { logger } from '@latcher/base'
 import type { DocumentDBResponse, DocumentDBUpdateRequest } from '@latcher/documentdb'
 
 export async function onOrderUpdated(
-  request: DocumentDBUpdateRequest<OrderDocumentKey, Order>,
+  request: DocumentDBUpdateRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }>,
 ): Promise<DocumentDBResponse> {
   const { documentKey, updateDescription } = request
   const changed = Object.keys(updateDescription.updatedFields ?? {})
@@ -179,10 +179,10 @@ export async function onOrderUpdated(
 | Field | Type | Description |
 | --- | --- | --- |
 | `operationType` | `'insert' \| 'update' \| 'replace' \| 'delete'` | Which change this is |
-| `documentKey` | `TDocumentKey` | The changed document's `_id` |
-| `fullDocument` | `TFullDocument` | The document after the change. Always on insert and replace, on update only when the change stream sends it, never on delete |
+| `documentKey` | The `documentKey` key, default `Record<string, unknown>` | The changed document's `_id` |
+| `fullDocument` | The `fullDocument` key, default `Record<string, unknown>` | The document after the change. Always on insert and replace, on update only when the change stream sends it, never on delete |
 | `updateDescription` | `DocumentDBUpdateDescription` | `updatedFields` and `removedFields`. Update only |
-| `fullDocumentBeforeChange` | `TFullDocumentBeforeChange` | The document before the change, on update, replace and delete, and only when the change stream sends it |
+| `fullDocumentBeforeChange` | The `fullDocumentBeforeChange` key, default `Record<string, unknown>` | The document before the change, on update, replace and delete, and only when the change stream sends it |
 | `changeEvent` | `DocumentDBChangeEvent` | The untouched change event, for `clusterTime`, `ns` and anything else you need |
 | `entry` | `DocumentDBEventEntry` | The batch entry wrapping that change event |
 | `context` | `Context` | The Lambda context |
@@ -258,7 +258,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`DocumentDBUpdateRequest`](#generic-parameters) and your own types.
+[`DocumentDBUpdateRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/onOrderUpdated.ts
@@ -273,7 +273,7 @@ type OrderDocumentKey = z.infer<typeof OrderDocumentKeySchema>
 type Order = z.infer<typeof OrderSchema>
 
 export async function onOrderUpdated(
-  request: DocumentDBUpdateRequest<OrderDocumentKey, Order>,
+  request: DocumentDBUpdateRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }>,
 ): Promise<DocumentDBResponse> {
   if (!request.fullDocument) return
 
@@ -307,7 +307,7 @@ is filtered, which is why `onOrderUpdated` returns early above. Intersect it if 
 the change stream's configuration once at the boundary.
 
 ```ts
-type OrderUpdateRequest = DocumentDBUpdateRequest<OrderDocumentKey, Order> & { fullDocument: Order }
+type OrderUpdateRequest = DocumentDBUpdateRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }> & { fullDocument: Order }
 ```
 
 ## Schema validation
@@ -381,7 +381,7 @@ export const logInvocation: DocumentDBMiddleware = async (request, next) => {
   return next(request)
 }
 
-export const withOrderContext: DocumentDBMiddleware<OrderDocumentKey, Order> = async (request, next) => {
+export const withOrderContext: DocumentDBMiddleware<{ documentKey: OrderDocumentKey; fullDocument: Order }> = async (request, next) => {
   logger.info(`Handling order ${request.documentKey._id}`)
   return next(request)
 }
@@ -398,14 +398,14 @@ documentDBMatcher.update({
 ```
 
 **Route middleware carries the handler's types.** `onOrderUpdated` is annotated
-`DocumentDBUpdateRequest<OrderDocumentKey, Order>`, so the route takes its middleware as
-`DocumentDBMiddleware<OrderDocumentKey, Order>` and a plain `DocumentDBMiddleware` will not assign next
+`DocumentDBUpdateRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }>`, so the route takes its middleware as
+`DocumentDBMiddleware<{ documentKey: OrderDocumentKey; fullDocument: Order }>` and a plain `DocumentDBMiddleware` will not assign next
 to it. A `defineRoute` route is the other way round: it takes the bare alias only, since the schemas on
 their own do not narrow it.
 
-`delete()` pins the middle generic to its default, so middleware on a delete route is
-`DocumentDBMiddleware<OrderDocumentKey, Record<string, unknown>, Order>`. A deleted document has no
-after image for the second parameter to type.
+`delete()` leaves `fullDocument` at its default, so middleware on a delete route is
+`DocumentDBMiddleware<{ documentKey: OrderDocumentKey; fullDocumentBeforeChange: Order }>`. A deleted document has no
+after image for `fullDocument` to type.
 
 Changes are handled one at a time, so `appendKeys` on the shared logger cannot interleave the way it
 does on SQS. Keys are cleared per invocation rather than per change, so one you set for a change stays
@@ -418,25 +418,28 @@ All exported from `@latcher/documentdb`.
 
 | Type | Description |
 | --- | --- |
-| `DocumentDBRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | The handler argument, as a union of the four change shapes |
-| `DocumentDBInsertRequest<TDocumentKey, TFullDocument>` | The insert branch, with `fullDocument` guaranteed |
-| `DocumentDBUpdateRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | The update branch, with `updateDescription` guaranteed |
-| `DocumentDBReplaceRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | The replace branch, with `fullDocument` guaranteed |
-| `DocumentDBDeleteRequest<TDocumentKey, TFullDocumentBeforeChange>` | The delete branch, with only `documentKey` guaranteed |
+| `DocumentDBRequest<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | The handler argument, as a union of the four change shapes |
+| `DocumentDBInsertRequest<{ documentKey, fullDocument }>` | The insert branch, with `fullDocument` guaranteed |
+| `DocumentDBUpdateRequest<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | The update branch, with `updateDescription` guaranteed |
+| `DocumentDBReplaceRequest<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | The replace branch, with `fullDocument` guaranteed |
+| `DocumentDBDeleteRequest<{ documentKey, fullDocumentBeforeChange }>` | The delete branch, with only `documentKey` guaranteed |
 | `DocumentDBResponse` | Handler return type, `undefined` |
 | `DocumentDBOperationType` | `'insert' \| 'update' \| 'replace' \| 'delete'` |
 | `DocumentDBFullDocumentOption` | The change stream's `fullDocument` settings, `'default'` through `'required'` |
 | `DocumentDBFullDocumentBeforeChangeOption` | The change stream's `fullDocumentBeforeChange` settings, `'off'` through `'required'` |
 | `DocumentDBFilters` | The `filters` object |
 | `DocumentDBFilterInput` | What `custom` receives |
-| `DocumentDBRecordHandler<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | The `handler` function, taking every operation its route can match |
-| `DocumentDBRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | A full route passed to `route()` |
-| `DocumentDBInsertRouteDefinition<TDocumentKey, TFullDocument>` | A route passed to `insert()` |
-| `DocumentDBUpdateRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | A route passed to `update()` |
-| `DocumentDBReplaceRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | A route passed to `replace()` |
-| `DocumentDBDeleteRouteDefinition<TDocumentKey, TFullDocumentBeforeChange>` | A route passed to `delete()` |
+| `DocumentDBRecordHandler<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | The `handler` function, taking every operation its route can match |
+| `DocumentDBRouteDefinition<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | A full route passed to `route()` |
+| `DocumentDBInsertRouteDefinition<{ documentKey, fullDocument }>` | A route passed to `insert()` |
+| `DocumentDBUpdateRouteDefinition<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | A route passed to `update()` |
+| `DocumentDBReplaceRouteDefinition<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | A route passed to `replace()` |
+| `DocumentDBDeleteRouteDefinition<{ documentKey, fullDocumentBeforeChange }>` | A route passed to `delete()` |
 | `DocumentDBMatcherOptions` | Options for `createDocumentDBMatcher` |
-| `DocumentDBMiddleware<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` | Matcher and route middleware |
+| `DocumentDBMiddleware<{ documentKey, fullDocument, fullDocumentBeforeChange }>` | Matcher and route middleware |
+| `DocumentDBTypes` | The keys `DocumentDBRequest`, `DocumentDBMiddleware`, `DocumentDBRecordHandler`, `DocumentDBRouteDefinition`, `DocumentDBUpdateRequest`, `DocumentDBUpdateRouteDefinition`, `DocumentDBReplaceRequest` and `DocumentDBReplaceRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `DocumentDBInsertTypes` | The keys `DocumentDBInsertRequest` and `DocumentDBInsertRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `DocumentDBDeleteTypes` | The keys `DocumentDBDeleteRequest` and `DocumentDBDeleteRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `DocumentDBUpdateDescription` | `request.updateDescription`, `{ updatedFields?, removedFields? }` |
 | `DocumentDBChangeEvent` | `request.changeEvent`, the raw change from the stream |
 | `DocumentDBEventEntry` | `request.entry`, the batch entry wrapping a change event |
@@ -445,28 +448,26 @@ All exported from `@latcher/documentdb`.
 The `DocumentDBMatcher` class and the `createDocumentDBMatcher` and `defineRoute` functions come from the
 same place.
 
-### Generic parameters
+### Type arguments
 
-Three parameters, though only the types covering a change that has both documents take all three.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Types | Parameters |
-| --- | --- |
-| `DocumentDBRequest`, `DocumentDBUpdateRequest`, `DocumentDBReplaceRequest`, `DocumentDBRouteDefinition`, `DocumentDBUpdateRouteDefinition`, `DocumentDBReplaceRouteDefinition`, `DocumentDBMiddleware` | `<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>` |
-| `DocumentDBInsertRequest`, `DocumentDBInsertRouteDefinition` | `<TDocumentKey, TFullDocument>` |
-| `DocumentDBDeleteRequest`, `DocumentDBDeleteRouteDefinition` | `<TDocumentKey, TFullDocumentBeforeChange>` |
-
-| Parameter | Types | Default |
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TDocumentKey` | `request.documentKey` | `Record<string, unknown>` |
-| `TFullDocument` | `request.fullDocument` | `Record<string, unknown>` |
-| `TFullDocumentBeforeChange` | `request.fullDocumentBeforeChange` | `Record<string, unknown>` |
+| `documentKey`, `fullDocument`, `fullDocumentBeforeChange` | `DocumentDBRequest`, `DocumentDBMiddleware`, `DocumentDBRecordHandler`, `DocumentDBRouteDefinition`, `DocumentDBUpdateRequest`, `DocumentDBUpdateRouteDefinition`, `DocumentDBReplaceRequest`, `DocumentDBReplaceRouteDefinition` | `Record<string, unknown>` |
+| `documentKey`, `fullDocument` | `DocumentDBInsertRequest`, `DocumentDBInsertRouteDefinition` | `Record<string, unknown>` |
+| `documentKey`, `fullDocumentBeforeChange` | `DocumentDBDeleteRequest`, `DocumentDBDeleteRouteDefinition` | `Record<string, unknown>` |
 
-**On the delete types the second parameter is the before-change document.** A deleted document has no
-after image, so `DocumentDBDeleteRequest<OrderDocumentKey, Order>` types `fullDocumentBeforeChange` as
-`Order`.
+`documentKey` types `request.documentKey`, `fullDocument` types `request.fullDocument` and
+`fullDocumentBeforeChange` types `request.fullDocumentBeforeChange`. Leave a key out and it takes its default,
+so `DocumentDBUpdateRequest<{ documentKey: OrderDocumentKey }>` types the document key and leaves both documents
+loose.
 
-Pass fewer than a type takes and the rest fall back to their defaults, so
-`DocumentDBUpdateRequest<OrderDocumentKey>` types the document key and leaves both documents loose.
+**On the delete types the key is `fullDocumentBeforeChange`.** A deleted document has no after image, so
+`DocumentDBDeleteRequest<{ documentKey: OrderDocumentKey; fullDocumentBeforeChange: Order }>` types
+`fullDocumentBeforeChange` as `Order`.
+
+See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers all three.
 
@@ -543,13 +544,13 @@ import type {
 import type { Order, OrderDocumentKey } from '../schemas/order.js'
 
 export async function onOrderInserted(
-  request: DocumentDBInsertRequest<OrderDocumentKey, Order>,
+  request: DocumentDBInsertRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }>,
 ): Promise<DocumentDBResponse> {
   logger.info(\`Order created \${request.fullDocument._id} at \${request.fullDocument.total}\`)
 }
 
 export async function onOrderUpdated(
-  request: DocumentDBUpdateRequest<OrderDocumentKey, Order>,
+  request: DocumentDBUpdateRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }>,
 ): Promise<DocumentDBResponse> {
   const { documentKey, fullDocument, updateDescription } = request
   const changed = Object.keys(updateDescription.updatedFields ?? {})
@@ -561,13 +562,13 @@ export async function onOrderUpdated(
 }
 
 export async function onOrderReplaced(
-  request: DocumentDBReplaceRequest<OrderDocumentKey, Order>,
+  request: DocumentDBReplaceRequest<{ documentKey: OrderDocumentKey; fullDocument: Order }>,
 ): Promise<DocumentDBResponse> {
   logger.info(\`Order replaced \${request.fullDocument._id}\`)
 }
 
 export async function onOrderDeleted(
-  request: DocumentDBDeleteRequest<OrderDocumentKey>,
+  request: DocumentDBDeleteRequest<{ documentKey: OrderDocumentKey }>,
 ): Promise<DocumentDBResponse> {
   logger.info(\`Order deleted \${request.documentKey._id}\`)
 }`,

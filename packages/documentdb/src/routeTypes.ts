@@ -6,10 +6,10 @@ import type {
   DocumentDBFilters,
   DocumentDBFullDocumentBeforeChangeOption,
   DocumentDBFullDocumentOption,
-  DocumentDBMiddleware,
+  DocumentDBMiddlewareCore,
   DocumentDBOperationType,
-  DocumentDBRequest,
-  DocumentDBRouteDefinition,
+  DocumentDBRequestCore,
+  DocumentDBRouteDefinitionCore,
 } from './types.js';
 
 // Ops whose change events can carry fullDocument (delete is the only op that never has it)
@@ -71,7 +71,7 @@ type FilterOverrides<
     ? { fullDocumentBeforeChange: TFullDocumentBeforeChange }
     : unknown);
 
-// Narrow DocumentDBRequest to the branches matching the filtered operationType(s),
+// Narrow DocumentDBRequestCore to the branches matching the filtered operationType(s),
 // then overlay any required fields declared by the filter
 export type FiltersToRequest<
   TFilters extends DocumentDBFilters,
@@ -80,11 +80,11 @@ export type FiltersToRequest<
   TFullDocumentBeforeChange,
 > = TFilters['operationType'] extends DocumentDBOperationType | readonly DocumentDBOperationType[]
   ? Extract<
-      DocumentDBRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
+      DocumentDBRequestCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
       { operationType: OperationTypeUnion<TFilters['operationType']> }
     > &
       FilterOverrides<TFilters, TFullDocument, TFullDocumentBeforeChange>
-  : DocumentDBRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>;
+  : DocumentDBRequestCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>;
 
 export type RouteInput<
   TDocumentKeySchema extends StandardSchemaV1 | undefined = undefined,
@@ -94,7 +94,7 @@ export type RouteInput<
 > = {
   filters: TFilters;
   documentKeySchema?: TDocumentKeySchema;
-  middleware?: DocumentDBMiddleware[];
+  middleware?: DocumentDBMiddlewareCore[];
 } & FullDocumentSchemaOption<TFilters['operationType'], TFullDocumentSchema> &
   FullDocumentBeforeChangeSchemaOption<TFilters['operationType'], TFullDocumentBeforeChangeSchema>;
 
@@ -108,7 +108,7 @@ export interface RouteBuilder<
     handler: (
       request: FiltersToRequest<TFilters, TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
     ) => Promise<void>,
-  ): DocumentDBRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>;
+  ): DocumentDBRouteDefinitionCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>;
 }
 
 export interface InternalRoute {
@@ -116,6 +116,6 @@ export interface InternalRoute {
   documentKeySchema?: StandardSchemaV1;
   fullDocumentSchema?: StandardSchemaV1;
   fullDocumentBeforeChangeSchema?: StandardSchemaV1;
-  middleware: MiddlewareCore<DocumentDBRequest, void>[];
-  handler: (request: DocumentDBRequest) => Promise<void>;
+  middleware: MiddlewareCore<DocumentDBRequestCore, void>[];
+  handler: (request: DocumentDBRequestCore) => Promise<void>;
 }

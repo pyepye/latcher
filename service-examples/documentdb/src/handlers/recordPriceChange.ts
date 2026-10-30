@@ -4,7 +4,7 @@ import type { DocumentDBInsertRequest, DocumentDBResponse } from '@latcher/docum
 import type { TDocumentKey, TPriceHistory } from '../utils/schemas.js';
 
 export async function recordPriceChange(
-  request: DocumentDBInsertRequest<TDocumentKey, TPriceHistory>,
+  request: DocumentDBInsertRequest<{ documentKey: TDocumentKey; fullDocument: TPriceHistory }>,
 ): Promise<DocumentDBResponse> {
   logger.info({
     message: 'Price recorded',

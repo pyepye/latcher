@@ -14,16 +14,16 @@ import {
 import type { FiltersToRequest, InternalRoute, RouteBuilder, RouteInput } from './routeTypes.js';
 import type {
   DocumentDBChangeEvent,
-  DocumentDBDeleteRouteDefinition,
+  DocumentDBDeleteRouteDefinitionCore,
   DocumentDBEvent,
   DocumentDBEventEntry,
   DocumentDBFilters,
-  DocumentDBInsertRouteDefinition,
+  DocumentDBInsertRouteDefinitionCore,
   DocumentDBMatcherOptions,
-  DocumentDBReplaceRouteDefinition,
-  DocumentDBRequest,
-  DocumentDBRouteDefinition,
-  DocumentDBUpdateRouteDefinition,
+  DocumentDBReplaceRouteDefinitionCore,
+  DocumentDBRequestCore,
+  DocumentDBRouteDefinitionCore,
+  DocumentDBUpdateRouteDefinitionCore,
 } from './types.js';
 
 export function defineRoute<
@@ -48,10 +48,10 @@ export function defineRoute<
       handler: (
         request: FiltersToRequest<TFilters, TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
       ) => Promise<void>,
-    ): DocumentDBRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange> {
+    ): DocumentDBRouteDefinitionCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange> {
       // Casts bridge the narrowed RouteInput shape back to the public route definition.
       // Handler is contravariant in the request union: FiltersToRequest narrows the request,
-      // but DocumentDBRouteDefinition expects the full discriminated union.
+      // but DocumentDBRouteDefinitionCore expects the full discriminated union.
       return {
         filters: config.filters,
         documentKeySchema: config.documentKeySchema as StandardSchemaV1<unknown, TDocumentKey> | undefined,
@@ -59,13 +59,13 @@ export function defineRoute<
         fullDocumentBeforeChangeSchema: config.fullDocumentBeforeChangeSchema as
           | StandardSchemaV1<unknown, TFullDocumentBeforeChange>
           | undefined,
-        middleware: config.middleware as DocumentDBRouteDefinition<
+        middleware: config.middleware as DocumentDBRouteDefinitionCore<
           TDocumentKey,
           TFullDocument,
           TFullDocumentBeforeChange
         >['middleware'],
         handler: handler as (
-          request: DocumentDBRequest<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
+          request: DocumentDBRequestCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
         ) => Promise<void>,
       };
     },
@@ -75,10 +75,10 @@ export function defineRoute<
 export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, undefined> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: MiddlewareCore<DocumentDBRequest, void>[];
+  private middleware: MiddlewareCore<DocumentDBRequestCore, void>[];
 
   constructor(options?: DocumentDBMatcherOptions) {
-    this.middleware = (options?.middleware ?? []) as MiddlewareCore<DocumentDBRequest, void>[];
+    this.middleware = (options?.middleware ?? []) as MiddlewareCore<DocumentDBRequestCore, void>[];
   }
 
   canHandleEvent(event: unknown): event is DocumentDBEvent {
@@ -112,14 +112,16 @@ export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, 
   ): this;
 
   route<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>(
-    definition: DocumentDBRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
+    definition: DocumentDBRouteDefinitionCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
   ): this;
 
   route(definition: { filters: DocumentDBFilters; handler: (...args: never[]) => Promise<void> }): this {
     return this.addRoute(definition as unknown as InternalRoute);
   }
 
-  insert<TDocumentKey, TFullDocument>(definition: DocumentDBInsertRouteDefinition<TDocumentKey, TFullDocument>): this {
+  insert<TDocumentKey, TFullDocument>(
+    definition: DocumentDBInsertRouteDefinitionCore<TDocumentKey, TFullDocument>,
+  ): this {
     return this.addRoute({
       ...definition,
       filters: { ...definition.filters, operationType: 'insert' },
@@ -127,7 +129,7 @@ export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, 
   }
 
   update<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>(
-    definition: DocumentDBUpdateRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
+    definition: DocumentDBUpdateRouteDefinitionCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
   ): this {
     return this.addRoute({
       ...definition,
@@ -136,7 +138,7 @@ export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, 
   }
 
   replace<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>(
-    definition: DocumentDBReplaceRouteDefinition<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
+    definition: DocumentDBReplaceRouteDefinitionCore<TDocumentKey, TFullDocument, TFullDocumentBeforeChange>,
   ): this {
     return this.addRoute({
       ...definition,
@@ -145,7 +147,7 @@ export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, 
   }
 
   delete<TDocumentKey, TFullDocumentBeforeChange>(
-    definition: DocumentDBDeleteRouteDefinition<TDocumentKey, TFullDocumentBeforeChange>,
+    definition: DocumentDBDeleteRouteDefinitionCore<TDocumentKey, TFullDocumentBeforeChange>,
   ): this {
     return this.addRoute({
       ...definition,
@@ -210,7 +212,7 @@ export class DocumentDBMatcher implements EventTypeMatcherCore<DocumentDBEvent, 
       changeEvent,
       entry,
       context,
-    } as DocumentDBRequest;
+    } as DocumentDBRequestCore;
 
     const allMiddleware = [...this.middleware, ...route.middleware];
     await handleEventWithMiddleware(allMiddleware, request, route.handler);

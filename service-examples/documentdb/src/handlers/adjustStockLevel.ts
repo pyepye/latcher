@@ -4,7 +4,7 @@ import type { DocumentDBInsertRequest, DocumentDBResponse } from '@latcher/docum
 import type { TDocumentKey, TStockLevel } from '../utils/schemas.js';
 
 export async function adjustStockLevel(
-  request: DocumentDBInsertRequest<TDocumentKey, TStockLevel>,
+  request: DocumentDBInsertRequest<{ documentKey: TDocumentKey; fullDocument: TStockLevel }>,
 ): Promise<DocumentDBResponse> {
   logger.info({
     message: 'Stock level adjusted',

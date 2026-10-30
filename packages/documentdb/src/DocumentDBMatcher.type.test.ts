@@ -1,5 +1,10 @@
 import { createDocumentDBMatcher } from './DocumentDBMatcher.js';
-import type { DocumentDBInsertRequest, DocumentDBRequest, DocumentDBRouteDefinition } from './types.js';
+import type {
+  DocumentDBInsertRequest,
+  DocumentDBRequest,
+  DocumentDBRouteDefinition,
+  DocumentDBUpdateRequest,
+} from './types.js';
 
 suite('route()', () => {
   test('narrows an inferred handler from the operationType filter', () => {
@@ -50,5 +55,17 @@ suite('DocumentDBRouteDefinition handler', () => {
     };
 
     expect(definition.handler).toBeTypeOf('function');
+  });
+
+  test('the documentKey, fullDocument and fullDocumentBeforeChange keys type the request', () => {
+    type Request = DocumentDBUpdateRequest<{
+      documentKey: { _id: string };
+      fullDocument: { status: 'open' };
+      fullDocumentBeforeChange: { status: 'closed' };
+    }>;
+
+    expectTypeOf<Request['documentKey']>().toEqualTypeOf<{ _id: string }>();
+    expectTypeOf<Request['fullDocument']>().toEqualTypeOf<{ status: 'open' } | undefined>();
+    expectTypeOf<Request['fullDocumentBeforeChange']>().toEqualTypeOf<{ status: 'closed' } | undefined>();
   });
 });

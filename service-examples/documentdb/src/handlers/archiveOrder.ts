@@ -4,6 +4,8 @@ import type { DocumentDBDeleteRequest, DocumentDBResponse } from '@latcher/docum
 import type { TDocumentKey } from '../utils/schemas.js';
 
 // A delete carries the document key and nothing else, so the archive is keyed on the id alone.
-export async function archiveOrder(request: DocumentDBDeleteRequest<TDocumentKey>): Promise<DocumentDBResponse> {
+export async function archiveOrder(
+  request: DocumentDBDeleteRequest<{ documentKey: TDocumentKey }>,
+): Promise<DocumentDBResponse> {
   logger.info({ message: 'Order archived', orderId: request.documentKey._id.$oid });
 }

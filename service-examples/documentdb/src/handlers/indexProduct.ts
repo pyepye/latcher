@@ -4,7 +4,7 @@ import type { DocumentDBInsertRequest, DocumentDBResponse } from '@latcher/docum
 import type { TDocumentKey, TProduct } from '../utils/schemas.js';
 
 export async function indexProduct(
-  request: DocumentDBInsertRequest<TDocumentKey, TProduct>,
+  request: DocumentDBInsertRequest<{ documentKey: TDocumentKey; fullDocument: TProduct }>,
 ): Promise<DocumentDBResponse> {
   logger.info({
     message: 'Product indexed',

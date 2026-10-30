@@ -6,7 +6,7 @@ import type { TDocumentKey, TPayment } from '../utils/schemas.js';
 // The distinction shows in the logs: the middleware chain has already run by the time the handler
 // throws, so this change has a Handling change line. A change that fails validation has none.
 export async function capturePayment(
-  request: DocumentDBInsertRequest<TDocumentKey, TPayment>,
+  request: DocumentDBInsertRequest<{ documentKey: TDocumentKey; fullDocument: TPayment }>,
 ): Promise<DocumentDBResponse> {
   throw new Error(`Payment gateway unavailable for ${request.fullDocument.orderReference}`);
 }

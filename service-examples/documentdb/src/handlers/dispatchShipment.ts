@@ -4,7 +4,7 @@ import type { DocumentDBInsertRequest, DocumentDBResponse } from '@latcher/docum
 import type { TDocumentKey, TShipment } from '../utils/schemas.js';
 
 export async function dispatchShipment(
-  request: DocumentDBInsertRequest<TDocumentKey, TShipment>,
+  request: DocumentDBInsertRequest<{ documentKey: TDocumentKey; fullDocument: TShipment }>,
 ): Promise<DocumentDBResponse> {
   logger.info({
     message: 'Shipment dispatched',

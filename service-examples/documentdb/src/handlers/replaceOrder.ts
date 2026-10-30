@@ -4,7 +4,7 @@ import type { DocumentDBReplaceRequest, DocumentDBResponse } from '@latcher/docu
 import type { TDocumentKey, TOrder } from '../utils/schemas.js';
 
 export async function replaceOrder(
-  request: DocumentDBReplaceRequest<TDocumentKey, TOrder>,
+  request: DocumentDBReplaceRequest<{ documentKey: TDocumentKey; fullDocument: TOrder }>,
 ): Promise<DocumentDBResponse> {
   logger.info({
     message: 'Order replaced',
