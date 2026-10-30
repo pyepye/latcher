@@ -142,9 +142,9 @@ oversized change gives you a `ConfigOversizedRequest` with a summary and no conf
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `configurationItem` | `ConfigurationItem<TConfig>` on a normal change, `undefined` on an oversized one | The changed resource, including its `configuration` |
+| `configurationItem` | `ConfigurationItem` on a normal change, with the `configuration` key, default `Record<string, unknown> \| null`. `undefined` on an oversized one | The changed resource, including its `configuration` |
 | `configurationItemSummary` | `ConfigurationItemSummary` on an oversized change, `undefined` on a normal one | Metadata only, with no `configuration`. Fetch the full item yourself when you need it |
-| `ruleParameters` | `TParams` | The rule's parameters, parsed from JSON. Defaults to `{}`, because Config sends none for a rule without parameters |
+| `ruleParameters` | The `ruleParameters` key, default `Record<string, string>` | The rule's parameters, parsed from JSON. Defaults to `{}`, because Config sends none for a rule without parameters |
 | `resultToken` | `string` | The token you pass to `PutEvaluations` to report the result |
 | `configRuleName` | `string` | The Config rule that invoked the Lambda |
 | `event` | `ConfigEvent` | The untouched event from AWS |
@@ -211,7 +211,7 @@ source is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>`](#generic-parameters). Derive the
+[`ConfigRequest`](#type-arguments) and [`ConfigOversizedRequest`](#type-arguments). Derive the
 parameter types from your schemas with `z.infer` rather than hand-writing them.
 
 **Annotate the union, not one half of it.** No filter tells a normal change from an oversized one, so
@@ -228,7 +228,7 @@ import type { configurationSchema } from '../schemas/rules'
 type RdsConfig = z.infer<typeof configurationSchema>
 
 export async function evaluateEncryption(
-  request: ConfigRequest<RdsConfig> | ConfigOversizedRequest,
+  request: ConfigRequest<{ configuration: RdsConfig }> | ConfigOversizedRequest,
 ): Promise<void> {
   const { configurationItem } = request
   if (!configurationItem) {
@@ -379,7 +379,7 @@ configMatcher.route({
 ```
 
 **Route middleware carries the route's schema types.** A route with a `configurationSchema` or a
-`ruleParametersSchema` needs `ConfigMiddleware<Configuration, Params>`. `ConfigMiddleware` on its own
+`ruleParametersSchema` needs `ConfigMiddleware<{ configuration: Configuration; ruleParameters: Params }>`. `ConfigMiddleware` on its own
 does not compile there. Matcher middleware takes no type argument, because it runs for every route.
 
 A middleware still gets the request as the union of both notification shapes. It runs before the
@@ -397,9 +397,12 @@ All exported from `@latcher/config`.
 | `ConfigChangeFilters` | The `filters` object |
 | `ConfigChangeFilterInput` | What a `custom` receives |
 | `ConfigMessageType` | The notification message types |
-| `ConfigMiddleware<TConfig, TParams>` | Matcher and route middleware |
+| `ConfigMiddleware<{ configuration, ruleParameters }>` | Matcher and route middleware |
 | `ConfigChangeHandler` | The `handler` function, taking both notification shapes |
 | `ConfigRouteDefinition` | A full route passed to `route()` |
+| `ConfigTypes` | The keys `ConfigRequest`, `ConfigMiddleware`, `ConfigChangeHandler` and `ConfigRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `ConfigOversizedTypes` | The key `ConfigOversizedRequest` accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `ConfigurationItemTypes` | The key `ConfigurationItem` accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `ConfigMatcherOptions` | Options for `createConfigMatcher` |
 | `ConfigurationItem` | The changed resource on a normal change |
 | `ConfigurationItemRelationship` | One entry in `configurationItem.relationships` |
@@ -413,19 +416,24 @@ All exported from `@latcher/config`.
 The `ConfigMatcher` class and the `createConfigMatcher` and `defineRoute` functions come from the same
 place.
 
-### Generic parameters
+### Type arguments
 
-| Parameter | Types | Default |
+The types above take one object. Its keys are the names of the properties they type.
+
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TConfig` | `configurationItem.configuration`, from `configurationSchema` | `Record<string, unknown> \| null` |
-| `TParams` | `ruleParameters`, from `ruleParametersSchema` | `Record<string, string>` |
+| `configuration`, `ruleParameters` | `ConfigRequest`, `ConfigMiddleware`, `ConfigChangeHandler`, `ConfigRouteDefinition` | `Record<string, unknown> \| null` and `Record<string, string>` |
+| `configuration` | `ConfigurationItem` | `Record<string, unknown> \| null` |
+| `ruleParameters` | `ConfigOversizedRequest` | `Record<string, string>` |
 
-The default allows `null`, because a deleted resource carries no configuration.
+`configuration` types `configurationItem.configuration`, from `configurationSchema`. `ruleParameters`
+types `ruleParameters`, from `ruleParametersSchema`. The default allows `null`, because a deleted
+resource carries no configuration.
 
-`ConfigRequest<TConfig, TParams>` and `ConfigMiddleware<TConfig, TParams>` take both, and
-`ConfigurationItem<TConfig>` takes the first, so you can pass only `TConfig` and leave `TParams` on
-its default. `ConfigOversizedRequest<TParams>` takes only `TParams`, since an oversized notification
-has no configuration to type.
+`ConfigRequest` and `ConfigMiddleware` take both keys, and `ConfigurationItem` takes `configuration`
+alone, so you can pass only `configuration` and leave `ruleParameters` on its default.
+`ConfigOversizedRequest` takes only `ruleParameters`, since an oversized notification has no
+configuration to type. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 

@@ -15,13 +15,13 @@ import type { ConfigEvent, ConfigResponse } from '../types.js';
 import type {
   ConfigChangeFilterInput,
   ConfigMatcherOptions,
-  ConfigMiddleware,
-  ConfigOversizedRequest,
-  ConfigRequest,
+  ConfigMiddlewareCore,
+  ConfigOversizedRequestCore,
+  ConfigRequestCore,
   ConfigRouteBuilder,
-  ConfigRouteDefinition,
+  ConfigRouteDefinitionCore,
   ConfigRouteInput,
-  ConfigurationItem,
+  ConfigurationItemCore,
   ConfigurationItemSummary,
   InternalConfigRoute,
   InvokingEvent,
@@ -39,8 +39,8 @@ export function defineRoute<
 >(config: ConfigRouteInput<TParamsSchema, TConfigSchema, TParams, TConfig>): ConfigRouteBuilder<TConfig, TParams> {
   return {
     handle(
-      handler: (request: ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>) => Promise<void>,
-    ): ConfigRouteDefinition<TConfig, TParams> {
+      handler: (request: ConfigRequestCore<TConfig, TParams> | ConfigOversizedRequestCore<TParams>) => Promise<void>,
+    ): ConfigRouteDefinitionCore<TConfig, TParams> {
       return {
         filters: config.filters,
         ruleParametersSchema: config.ruleParametersSchema as StandardSchemaV1<unknown, TParams> | undefined,
@@ -60,7 +60,7 @@ const CHANGE_MESSAGE_TYPES: Set<string> = new Set([
 export class ConfigMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigResponse> {
   private routes: InternalConfigRoute[] = [];
   private routesOrdered = false;
-  private middleware: ConfigMiddleware[] = [];
+  private middleware: ConfigMiddlewareCore[] = [];
 
   constructor(options?: ConfigMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -82,7 +82,7 @@ export class ConfigMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigRe
   }
 
   route<TConfig = Record<string, unknown> | null, TParams = Record<string, string>>(
-    definition: ConfigRouteDefinition<TConfig, TParams>,
+    definition: ConfigRouteDefinitionCore<TConfig, TParams>,
   ): this {
     this.routes.push(definition as InternalConfigRoute);
     this.routesOrdered = false;
@@ -121,10 +121,10 @@ export class ConfigMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigRe
       'Schema validation failed for ruleParameters',
     );
 
-    const handler = route.handler as (request: ConfigRequest | ConfigOversizedRequest) => Promise<void>;
+    const handler = route.handler as (request: ConfigRequestCore | ConfigOversizedRequestCore) => Promise<void>;
 
     if (isOversized) {
-      const request: ConfigOversizedRequest = {
+      const request: ConfigOversizedRequestCore = {
         configurationItemSummary: configurationItemSummary as ConfigurationItemSummary,
         configurationItem: undefined,
         ruleParameters: validatedParams,
@@ -151,12 +151,12 @@ export class ConfigMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigRe
       throw new Error('configurationItem is required for ConfigurationItemChangeNotification events');
     }
 
-    const itemWithValidatedConfig: ConfigurationItem = {
+    const itemWithValidatedConfig: ConfigurationItemCore = {
       ...configurationItem,
       configuration: validatedConfiguration ?? configurationItem.configuration,
     };
 
-    const request: ConfigRequest = {
+    const request: ConfigRequestCore = {
       configurationItem: itemWithValidatedConfig,
       configurationItemSummary: undefined,
       ruleParameters: validatedParams,

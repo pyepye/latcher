@@ -135,7 +135,7 @@ export async function runTagAudit(request: ConfigScheduledRequest): Promise<void
 | `resultToken` | `string` | The token you pass to `PutEvaluations` to report the result |
 | `configRuleName` | `string` | The Config rule that invoked the Lambda |
 | `accountId` | `string` | The AWS account the evaluation runs in |
-| `ruleParameters` | `TParams` | The rule's parameters, parsed from JSON. Defaults to `{}`, because Config sends none for a rule without parameters |
+| `ruleParameters` | The `ruleParameters` key, default `Record<string, string>` | The rule's parameters, parsed from JSON. Defaults to `{}`, because Config sends none for a rule without parameters |
 | `event` | `ConfigEvent` | The untouched event from AWS |
 | `context` | `Context` | The Lambda context |
 
@@ -176,7 +176,7 @@ source is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`ConfigScheduledRequest<TParams>`](#generic-parameters) and your own type for the parameters. Derive
+[`ConfigScheduledRequest`](#type-arguments) and your own type for the parameters. Derive
 that type from your schema with `z.infer` rather than hand-writing it.
 
 ```ts
@@ -189,7 +189,7 @@ import type { tagAuditParamsSchema } from '../schemas/rules'
 type TagAuditParams = z.infer<typeof tagAuditParamsSchema>
 
 export async function runTagAudit(
-  request: ConfigScheduledRequest<TagAuditParams>,
+  request: ConfigScheduledRequest<{ ruleParameters: TagAuditParams }>,
 ): Promise<void> {
   const requiredTags = JSON.parse(request.ruleParameters.requiredTags) as string[]
   logger.info(`Auditing ${requiredTags.join(', ')} in ${request.accountId}`)
@@ -317,7 +317,7 @@ scheduledMatcher.route({
 ```
 
 **Route middleware carries the route's parameters type.** A route with a `ruleParametersSchema` needs
-`ConfigScheduledMiddleware<TagAuditParams>`. `ConfigScheduledMiddleware` on its own does not compile
+`ConfigScheduledMiddleware<{ ruleParameters: TagAuditParams }>`. `ConfigScheduledMiddleware` on its own does not compile
 there. Matcher middleware takes no type argument, because it runs for every route.
 
 Matcher middleware runs before route middleware, and both run before the handler. A middleware that
@@ -335,8 +335,9 @@ All exported from `@latcher/config`.
 | `ConfigScheduledRequest` | The handler argument |
 | `ConfigScheduledFilters` | The `filters` object |
 | `ConfigScheduledFilterInput` | What a `custom` receives |
-| `ConfigScheduledMiddleware<TParams>` | Matcher and route middleware |
+| `ConfigScheduledMiddleware<{ ruleParameters }>` | Matcher and route middleware |
 | `ConfigScheduledRouteDefinition` | A full route passed to `route()` |
+| `ConfigScheduledTypes` | The keys `ConfigScheduledRequest`, `ConfigScheduledMiddleware` and `ConfigScheduledRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `ConfigScheduledMatcherOptions` | Options for `createConfigScheduledMatcher` |
 | `ConfigEvent` | The untouched event from AWS |
 | `ConfigResponse` | The handler return type, `undefined` |
@@ -344,14 +345,17 @@ All exported from `@latcher/config`.
 The `ConfigScheduledMatcher` class and the `createConfigScheduledMatcher` and
 `defineConfigScheduledRoute` functions come from the same place.
 
-### Generic parameters
+### Type arguments
 
-| Parameter | Types | Default |
+The types above take one object. Its keys are the names of the properties they type.
+
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TParams` | `ruleParameters`, from `ruleParametersSchema` | `Record<string, string>` |
+| `ruleParameters` | `ConfigScheduledRequest`, `ConfigScheduledMiddleware`, `ConfigScheduledRouteDefinition` | `Record<string, string>` |
 
-`ConfigScheduledRequest<TParams>` and `ConfigScheduledMiddleware<TParams>` take the one parameter, so
-leave it off to get the default when a route has no `ruleParametersSchema`.
+`ruleParameters` types `ruleParameters`, from `ruleParametersSchema`. `ConfigScheduledRequest` and
+`ConfigScheduledMiddleware` take the key, so leave the type arguments off to get the default when a
+route has no `ruleParametersSchema`. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 

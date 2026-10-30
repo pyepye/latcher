@@ -10,4 +10,5 @@ export type {
   ConfigScheduledMiddleware,
   ConfigScheduledRequest,
   ConfigScheduledRouteDefinition,
+  ConfigScheduledTypes,
 } from './types.js';

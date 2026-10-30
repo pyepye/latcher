@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 import type { ConfigEvent } from '../types.js';
 
@@ -19,7 +19,7 @@ export interface ConfigurationItemRelationship {
 }
 
 // A deleted resource arrives with a null configuration, so the default allows for it
-export interface ConfigurationItem<TConfig = Record<string, unknown> | null> {
+export interface ConfigurationItemCore<TConfig = Record<string, unknown> | null> {
   resourceType: string;
   resourceId: string;
   resourceName: string | null;
@@ -79,7 +79,7 @@ export interface ConfigurationItemDiff {
 // item. An oversized change carries configurationItemSummary and s3DeliverySummary instead
 export interface InvokingEvent {
   messageType: ConfigMessageType;
-  configurationItem?: ConfigurationItem;
+  configurationItem?: ConfigurationItemCore;
   configurationItemDiff?: ConfigurationItemDiff | null;
   configurationItemSummary?: ConfigurationItemSummary;
   s3DeliverySummary?: Record<string, unknown> | null;
@@ -92,8 +92,8 @@ export interface ConfigHandlerContext {
   context: Context;
 }
 
-export interface ConfigRequest<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> {
-  configurationItem: ConfigurationItem<TConfig>;
+export interface ConfigRequestCore<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> {
+  configurationItem: ConfigurationItemCore<TConfig>;
   configurationItemSummary?: undefined;
   ruleParameters: TParams;
   resultToken: string;
@@ -102,7 +102,7 @@ export interface ConfigRequest<TConfig = Record<string, unknown> | null, TParams
   context: Context;
 }
 
-export interface ConfigOversizedRequest<TParams = Record<string, string>> {
+export interface ConfigOversizedRequestCore<TParams = Record<string, string>> {
   configurationItemSummary: ConfigurationItemSummary;
   configurationItem?: undefined;
   ruleParameters: TParams;
@@ -112,15 +112,15 @@ export interface ConfigOversizedRequest<TParams = Record<string, string>> {
   context: Context;
 }
 
-export type ConfigMiddleware<
+export type ConfigMiddlewareCore<
   TConfig = Record<string, unknown> | null,
   TParams = Record<string, string>,
-> = MiddlewareCore<ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>, void>;
+> = MiddlewareCore<ConfigRequestCore<TConfig, TParams> | ConfigOversizedRequestCore<TParams>, void>;
 
 // Takes both shapes, so a handler written for one will not assign to a route whose filters can
 // deliver the other. Narrow on request.configurationItem inside the handler
-export type ConfigChangeHandler<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> = (
-  request: ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>,
+export type ConfigChangeHandlerCore<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> = (
+  request: ConfigRequestCore<TConfig, TParams> | ConfigOversizedRequestCore<TParams>,
 ) => Promise<void>;
 
 export interface ConfigChangeFilterInput {
@@ -138,26 +138,26 @@ export interface ConfigChangeFilters {
   custom?: (input: ConfigChangeFilterInput) => boolean | Promise<boolean>;
 }
 
-export interface ConfigRouteDefinition<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> {
+export interface ConfigRouteDefinitionCore<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> {
   filters: ConfigChangeFilters;
   ruleParametersSchema?: StandardSchemaV1<unknown, TParams>;
   configurationSchema?: StandardSchemaV1<unknown, TConfig>;
-  middleware?: ConfigMiddleware<NoInfer<TConfig>, NoInfer<TParams>>[];
-  handler: ConfigChangeHandler<TConfig, TParams>;
+  middleware?: ConfigMiddlewareCore<NoInfer<TConfig>, NoInfer<TParams>>[];
+  handler: ConfigChangeHandlerCore<TConfig, TParams>;
 }
 
 export interface InternalConfigRoute {
   filters: ConfigChangeFilters;
   ruleParametersSchema?: StandardSchemaV1;
   configurationSchema?: StandardSchemaV1;
-  middleware?: ConfigMiddleware[];
-  handler: ConfigChangeHandler;
+  middleware?: ConfigMiddlewareCore[];
+  handler: ConfigChangeHandlerCore;
 }
 
 export interface ConfigRouteBuilder<TConfig, TParams> {
   handle(
-    handler: (request: ConfigRequest<TConfig, TParams> | ConfigOversizedRequest<TParams>) => Promise<void>,
-  ): ConfigRouteDefinition<TConfig, TParams>;
+    handler: (request: ConfigRequestCore<TConfig, TParams> | ConfigOversizedRequestCore<TParams>) => Promise<void>,
+  ): ConfigRouteDefinitionCore<TConfig, TParams>;
 }
 
 export interface ConfigRouteInput<
@@ -169,9 +169,63 @@ export interface ConfigRouteInput<
   filters: ConfigChangeFilters;
   ruleParametersSchema?: TParamsSchema;
   configurationSchema?: TConfigSchema;
-  middleware?: ConfigMiddleware<NoInfer<TConfig>, NoInfer<TParams>>[];
+  middleware?: ConfigMiddlewareCore<NoInfer<TConfig>, NoInfer<TParams>>[];
 }
 
 export interface ConfigMatcherOptions {
-  middleware?: ConfigMiddleware[];
+  middleware?: ConfigMiddlewareCore[];
 }
+
+export interface ConfigTypes {
+  configuration?: unknown;
+  ruleParameters?: unknown;
+}
+
+interface ConfigDefaults {
+  configuration: Record<string, unknown> | null;
+  ruleParameters: Record<string, string>;
+}
+
+export type ConfigRequest<T extends TypeArgs<T, ConfigTypes> = object> = ConfigRequestCore<
+  TypeArg<T, 'configuration', ConfigDefaults>,
+  TypeArg<T, 'ruleParameters', ConfigDefaults>
+>;
+
+export type ConfigMiddleware<T extends TypeArgs<T, ConfigTypes> = object> = ConfigMiddlewareCore<
+  TypeArg<T, 'configuration', ConfigDefaults>,
+  TypeArg<T, 'ruleParameters', ConfigDefaults>
+>;
+
+export type ConfigChangeHandler<T extends TypeArgs<T, ConfigTypes> = object> = ConfigChangeHandlerCore<
+  TypeArg<T, 'configuration', ConfigDefaults>,
+  TypeArg<T, 'ruleParameters', ConfigDefaults>
+>;
+
+export type ConfigRouteDefinition<T extends TypeArgs<T, ConfigTypes> = object> = ConfigRouteDefinitionCore<
+  TypeArg<T, 'configuration', ConfigDefaults>,
+  TypeArg<T, 'ruleParameters', ConfigDefaults>
+>;
+
+export interface ConfigOversizedTypes {
+  ruleParameters?: unknown;
+}
+
+interface ConfigOversizedDefaults {
+  ruleParameters: Record<string, string>;
+}
+
+export type ConfigOversizedRequest<T extends TypeArgs<T, ConfigOversizedTypes> = object> = ConfigOversizedRequestCore<
+  TypeArg<T, 'ruleParameters', ConfigOversizedDefaults>
+>;
+
+export interface ConfigurationItemTypes {
+  configuration?: unknown;
+}
+
+interface ConfigurationItemDefaults {
+  configuration: Record<string, unknown> | null;
+}
+
+export type ConfigurationItem<T extends TypeArgs<T, ConfigurationItemTypes> = object> = ConfigurationItemCore<
+  TypeArg<T, 'configuration', ConfigurationItemDefaults>
+>;

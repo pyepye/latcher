@@ -15,10 +15,10 @@ import type { ConfigEvent, ConfigResponse } from '../types.js';
 import type {
   ConfigScheduledFilterInput,
   ConfigScheduledMatcherOptions,
-  ConfigScheduledMiddleware,
-  ConfigScheduledRequest,
+  ConfigScheduledMiddlewareCore,
+  ConfigScheduledRequestCore,
   ConfigScheduledRouteBuilder,
-  ConfigScheduledRouteDefinition,
+  ConfigScheduledRouteDefinitionCore,
   ConfigScheduledRouteInput,
   InternalConfigScheduledRoute,
 } from './types.js';
@@ -31,8 +31,8 @@ export function defineConfigScheduledRoute<
 >(config: ConfigScheduledRouteInput<TParamsSchema, TParams>): ConfigScheduledRouteBuilder<TParams> {
   return {
     handle(
-      handler: (request: ConfigScheduledRequest<TParams>) => Promise<void>,
-    ): ConfigScheduledRouteDefinition<TParams> {
+      handler: (request: ConfigScheduledRequestCore<TParams>) => Promise<void>,
+    ): ConfigScheduledRouteDefinitionCore<TParams> {
       return {
         filters: config.filters,
         ruleParametersSchema: config.ruleParametersSchema as StandardSchemaV1<unknown, TParams> | undefined,
@@ -46,7 +46,7 @@ export function defineConfigScheduledRoute<
 export class ConfigScheduledMatcher implements EventTypeMatcherCore<ConfigEvent, ConfigResponse> {
   private routes: InternalConfigScheduledRoute[] = [];
   private routesOrdered = false;
-  private middleware: ConfigScheduledMiddleware[] = [];
+  private middleware: ConfigScheduledMiddlewareCore[] = [];
 
   constructor(options?: ConfigScheduledMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -68,7 +68,7 @@ export class ConfigScheduledMatcher implements EventTypeMatcherCore<ConfigEvent,
     return invokingEvent.messageType === 'ScheduledNotification';
   }
 
-  route<TParams = Record<string, string>>(definition: ConfigScheduledRouteDefinition<TParams>): this {
+  route<TParams = Record<string, string>>(definition: ConfigScheduledRouteDefinitionCore<TParams>): this {
     this.routes.push(definition as InternalConfigScheduledRoute);
     this.routesOrdered = false;
     return this;
@@ -88,7 +88,7 @@ export class ConfigScheduledMatcher implements EventTypeMatcherCore<ConfigEvent,
       'Schema validation failed for ruleParameters',
     );
 
-    const request: ConfigScheduledRequest = {
+    const request: ConfigScheduledRequestCore = {
       resultToken: event.resultToken,
       configRuleName: event.configRuleName,
       accountId: event.accountId,

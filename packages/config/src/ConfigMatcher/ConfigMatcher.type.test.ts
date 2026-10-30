@@ -67,4 +67,11 @@ suite('delivered item types', () => {
   test('ruleParameters is optional, because Config leaves it out when a rule has none', () => {
     expectTypeOf<ConfigEvent['ruleParameters']>().toEqualTypeOf<string | undefined>();
   });
+
+  test('the configuration and ruleParameters keys type the request', () => {
+    type Request = ConfigRequest<{ configuration: { encrypted: boolean }; ruleParameters: { tagKey: string } }>;
+
+    expectTypeOf<Request['configurationItem']['configuration']>().toEqualTypeOf<{ encrypted: boolean }>();
+    expectTypeOf<Request['ruleParameters']>().toEqualTypeOf<{ tagKey: string }>();
+  });
 });
