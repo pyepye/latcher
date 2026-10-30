@@ -120,7 +120,7 @@ Handlers take one argument and return a result for the record.
 import type { FirehoseRequest, FirehoseResponse } from '@latcher/firehose'
 import { Dropped, Ok } from '@latcher/firehose'
 
-export async function normaliseLogLine(request: FirehoseRequest<LogLine>): Promise<FirehoseResponse> {
+export async function normaliseLogLine(request: FirehoseRequest<{ data: LogLine }>): Promise<FirehoseResponse> {
   const { path, status } = request.data
   if (path.startsWith('/health')) return Dropped()
 
@@ -132,7 +132,7 @@ export async function normaliseLogLine(request: FirehoseRequest<LogLine>): Promi
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `data` | `TData` | The record's data, base64 decoded, read as UTF-8 text and JSON parsed. If it is not valid JSON you get the text |
+| `data` | The `data` key, default `unknown` | The record's data, base64 decoded, read as UTF-8 text and JSON parsed. If it is not valid JSON you get the text |
 | `rawData` | `Buffer` | The record's bytes, base64 decoded and left alone |
 | `recordId` | `string` | Firehose's id for the record. The matcher puts it back on the result for you |
 | `approximateArrivalTimestamp` | `number` | When Firehose accepted the record, as a Unix timestamp in milliseconds |
@@ -194,7 +194,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`FirehoseRequest`](#generic-parameters) and your own types.
+[`FirehoseRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/normaliseLogLine.ts
@@ -205,7 +205,7 @@ import { z } from 'zod'
 export const LogLineSchema = z.object({ path: z.string(), status: z.coerce.number() })
 type LogLine = z.infer<typeof LogLineSchema>
 
-export async function normaliseLogLine(request: FirehoseRequest<LogLine>): Promise<FirehoseResponse> {
+export async function normaliseLogLine(request: FirehoseRequest<{ data: LogLine }>): Promise<FirehoseResponse> {
   return Ok({ path: request.data.path, status: request.data.status })
 }
 ```
@@ -335,8 +335,8 @@ firehoseMatcher.route({
 ```
 
 **Route middleware carries the route's data type.** A route with a `dataSchema` needs
-`FirehoseMiddleware<LogLine>`. `FirehoseMiddleware` on its own does not compile there. Matcher
-middleware takes no type argument, because it runs for every route.
+`FirehoseMiddleware<{ data: LogLine }>`. `FirehoseMiddleware` on its own does not compile there. Matcher
+middleware takes no keys, because it runs for every route.
 
 Middleware returns a `FirehoseResponse`, so returning `Dropped()` without calling `next` drops the
 record and the handler never runs.
@@ -352,28 +352,30 @@ All exported from `@latcher/firehose`.
 
 | Type | Description |
 | --- | --- |
-| `FirehoseRequest<TData>` | The handler argument |
+| `FirehoseRequest<{ data }>` | The handler argument |
 | `FirehoseResponse` | Handler return type, the result for one record |
 | `FirehoseResponseResult` | The interface `FirehoseResponse` aliases, what `Ok`, `Dropped` and `Failed` return |
 | `FirehoseFilters` | The `filters` object |
 | `FirehoseFilterInput` | What `custom` receives |
-| `FirehoseRouteDefinition<TData>` | A full route passed to `route()` |
+| `FirehoseRouteDefinition<{ data }>` | A full route passed to `route()` |
 | `FirehoseMatcherOptions` | Options for `createFirehoseMatcher` |
-| `FirehoseMiddleware<TData>` | Matcher and route middleware |
+| `FirehoseMiddleware<{ data }>` | Matcher and route middleware |
+| `FirehoseTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `FirehoseMatcher` class, the `createFirehoseMatcher` and `defineRoute` functions and the `Ok`,
 `Dropped` and `Failed` helpers come from the same place.
 
-### Generic parameters
+### Type arguments
 
-The types above that take a parameter all take the same one.
+The three generic types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TData` | `request.data` | `unknown` |
+| `data` | `request.data` | `unknown` |
 
-Leave it off and `data` is `unknown`, so `FirehoseRequest` on its own is the right annotation for a
-handler that passes the record through without reading it.
+Leave it out and `data` is `unknown`, so `FirehoseRequest` on its own is the right annotation for a
+handler that passes the record through without reading it. See [Typing a request](/docs/handlers#typing-a-request)
+for the rules.
 
 You only need this for [annotated handlers](#annotated-handlers). Inference covers it.
 
@@ -429,7 +431,7 @@ import { Dropped, Ok } from '@latcher/firehose'
 
 import type { AppEvent, LogLine } from '../schemas/log.js'
 
-export async function normaliseLogLine(request: FirehoseRequest<LogLine>): Promise<FirehoseResponse> {
+export async function normaliseLogLine(request: FirehoseRequest<{ data: LogLine }>): Promise<FirehoseResponse> {
   const { path, status, durationMs, receivedAt } = request.data
   if (path.startsWith('/health')) return Dropped()
 
@@ -438,7 +440,7 @@ export async function normaliseLogLine(request: FirehoseRequest<LogLine>): Promi
   return Ok({ path, status, durationMs, day }, { partitionKeys: { day } })
 }
 
-export async function enrichAppEvent(request: FirehoseRequest<AppEvent>): Promise<FirehoseResponse> {
+export async function enrichAppEvent(request: FirehoseRequest<{ data: AppEvent }>): Promise<FirehoseResponse> {
   const { name, userId } = request.data
 
   return Ok({ name, userId, recordId: request.recordId })

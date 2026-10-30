@@ -9,4 +9,5 @@ export type {
   FirehoseRequest,
   FirehoseResponse,
   FirehoseRouteDefinition,
+  FirehoseTypes,
 } from './types.js';

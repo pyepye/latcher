@@ -2,7 +2,7 @@ import type { Context, FirehoseRecordMetadata, FirehoseTransformationEventRecord
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 import type { FirehoseResponseResult } from './response.js';
 
@@ -21,7 +21,7 @@ export interface FirehoseFilters {
   custom?: (input: FirehoseFilterInput) => boolean | Promise<boolean>;
 }
 
-export interface FirehoseRequest<TData = unknown> {
+export interface FirehoseRequestCore<TData = unknown> {
   data: TData;
   rawData: Buffer;
   recordId: string;
@@ -33,15 +33,35 @@ export interface FirehoseRequest<TData = unknown> {
 
 export type FirehoseResponse = FirehoseResponseResult;
 
-export type FirehoseMiddleware<TData = unknown> = MiddlewareCore<FirehoseRequest<TData>, FirehoseResponse>;
+export type FirehoseMiddlewareCore<TData = unknown> = MiddlewareCore<FirehoseRequestCore<TData>, FirehoseResponse>;
 
-export interface FirehoseRouteDefinition<TData = unknown> {
+export interface FirehoseRouteDefinitionCore<TData = unknown> {
   filters: FirehoseFilters;
   dataSchema?: StandardSchemaV1<unknown, TData>;
-  middleware?: FirehoseMiddleware<NoInfer<TData>>[];
-  handler: (request: FirehoseRequest<TData>) => Promise<FirehoseResponse>;
+  middleware?: FirehoseMiddlewareCore<NoInfer<TData>>[];
+  handler: (request: FirehoseRequestCore<TData>) => Promise<FirehoseResponse>;
 }
 
 export interface FirehoseMatcherOptions {
-  middleware?: FirehoseMiddleware[];
+  middleware?: FirehoseMiddlewareCore[];
 }
+
+export interface FirehoseTypes {
+  data?: unknown;
+}
+
+interface FirehoseDefaults {
+  data: unknown;
+}
+
+export type FirehoseRequest<T extends TypeArgs<T, FirehoseTypes> = object> = FirehoseRequestCore<
+  TypeArg<T, 'data', FirehoseDefaults>
+>;
+
+export type FirehoseMiddleware<T extends TypeArgs<T, FirehoseTypes> = object> = FirehoseMiddlewareCore<
+  TypeArg<T, 'data', FirehoseDefaults>
+>;
+
+export type FirehoseRouteDefinition<T extends TypeArgs<T, FirehoseTypes> = object> = FirehoseRouteDefinitionCore<
+  TypeArg<T, 'data', FirehoseDefaults>
+>;

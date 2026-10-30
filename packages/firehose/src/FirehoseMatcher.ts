@@ -24,17 +24,17 @@ import { isFirehoseResponse } from './response.js';
 import type {
   FirehoseFilters,
   FirehoseMatcherOptions,
-  FirehoseMiddleware,
-  FirehoseRequest,
+  FirehoseMiddlewareCore,
+  FirehoseRequestCore,
   FirehoseResponse,
-  FirehoseRouteDefinition,
+  FirehoseRouteDefinitionCore,
 } from './types.js';
 
 interface InternalRoute {
   filters: FirehoseFilters;
   dataSchema?: StandardSchemaV1;
-  middleware?: FirehoseMiddleware[];
-  handler: (request: FirehoseRequest) => Promise<FirehoseResponse>;
+  middleware?: FirehoseMiddlewareCore[];
+  handler: (request: FirehoseRequestCore) => Promise<FirehoseResponse>;
 }
 
 interface RouteInput<
@@ -42,12 +42,14 @@ interface RouteInput<
   TData = TDataSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TDataSchema> : unknown,
 > {
   filters: FirehoseFilters;
-  middleware?: FirehoseMiddleware<NoInfer<TData>>[];
+  middleware?: FirehoseMiddlewareCore<NoInfer<TData>>[];
   dataSchema?: TDataSchema;
 }
 
 interface RouteBuilder<TData> {
-  handle(handler: (request: FirehoseRequest<TData>) => Promise<FirehoseResponse>): FirehoseRouteDefinition<TData>;
+  handle(
+    handler: (request: FirehoseRequestCore<TData>) => Promise<FirehoseResponse>,
+  ): FirehoseRouteDefinitionCore<TData>;
 }
 
 export function defineRoute<
@@ -55,12 +57,14 @@ export function defineRoute<
   TData = TDataSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TDataSchema> : unknown,
 >(config: RouteInput<TDataSchema, TData>): RouteBuilder<TData> {
   return {
-    handle(handler: (request: FirehoseRequest<TData>) => Promise<FirehoseResponse>): FirehoseRouteDefinition<TData> {
+    handle(
+      handler: (request: FirehoseRequestCore<TData>) => Promise<FirehoseResponse>,
+    ): FirehoseRouteDefinitionCore<TData> {
       return {
         filters: config.filters as FirehoseFilters,
         dataSchema: config.dataSchema as StandardSchemaV1<unknown, TData> | undefined,
         middleware: config.middleware,
-        handler: handler as (request: FirehoseRequest<TData>) => Promise<FirehoseResponse>,
+        handler: handler as (request: FirehoseRequestCore<TData>) => Promise<FirehoseResponse>,
       };
     },
   };
@@ -71,7 +75,7 @@ export class FirehoseMatcher
 {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: FirehoseMiddleware[] = [];
+  private middleware: FirehoseMiddlewareCore[] = [];
 
   constructor(options?: FirehoseMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -88,7 +92,7 @@ export class FirehoseMatcher
     return typeof firstRecord.recordId === 'string';
   }
 
-  route<TData>(definition: FirehoseRouteDefinition<TData>): this {
+  route<TData>(definition: FirehoseRouteDefinitionCore<TData>): this {
     this.routes.push(definition as InternalRoute);
     this.routesOrdered = false;
     return this;
@@ -125,7 +129,7 @@ export class FirehoseMatcher
         `Data validation failed for record ${record.recordId}`,
       );
 
-      const request: FirehoseRequest = {
+      const request: FirehoseRequestCore = {
         data: validatedData,
         rawData,
         recordId: record.recordId,
