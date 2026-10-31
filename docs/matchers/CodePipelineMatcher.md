@@ -151,7 +151,7 @@ export async function runDeploy(request: CodePipelineRequest): Promise<CodePipel
 | --- | --- | --- |
 | `jobId` | `string` | The job ID, used when reporting the result back |
 | `functionName` | `string` | The `FunctionName` from the action configuration |
-| `userParameters` | `TUserParameters` | The `UserParameters` string, JSON parsed. Raw string if it is not JSON. Typed by your schema, otherwise `unknown` |
+| `userParameters` | The `userParameters` key, default `unknown` | The `UserParameters` string, JSON parsed. Raw string if it is not JSON. Typed by your schema, otherwise `unknown` |
 | `inputArtifacts` | `Artifact[]` | The input artifacts, each with a name and its S3 location |
 | `outputArtifacts` | `Artifact[]` | The output artifacts the action is expected to produce |
 | `artifactCredentials` | `Credentials` | Temporary credentials scoped to the artifact bucket |
@@ -208,7 +208,7 @@ source is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`CodePipelineRequest`](#generic-parameters) and the type of your parsed user parameters.
+[`CodePipelineRequest`](#type-arguments) and the type of your parsed user parameters.
 
 ```ts
 // handlers/runDeploy.ts
@@ -220,7 +220,7 @@ export const DeployParametersSchema = z.object({ environment: z.string(), region
 type DeployParameters = z.infer<typeof DeployParametersSchema>
 
 export async function runDeploy(
-  request: CodePipelineRequest<DeployParameters>,
+  request: CodePipelineRequest<{ userParameters: DeployParameters }>,
 ): Promise<CodePipelineResponse> {
   logger.info(`Deploying job ${request.jobId} to ${request.userParameters.environment}`)
   return { outputVariables: { region: request.userParameters.region } }
@@ -317,9 +317,9 @@ codePipelineMatcher.route({
 ```
 
 **Route middleware carries the route's user parameters type.** A route with a
-`userParametersSchema` needs `CodePipelineMiddleware<DeployParameters>`. `CodePipelineMiddleware` on
-its own does not compile there. Matcher middleware takes no type argument, because it runs for every
-route.
+`userParametersSchema` needs `CodePipelineMiddleware<{ userParameters: DeployParameters }>`.
+`CodePipelineMiddleware` on its own does not compile there. Matcher middleware takes no keys, because it
+runs for every route.
 
 Middleware does not run when a schema fails, since validation comes first. See
 [middleware](/docs/middleware) for the execution order and the three levels it attaches at.
@@ -330,30 +330,31 @@ All exported from `@latcher/codepipeline`.
 
 | Type | Description |
 | --- | --- |
-| `CodePipelineRequest<TUserParameters>` | The handler argument |
+| `CodePipelineRequest<{ userParameters }>` | The handler argument |
 | `CodePipelineResponse` | Handler return type, `CodePipelineSuccessResult \| void` |
 | `CodePipelineSuccessResult` | The success shape, `{ outputVariables?, continuationToken? }` |
-| `CodePipelineHandler<TUserParameters>` | The handler function type |
+| `CodePipelineHandler<{ userParameters }>` | The handler function type |
 | `CodePipelineFilters` | The `filters` object |
-| `CodePipelineFilterInput<TUserParameters>` | What `custom` receives |
-| `CodePipelineRouteDefinition<TUserParameters>` | A full route passed to `route()` |
-| `CodePipelineMiddleware<TUserParameters>` | Matcher and route middleware |
+| `CodePipelineFilterInput<{ userParameters }>` | What `custom` receives |
+| `CodePipelineRouteDefinition<{ userParameters }>` | A full route passed to `route()` |
+| `CodePipelineMiddleware<{ userParameters }>` | Matcher and route middleware |
+| `CodePipelineTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `CodePipelineMatcherOptions` | Options for `createCodePipelineMatcher` |
 
 The `CodePipelineMatcher` class and the `createCodePipelineMatcher` and `defineRoute` functions come
 from the same place.
 
-### Generic parameters
+### Type arguments
 
-The types above that take a parameter all take the same one.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TUserParameters` | `request.userParameters` | `unknown` |
+| `userParameters` | `request.userParameters` | `unknown` |
 
-Leave it off and `userParameters` stays `unknown`, which is what you narrow in a handler with no
+Leave it out and `userParameters` stays `unknown`, which is what you narrow in a handler with no
 schema. You only need it for [annotated handlers](#annotated-handlers); an inferred handler reads it
-from `userParametersSchema`.
+from `userParametersSchema`. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 
@@ -409,7 +410,7 @@ import type { CodePipelineRequest, CodePipelineResponse } from '@latcher/codepip
 import type { DeployParameters } from '../schemas/deploy.js'
 
 export async function runDeploy(
-  request: CodePipelineRequest<DeployParameters>,
+  request: CodePipelineRequest<{ userParameters: DeployParameters }>,
 ): Promise<CodePipelineResponse> {
   const { environment, region } = request.userParameters
   logger.info(\`Deploying job \${request.jobId} to \${environment} in \${region}\`)

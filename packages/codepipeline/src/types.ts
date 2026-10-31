@@ -3,9 +3,9 @@ import type { Artifact, CodePipelineEvent, Context, Credentials } from 'aws-lamb
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
-export interface CodePipelineRequest<TUserParameters = unknown> {
+export interface CodePipelineRequestCore<TUserParameters = unknown> {
   jobId: string;
   functionName: string;
   userParameters: TUserParameters;
@@ -25,16 +25,16 @@ export interface CodePipelineSuccessResult {
 // biome-ignore lint/suspicious/noConfusingVoidType: a handler may return nothing, meaning no output variables
 export type CodePipelineResponse = CodePipelineSuccessResult | void;
 
-export type CodePipelineMiddleware<TUserParameters = unknown> = MiddlewareCore<
-  CodePipelineRequest<TUserParameters>,
+export type CodePipelineMiddlewareCore<TUserParameters = unknown> = MiddlewareCore<
+  CodePipelineRequestCore<TUserParameters>,
   CodePipelineResponse
 >;
 
-export type CodePipelineHandler<TUserParameters = unknown> = (
-  request: CodePipelineRequest<TUserParameters>,
+export type CodePipelineHandlerCore<TUserParameters = unknown> = (
+  request: CodePipelineRequestCore<TUserParameters>,
 ) => Promise<CodePipelineResponse>;
 
-export interface CodePipelineFilterInput<TUserParameters = unknown> {
+export interface CodePipelineFilterInputCore<TUserParameters = unknown> {
   functionName: string;
   userParameters: TUserParameters;
   hasInputArtifacts: boolean;
@@ -46,17 +46,44 @@ export interface CodePipelineFilters {
   hasInputArtifacts?: boolean;
   hasContinuationToken?: boolean;
   // userParameters?: FilterStringMatcher;
-  custom?: (input: CodePipelineFilterInput) => boolean | Promise<boolean>;
+  custom?: (input: CodePipelineFilterInputCore) => boolean | Promise<boolean>;
 }
 
-export interface CodePipelineRouteDefinition<TUserParameters = unknown> {
+export interface CodePipelineRouteDefinitionCore<TUserParameters = unknown> {
   filters: CodePipelineFilters;
   userParametersSchema?: StandardSchemaV1<unknown, TUserParameters>;
-  middleware?: CodePipelineMiddleware<NoInfer<TUserParameters>>[];
-  handler: CodePipelineHandler<TUserParameters>;
+  middleware?: CodePipelineMiddlewareCore<NoInfer<TUserParameters>>[];
+  handler: CodePipelineHandlerCore<TUserParameters>;
 }
 
 export interface CodePipelineMatcherOptions {
   client?: CodePipelineClient;
-  middleware?: CodePipelineMiddleware[];
+  middleware?: CodePipelineMiddlewareCore[];
 }
+
+export interface CodePipelineTypes {
+  userParameters?: unknown;
+}
+
+interface CodePipelineDefaults {
+  userParameters: unknown;
+}
+
+export type CodePipelineRequest<T extends TypeArgs<T, CodePipelineTypes> = object> = CodePipelineRequestCore<
+  TypeArg<T, 'userParameters', CodePipelineDefaults>
+>;
+
+export type CodePipelineMiddleware<T extends TypeArgs<T, CodePipelineTypes> = object> = CodePipelineMiddlewareCore<
+  TypeArg<T, 'userParameters', CodePipelineDefaults>
+>;
+
+export type CodePipelineHandler<T extends TypeArgs<T, CodePipelineTypes> = object> = CodePipelineHandlerCore<
+  TypeArg<T, 'userParameters', CodePipelineDefaults>
+>;
+
+export type CodePipelineFilterInput<T extends TypeArgs<T, CodePipelineTypes> = object> = CodePipelineFilterInputCore<
+  TypeArg<T, 'userParameters', CodePipelineDefaults>
+>;
+
+export type CodePipelineRouteDefinition<T extends TypeArgs<T, CodePipelineTypes> = object> =
+  CodePipelineRouteDefinitionCore<TypeArg<T, 'userParameters', CodePipelineDefaults>>;

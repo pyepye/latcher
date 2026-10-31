@@ -19,21 +19,21 @@ import {
 } from '@latcher/base';
 
 import type {
-  CodePipelineFilterInput,
+  CodePipelineFilterInputCore,
   CodePipelineFilters,
-  CodePipelineHandler,
+  CodePipelineHandlerCore,
   CodePipelineMatcherOptions,
-  CodePipelineMiddleware,
-  CodePipelineRequest,
+  CodePipelineMiddlewareCore,
+  CodePipelineRequestCore,
   CodePipelineResponse,
-  CodePipelineRouteDefinition,
+  CodePipelineRouteDefinitionCore,
 } from './types.js';
 
 interface InternalRoute {
   filters: CodePipelineFilters;
   userParametersSchema?: StandardSchemaV1;
-  middleware?: CodePipelineMiddleware[];
-  handler: CodePipelineHandler;
+  middleware?: CodePipelineMiddlewareCore[];
+  handler: CodePipelineHandlerCore;
 }
 
 interface RouteInput<
@@ -43,12 +43,12 @@ interface RouteInput<
     : unknown,
 > {
   filters: CodePipelineFilters;
-  middleware?: CodePipelineMiddleware<NoInfer<TUserParameters>>[];
+  middleware?: CodePipelineMiddlewareCore<NoInfer<TUserParameters>>[];
   userParametersSchema?: TUserParametersSchema;
 }
 
 interface RouteBuilder<TUserParameters> {
-  handle(handler: CodePipelineHandler<TUserParameters>): CodePipelineRouteDefinition<TUserParameters>;
+  handle(handler: CodePipelineHandlerCore<TUserParameters>): CodePipelineRouteDefinitionCore<TUserParameters>;
 }
 
 export function defineRoute<
@@ -59,8 +59,8 @@ export function defineRoute<
 >(config: RouteInput<TUserParametersSchema, TUserParameters>): RouteBuilder<TUserParameters> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): CodePipelineRouteDefinition<TUserParameters> {
-      return { ...config, handler } as CodePipelineRouteDefinition<TUserParameters>;
+    handle(handler): CodePipelineRouteDefinitionCore<TUserParameters> {
+      return { ...config, handler } as CodePipelineRouteDefinitionCore<TUserParameters>;
     },
   };
 }
@@ -69,7 +69,7 @@ export class CodePipelineMatcher implements EventTypeMatcherCore<CodePipelineEve
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private codePipelineClient: CodePipelineClient;
-  private middleware: CodePipelineMiddleware[];
+  private middleware: CodePipelineMiddlewareCore[];
 
   constructor(options?: CodePipelineMatcherOptions) {
     this.codePipelineClient = options?.client ?? new CodePipelineClient();
@@ -85,19 +85,19 @@ export class CodePipelineMatcher implements EventTypeMatcherCore<CodePipelineEve
     return typeof job.id === 'string' && isObject(job.data);
   }
 
-  route<TUserParameters>(definition: CodePipelineRouteDefinition<TUserParameters>): this {
+  route<TUserParameters>(definition: CodePipelineRouteDefinitionCore<TUserParameters>): this {
     this.routes.push({
       filters: definition.filters,
       userParametersSchema: definition.userParametersSchema,
-      middleware: definition.middleware as CodePipelineMiddleware[] | undefined,
-      handler: definition.handler as CodePipelineHandler,
+      middleware: definition.middleware as CodePipelineMiddlewareCore[] | undefined,
+      handler: definition.handler as CodePipelineHandlerCore,
     });
     this.routesOrdered = false;
     return this;
   }
 
   continuation<TUserParameters>(
-    definition: Omit<CodePipelineRouteDefinition<TUserParameters>, 'filters'> & {
+    definition: Omit<CodePipelineRouteDefinitionCore<TUserParameters>, 'filters'> & {
       filters: Omit<CodePipelineFilters, 'hasContinuationToken'>;
     },
   ): this {
@@ -119,7 +119,7 @@ export class CodePipelineMatcher implements EventTypeMatcherCore<CodePipelineEve
       const functionName = configuration.FunctionName;
       const parsedUserParameters = safeJsonParse(configuration.UserParameters);
 
-      const filterInput: CodePipelineFilterInput = {
+      const filterInput: CodePipelineFilterInputCore = {
         functionName,
         userParameters: parsedUserParameters,
         hasInputArtifacts: job.data.inputArtifacts.length > 0,
@@ -137,7 +137,7 @@ export class CodePipelineMatcher implements EventTypeMatcherCore<CodePipelineEve
         `UserParameters validation failed for job ${jobId}`,
       );
 
-      const request: CodePipelineRequest = {
+      const request: CodePipelineRequestCore = {
         jobId,
         functionName,
         userParameters: validatedUserParameters,
@@ -169,7 +169,7 @@ export class CodePipelineMatcher implements EventTypeMatcherCore<CodePipelineEve
     this.routesOrdered = true;
   }
 
-  private async matchRoute(input: CodePipelineFilterInput): Promise<InternalRoute | undefined> {
+  private async matchRoute(input: CodePipelineFilterInputCore): Promise<InternalRoute | undefined> {
     this.orderRoutes();
 
     for (const route of this.routes) {

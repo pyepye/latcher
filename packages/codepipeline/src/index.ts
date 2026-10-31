@@ -9,4 +9,5 @@ export type {
   CodePipelineResponse,
   CodePipelineRouteDefinition,
   CodePipelineSuccessResult,
+  CodePipelineTypes,
 } from './types.js';
