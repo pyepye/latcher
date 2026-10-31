@@ -8,7 +8,7 @@ import type {
   Context,
 } from 'aws-lambda';
 
-import type { JsonValue, MiddlewareCore } from '@latcher/base';
+import type { JsonValue, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 // A repeated header or query param reaches this authorizer as its last value alone: API Gateway sends
 // neither multi-value map on payload format 1.0.
@@ -74,29 +74,54 @@ export type LambdaAuthorizerContext = Record<string, JsonValue>;
 
 // aws-lambda splits this across two interfaces, and the context-free one absorbs any context, leaving
 // its shape unchecked. API Gateway documents one shape with an optional context.
-export interface LambdaAuthorizerSimpleResult<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext>
+export interface LambdaAuthorizerSimpleResultCore<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext>
   extends APIGatewaySimpleAuthorizerResult {
   context?: TContext;
 }
 
-export type LambdaAuthorizerResult<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> =
+export type LambdaAuthorizerResultCore<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> =
   | APIGatewayAuthorizerResult
-  | LambdaAuthorizerSimpleResult<TContext>;
+  | LambdaAuthorizerSimpleResultCore<TContext>;
 
-export type LambdaAuthorizerHandler<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> = (
+export type LambdaAuthorizerHandlerCore<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> = (
   request: LambdaAuthorizerRequest,
-) => Promise<LambdaAuthorizerResult<TContext> | boolean>;
+) => Promise<LambdaAuthorizerResultCore<TContext> | boolean>;
 
 // Middleware is invariant in its result and also registers matcher-wide, where no route's context
 // applies, so it stays on the widest result.
-export type LambdaAuthorizerMiddleware = MiddlewareCore<LambdaAuthorizerRequest, LambdaAuthorizerResult | boolean>;
+export type LambdaAuthorizerMiddleware = MiddlewareCore<LambdaAuthorizerRequest, LambdaAuthorizerResultCore | boolean>;
 
-export interface LambdaAuthorizerRouteDefinition<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> {
+export interface LambdaAuthorizerRouteDefinitionCore<
+  TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext,
+> {
   filters: LambdaAuthorizerFilters;
   middleware?: LambdaAuthorizerMiddleware[];
-  handler: LambdaAuthorizerHandler<TContext>;
+  handler: LambdaAuthorizerHandlerCore<TContext>;
 }
 
 export interface LambdaAuthorizerMatcherOptions {
   middleware?: LambdaAuthorizerMiddleware[];
 }
+
+export interface LambdaAuthorizerTypes {
+  context?: LambdaAuthorizerContext;
+}
+
+export interface LambdaAuthorizerDefaults {
+  context: LambdaAuthorizerContext;
+}
+
+export type LambdaAuthorizerSimpleResult<T extends TypeArgs<T, LambdaAuthorizerTypes> = object> =
+  LambdaAuthorizerSimpleResultCore<Extract<TypeArg<T, 'context', LambdaAuthorizerDefaults>, LambdaAuthorizerContext>>;
+
+export type LambdaAuthorizerResult<T extends TypeArgs<T, LambdaAuthorizerTypes> = object> = LambdaAuthorizerResultCore<
+  Extract<TypeArg<T, 'context', LambdaAuthorizerDefaults>, LambdaAuthorizerContext>
+>;
+
+export type LambdaAuthorizerHandler<T extends TypeArgs<T, LambdaAuthorizerTypes> = object> =
+  LambdaAuthorizerHandlerCore<Extract<TypeArg<T, 'context', LambdaAuthorizerDefaults>, LambdaAuthorizerContext>>;
+
+export type LambdaAuthorizerRouteDefinition<T extends TypeArgs<T, LambdaAuthorizerTypes> = object> =
+  LambdaAuthorizerRouteDefinitionCore<
+    Extract<TypeArg<T, 'context', LambdaAuthorizerDefaults>, LambdaAuthorizerContext>
+  >;

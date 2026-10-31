@@ -131,7 +131,7 @@ suite('lambdaAuthorizerResponse', () => {
 
     test('checks the context against a declared shape', () => {
       // @ts-expect-error tenantId is the declared key, so the typo does not compile
-      const result: LambdaAuthorizerResult<{ tenantId: string }> = {
+      const result: LambdaAuthorizerResult<{ context: { tenantId: string } }> = {
         isAuthorized: true,
         context: { tenntId: 'acme' },
       };

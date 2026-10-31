@@ -6,7 +6,7 @@ import type {
   Context,
 } from 'aws-lambda';
 
-import type { EventTypeMatcherCore } from '@latcher/base';
+import type { EventTypeMatcherCore, TypeArg, TypeArgs } from '@latcher/base';
 import { handleEventWithMiddleware, isObject, orderRoutesBySpecificity } from '@latcher/base';
 import { buildValueMaps } from '@latcher/http';
 
@@ -15,23 +15,25 @@ import type {
   AuthorizerType,
   HttpApiRequestAuthorizerEventV1,
   LambdaAuthorizerContext,
+  LambdaAuthorizerDefaults,
   LambdaAuthorizerEvent,
   LambdaAuthorizerFilterInput,
   LambdaAuthorizerFilters,
-  LambdaAuthorizerHandler,
+  LambdaAuthorizerHandlerCore,
   LambdaAuthorizerMatcherOptions,
   LambdaAuthorizerMiddleware,
   LambdaAuthorizerRequest,
   LambdaAuthorizerRequestRequest,
-  LambdaAuthorizerResult,
-  LambdaAuthorizerRouteDefinition,
+  LambdaAuthorizerResultCore,
+  LambdaAuthorizerRouteDefinitionCore,
   LambdaAuthorizerTokenRequest,
+  LambdaAuthorizerTypes,
 } from './types.js';
 
 interface InternalRoute {
   filters: LambdaAuthorizerFilters;
   middleware?: LambdaAuthorizerMiddleware[];
-  handler: LambdaAuthorizerHandler;
+  handler: LambdaAuthorizerHandlerCore;
 }
 
 type InferRequest<TType extends AuthorizerType | undefined> = TType extends 'TOKEN'
@@ -51,8 +53,8 @@ interface RouteInput<TType extends AuthorizerType | undefined = AuthorizerType |
 
 interface RouteBuilder<TRequest, TContext extends LambdaAuthorizerContext> {
   handle(
-    handler: (request: TRequest) => Promise<LambdaAuthorizerResult<TContext> | boolean>,
-  ): LambdaAuthorizerRouteDefinition<TContext>;
+    handler: (request: TRequest) => Promise<LambdaAuthorizerResultCore<TContext> | boolean>,
+  ): LambdaAuthorizerRouteDefinitionCore<TContext>;
 }
 
 export function defineLambdaAuthorizerRoute<
@@ -62,7 +64,7 @@ export function defineLambdaAuthorizerRoute<
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
     handle(handler) {
-      return { ...config, handler } as LambdaAuthorizerRouteDefinition<TContext>;
+      return { ...config, handler } as LambdaAuthorizerRouteDefinitionCore<TContext>;
     },
   };
 }
@@ -90,15 +92,15 @@ export function generatePolicy(
   };
 }
 
-export interface LambdaAuthorizerTokenInput<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> {
+interface LambdaAuthorizerTokenInputCore<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> {
   middleware?: LambdaAuthorizerMiddleware[];
-  handler: (request: LambdaAuthorizerTokenRequest) => Promise<LambdaAuthorizerResult<TContext> | boolean>;
+  handler: (request: LambdaAuthorizerTokenRequest) => Promise<LambdaAuthorizerResultCore<TContext> | boolean>;
 }
 
-export interface LambdaAuthorizerRequestInput<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> {
+interface LambdaAuthorizerRequestInputCore<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext> {
   method?: string;
   middleware?: LambdaAuthorizerMiddleware[];
-  handler: (request: LambdaAuthorizerRequestRequest) => Promise<LambdaAuthorizerResult<TContext> | boolean>;
+  handler: (request: LambdaAuthorizerRequestRequest) => Promise<LambdaAuthorizerResultCore<TContext> | boolean>;
 }
 
 function isTokenEvent(event: LambdaAuthorizerEvent): event is APIGatewayTokenAuthorizerEvent {
@@ -134,7 +136,7 @@ function findFraction(value: unknown, path: string): { path: string; value: numb
   return undefined;
 }
 
-function assertNoFractions(result: LambdaAuthorizerResult): void {
+function assertNoFractions(result: LambdaAuthorizerResultCore): void {
   const fraction = findFraction(result.context, '');
   if (!fraction) return;
   throw new Error(
@@ -142,7 +144,9 @@ function assertNoFractions(result: LambdaAuthorizerResult): void {
   );
 }
 
-export class LambdaAuthorizerMatcher implements EventTypeMatcherCore<LambdaAuthorizerEvent, LambdaAuthorizerResult> {
+export class LambdaAuthorizerMatcher
+  implements EventTypeMatcherCore<LambdaAuthorizerEvent, LambdaAuthorizerResultCore>
+{
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private middleware: LambdaAuthorizerMiddleware[];
@@ -174,12 +178,12 @@ export class LambdaAuthorizerMatcher implements EventTypeMatcherCore<LambdaAutho
   }
 
   route<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext>(
-    definition: LambdaAuthorizerRouteDefinition<TContext>,
+    definition: LambdaAuthorizerRouteDefinitionCore<TContext>,
   ): this {
     this.routes.push({
       filters: definition.filters,
       middleware: definition.middleware,
-      handler: definition.handler as LambdaAuthorizerHandler,
+      handler: definition.handler as LambdaAuthorizerHandlerCore,
     });
     this.routesOrdered = false;
     return this;
@@ -188,11 +192,11 @@ export class LambdaAuthorizerMatcher implements EventTypeMatcherCore<LambdaAutho
   token<TContext extends LambdaAuthorizerContext = LambdaAuthorizerContext>({
     middleware,
     handler,
-  }: LambdaAuthorizerTokenInput<TContext>): this {
+  }: LambdaAuthorizerTokenInputCore<TContext>): this {
     this.routes.push({
       filters: { type: 'TOKEN' },
       middleware,
-      handler: handler as LambdaAuthorizerHandler,
+      handler: handler as LambdaAuthorizerHandlerCore,
     });
     this.routesOrdered = false;
     return this;
@@ -202,17 +206,17 @@ export class LambdaAuthorizerMatcher implements EventTypeMatcherCore<LambdaAutho
     method,
     middleware,
     handler,
-  }: LambdaAuthorizerRequestInput<TContext>): this {
+  }: LambdaAuthorizerRequestInputCore<TContext>): this {
     this.routes.push({
       filters: { type: 'REQUEST', method },
       middleware,
-      handler: handler as LambdaAuthorizerHandler,
+      handler: handler as LambdaAuthorizerHandlerCore,
     });
     this.routesOrdered = false;
     return this;
   }
 
-  async handleEvent(event: LambdaAuthorizerEvent, context: Context): Promise<LambdaAuthorizerResult> {
+  async handleEvent(event: LambdaAuthorizerEvent, context: Context): Promise<LambdaAuthorizerResultCore> {
     const request = this.buildRequest(event, context);
 
     const route = await this.matchRoute(request);
@@ -322,3 +326,9 @@ export class LambdaAuthorizerMatcher implements EventTypeMatcherCore<LambdaAutho
 export function createLambdaAuthorizerMatcher(options?: LambdaAuthorizerMatcherOptions): LambdaAuthorizerMatcher {
   return new LambdaAuthorizerMatcher(options);
 }
+
+export type LambdaAuthorizerTokenInput<T extends TypeArgs<T, LambdaAuthorizerTypes> = object> =
+  LambdaAuthorizerTokenInputCore<Extract<TypeArg<T, 'context', LambdaAuthorizerDefaults>, LambdaAuthorizerContext>>;
+
+export type LambdaAuthorizerRequestInput<T extends TypeArgs<T, LambdaAuthorizerTypes> = object> =
+  LambdaAuthorizerRequestInputCore<Extract<TypeArg<T, 'context', LambdaAuthorizerDefaults>, LambdaAuthorizerContext>>;

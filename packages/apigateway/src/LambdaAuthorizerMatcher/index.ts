@@ -23,4 +23,5 @@ export type {
   LambdaAuthorizerRouteDefinition,
   LambdaAuthorizerSimpleResult,
   LambdaAuthorizerTokenRequest,
+  LambdaAuthorizerTypes,
 } from './types.js';

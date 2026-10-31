@@ -259,7 +259,7 @@ so strings, numbers, booleans, arrays and nested objects all go through. Name th
 checks what you build against it.
 
 ```ts
-const result: LambdaAuthorizerResult<{ tenantId: string; plan: string }> = {
+const result: LambdaAuthorizerResult<{ context: { tenantId: string; plan: string } }> = {
   isAuthorized: true,
   context: { tenantId: 'acme', plan: 'pro' },
 }
@@ -525,6 +525,7 @@ All exported from `@latcher/apigateway`.
 | `LambdaAuthorizerEvent` | `request.event` |
 | `HttpApiRequestAuthorizerEventV1` | The event an HTTP API sends its authorizer on payload format 1.0 |
 | `AuthorizerType` | `'TOKEN' \| 'REQUEST'` |
+| `LambdaAuthorizerTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 `Context` on the request comes from `aws-lambda`, and so do three of the four events
 `LambdaAuthorizerEvent` unions together and the policy half of `LambdaAuthorizerResult`. `Allow`,
@@ -534,10 +535,10 @@ annotate a policy handler's return type with. `Authorized` and `Denied` return
 response with an optional context and `aws-lambda` splits it across two interfaces.
 
 `LambdaAuthorizerResult`, `LambdaAuthorizerSimpleResult`, `LambdaAuthorizerHandler`,
-`LambdaAuthorizerRouteDefinition`, `LambdaAuthorizerTokenInput` and `LambdaAuthorizerRequestInput` take
-the context shape as a type parameter, defaulting to `LambdaAuthorizerContext`. The rest take none: a
+`LambdaAuthorizerRouteDefinition`, `LambdaAuthorizerTokenInput` and `LambdaAuthorizerRequestInput` take one
+object with a `context` key, the context shape, defaulting to `LambdaAuthorizerContext`. The rest take none: a
 route carries no schema, so there is nothing for a type to pass through, and the request shape comes
-from the `type` filter instead.
+from the `type` filter instead. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 `LambdaAuthorizerMiddleware` stays on the default. Middleware registers on the matcher as well as on a
 route, where no single route's context applies.
