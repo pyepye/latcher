@@ -128,7 +128,7 @@ A regular handler takes the payload and returns the task output.
 import { logger } from '@latcher/base'
 import type { StepFunctionsRequest } from '@latcher/stepfunctions'
 
-export async function processOrder({ event }: StepFunctionsRequest<Order>): Promise<OrderResult> {
+export async function processOrder({ event }: StepFunctionsRequest<{ event: Order }>): Promise<OrderResult> {
   logger.info(`Processing order ${event.orderId}`)
   return { orderId: event.orderId, status: 'processed' }
 }
@@ -140,7 +140,7 @@ A regular route hands the handler two fields.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `event` | `TInput` | The task payload. `unknown` until you type it with an `eventSchema` or an annotation |
+| `event` | The `event` key, default `unknown` | The task payload. `unknown` until you type it with an `eventSchema` or an annotation |
 | `context` | `Context` | The Lambda context |
 
 A route with `taskToken: true` hands a different shape, adding the callback token and the parsed input.
@@ -183,7 +183,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`StepFunctionsRequest`](#generic-parameters) and your own type for the payload.
+[`StepFunctionsRequest`](#type-arguments) and your own type for the payload.
 
 ```ts
 // handlers/processOrder.ts
@@ -194,7 +194,7 @@ import { z } from 'zod'
 export const OrderSchema = z.object({ taskType: z.literal('processOrder'), orderId: z.string() })
 type Order = z.infer<typeof OrderSchema>
 
-export async function processOrder({ event }: StepFunctionsRequest<Order>): Promise<{ status: string }> {
+export async function processOrder({ event }: StepFunctionsRequest<{ event: Order }>): Promise<{ status: string }> {
   logger.info(`Processing order ${event.orderId}`)
   return { status: 'processed' }
 }
@@ -285,7 +285,7 @@ import { logger } from '@latcher/base'
 import type { StepFunctionsTaskTokenRequest } from '@latcher/stepfunctions'
 
 export async function requestApproval(
-  { taskToken, input }: StepFunctionsTaskTokenRequest<ApprovalRequest>,
+  { taskToken, input }: StepFunctionsTaskTokenRequest<{ input: ApprovalRequest }>,
 ): Promise<void> {
   logger.info(`Approval ${input.requestId} needs sign-off`)
   await saveTokenForLater(input.requestId, taskToken)
@@ -296,12 +296,12 @@ export async function requestApproval(
 | Field | Type | Description |
 | --- | --- | --- |
 | `taskToken` | `string` | The callback token to pass to `SendTaskSuccess` or `SendTaskFailure` |
-| `input` | `TInput` | The payload with `TaskToken` removed, validated against `eventSchema` |
+| `input` | The `input` key, default `unknown` | The payload with `TaskToken` removed, validated against `eventSchema` |
 | `event` | `unknown` | The untouched payload, `TaskToken` included |
 | `context` | `Context` | The Lambda context |
 
 Setting `taskToken: true` infers this shape for an inferred handler, on `route()` and `defineRoute`
-alike. `StepFunctionsTaskTokenRequest<TInput>` types an annotated one. Returning from the handler
+alike. `StepFunctionsTaskTokenRequest<{ input: Approval }>` types an annotated one. Returning from the handler
 does not resolve the task; only the callback does.
 
 ## Middleware
@@ -332,19 +332,19 @@ stepFunctionsMatcher.route({
 regular route and on `input` for a `taskToken` route, so each has its own alias.
 
 ```ts
-const withOrderContext: StepFunctionsMiddleware<unknown, Order> = async (request, next) => {
+const withOrderContext: StepFunctionsMiddleware<{ event: Order }> = async (request, next) => {
   logger.appendKeys({ orderId: request.event.orderId })
   return next(request)
 }
 
-const withApprovalContext: StepFunctionsTaskTokenMiddleware<unknown, Approval> = async (request, next) => {
+const withApprovalContext: StepFunctionsTaskTokenMiddleware<{ input: Approval }> = async (request, next) => {
   logger.appendKeys({ approvalId: request.input.approvalId })
   return next(request)
 }
 ```
 
-Type route middleware to the route's `eventSchema`. Matcher middleware takes no type argument, because
-it runs for every route. It also runs before route middleware. See
+Type route middleware to the route's `eventSchema`. Matcher middleware takes no keys, because it runs
+for every route. It also runs before route middleware. See
 [middleware](/docs/middleware) for the execution order and the three levels it attaches at.
 
 ## Types
@@ -353,37 +353,43 @@ All exported from `@latcher/stepfunctions`.
 
 | Type | Description |
 | --- | --- |
-| `StepFunctionsRequest<TInput>` | The handler argument for a regular route |
-| `StepFunctionsTaskTokenRequest<TInput>` | The handler argument for a `taskToken` route |
-| `StepFunctionsHandler<TInput>` | The regular handler, returning `Promise<unknown>` |
-| `StepFunctionsTaskTokenHandler<TInput>` | The callback handler, returning `Promise<unknown>` |
+| `StepFunctionsRequest<{ event }>` | The handler argument for a regular route |
+| `StepFunctionsTaskTokenRequest<{ input }>` | The handler argument for a `taskToken` route |
+| `StepFunctionsHandler<{ event }>` | The regular handler, returning `Promise<unknown>` |
+| `StepFunctionsTaskTokenHandler<{ input }>` | The callback handler, returning `Promise<unknown>` |
 | `StepFunctionsFilters` | The `filters` object |
 | `StepFunctionsFilterInput` | What `custom` receives, `{ event: unknown }` |
-| `StepFunctionsMiddleware<TResponse, TInput>` | Matcher and route middleware on a regular route |
-| `StepFunctionsTaskTokenMiddleware<TResponse, TInput>` | Route middleware on a `taskToken` route |
-| `StepFunctionsRouteDefinition<TInput>` | A full route passed to `route()` |
-| `StepFunctionsTaskTokenRouteDefinition<TInput>` | A `taskToken` route passed to `route()` |
+| `StepFunctionsMiddleware<{ event, response }>` | Matcher and route middleware on a regular route |
+| `StepFunctionsTaskTokenMiddleware<{ input, response }>` | Route middleware on a `taskToken` route |
+| `StepFunctionsRouteDefinition<{ event }>` | A full route passed to `route()` |
+| `StepFunctionsTaskTokenRouteDefinition<{ input }>` | A `taskToken` route passed to `route()` |
+| `StepFunctionsTypes` | The keys `StepFunctionsRequest`, `StepFunctionsHandler` and `StepFunctionsRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `StepFunctionsMiddlewareTypes` | The keys `StepFunctionsMiddleware` accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `StepFunctionsTaskTokenTypes` | The keys the task token request, handler and route definition accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `StepFunctionsTaskTokenMiddlewareTypes` | The keys `StepFunctionsTaskTokenMiddleware` accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `StepFunctionsMatcherOptions` | Options for `createStepFunctionsMatcher` |
 
 The `StepFunctionsMatcher` class and the `createStepFunctionsMatcher` and `defineRoute` functions come
 from the same place. There is no `StepFunctionsResponse` type, since a handler returns `Promise<unknown>`
 directly.
 
-### Generic parameters
+### Type arguments
 
-The types above that take a parameter all take the same one.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TInput` | `request.event` on a regular route, `request.input` on a `taskToken` route | `unknown` |
-| `TResponse` | What a middleware returns | `unknown` |
+| `event` | `StepFunctionsRequest`, `StepFunctionsHandler`, `StepFunctionsRouteDefinition` | `unknown` |
+| `event`, `response` | `StepFunctionsMiddleware` | `unknown` each |
+| `input` | `StepFunctionsTaskTokenRequest`, `StepFunctionsTaskTokenHandler`, `StepFunctionsTaskTokenRouteDefinition` | `unknown` |
+| `input`, `response` | `StepFunctionsTaskTokenMiddleware` | `unknown` each |
 
-The two middleware aliases take `TResponse` first, so a typed middleware reads
-`StepFunctionsMiddleware<unknown, Order>`.
+`event` types `request.event` on a regular route, `input` types `request.input` on a `taskToken` route, and
+`response` is what a middleware returns.
 
-Leave it off and the payload is `unknown`, which is what you get without an `eventSchema`. An
+Leave the key out and it stays `unknown`, which is what you get without an `eventSchema`. An
 `eventSchema` sets it for you through `defineRoute`; pass it yourself only for [annotated
-handlers](#annotated-handlers).
+handlers](#annotated-handlers). See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 
@@ -439,13 +445,13 @@ import type { StepFunctionsRequest, StepFunctionsTaskTokenRequest } from '@latch
 
 import type { Approval, Order } from '../schemas/tasks.js'
 
-export async function processOrder({ event }: StepFunctionsRequest<Order>): Promise<{ orderId: string; status: string }> {
+export async function processOrder({ event }: StepFunctionsRequest<{ event: Order }>): Promise<{ orderId: string; status: string }> {
   logger.info(\`Processing order \${event.orderId}\`)
   return { orderId: event.orderId, status: 'processed' }
 }
 
 export async function requestApproval(
-  { taskToken, input }: StepFunctionsTaskTokenRequest<Approval>,
+  { taskToken, input }: StepFunctionsTaskTokenRequest<{ input: Approval }>,
 ): Promise<void> {
   logger.info(\`Approval \${input.requestId} from \${input.requester} needs sign-off\`)
   // Store taskToken, then later: sfn.sendTaskSuccess({ taskToken, output }) once signed off

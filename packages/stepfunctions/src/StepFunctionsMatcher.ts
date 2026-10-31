@@ -14,34 +14,34 @@ import {
 
 import type {
   StepFunctionsFilters,
-  StepFunctionsHandler,
-  StepFunctionsMiddleware,
-  StepFunctionsRequest,
-  StepFunctionsRouteDefinition,
-  StepFunctionsTaskTokenHandler,
-  StepFunctionsTaskTokenMiddleware,
-  StepFunctionsTaskTokenRequest,
-  StepFunctionsTaskTokenRouteDefinition,
+  StepFunctionsHandlerCore,
+  StepFunctionsMiddlewareCore,
+  StepFunctionsRequestCore,
+  StepFunctionsRouteDefinitionCore,
+  StepFunctionsTaskTokenHandlerCore,
+  StepFunctionsTaskTokenMiddlewareCore,
+  StepFunctionsTaskTokenRequestCore,
+  StepFunctionsTaskTokenRouteDefinitionCore,
 } from './types.js';
 
 export interface StepFunctionsMatcherOptions {
-  middleware?: StepFunctionsMiddleware[];
+  middleware?: StepFunctionsMiddlewareCore[];
 }
 
 interface InternalRoute {
   filters: StepFunctionsFilters;
   eventSchema?: StandardSchemaV1;
   isTaskTokenRoute: boolean;
-  middleware: StepFunctionsMiddleware[];
+  middleware: StepFunctionsMiddlewareCore[];
   handler: (request: never) => Promise<unknown>;
 }
 
 interface TaskTokenRouteBuilder<TInput> {
-  handle(handler: StepFunctionsTaskTokenHandler<TInput>): StepFunctionsTaskTokenRouteDefinition<TInput>;
+  handle(handler: StepFunctionsTaskTokenHandlerCore<TInput>): StepFunctionsTaskTokenRouteDefinitionCore<TInput>;
 }
 
 interface RegularRouteBuilder<TInput> {
-  handle(handler: StepFunctionsHandler<TInput>): StepFunctionsRouteDefinition<TInput>;
+  handle(handler: StepFunctionsHandlerCore<TInput>): StepFunctionsRouteDefinitionCore<TInput>;
 }
 
 // TaskToken route - when filters include taskToken: true
@@ -51,7 +51,7 @@ export function defineRoute<
 >(config: {
   filters: StepFunctionsFilters & { taskToken: true };
   eventSchema?: TEventSchema;
-  middleware?: StepFunctionsTaskTokenMiddleware<unknown, NoInfer<TInput>>[];
+  middleware?: StepFunctionsTaskTokenMiddlewareCore<unknown, NoInfer<TInput>>[];
 }): TaskTokenRouteBuilder<TInput>;
 
 // Regular route
@@ -61,24 +61,24 @@ export function defineRoute<
 >(config: {
   filters: StepFunctionsFilters;
   eventSchema?: TEventSchema;
-  middleware?: StepFunctionsMiddleware<unknown, NoInfer<TInput>>[];
+  middleware?: StepFunctionsMiddlewareCore<unknown, NoInfer<TInput>>[];
 }): RegularRouteBuilder<TInput>;
 
 export function defineRoute(config: {
   filters: StepFunctionsFilters;
   eventSchema?: StandardSchemaV1;
-  middleware?: StepFunctionsMiddleware[] | StepFunctionsTaskTokenMiddleware[];
+  middleware?: StepFunctionsMiddlewareCore[] | StepFunctionsTaskTokenMiddlewareCore[];
 }): TaskTokenRouteBuilder<unknown> | RegularRouteBuilder<unknown> {
   return {
     handle(
-      handler: StepFunctionsHandler | StepFunctionsTaskTokenHandler,
-    ): StepFunctionsRouteDefinition | StepFunctionsTaskTokenRouteDefinition {
+      handler: StepFunctionsHandlerCore | StepFunctionsTaskTokenHandlerCore,
+    ): StepFunctionsRouteDefinitionCore | StepFunctionsTaskTokenRouteDefinitionCore {
       return {
         filters: config.filters,
         eventSchema: config.eventSchema,
         middleware: config.middleware,
         handler,
-      } as StepFunctionsRouteDefinition | StepFunctionsTaskTokenRouteDefinition;
+      } as StepFunctionsRouteDefinitionCore | StepFunctionsTaskTokenRouteDefinitionCore;
     },
   } as TaskTokenRouteBuilder<unknown> | RegularRouteBuilder<unknown>;
 }
@@ -87,7 +87,7 @@ export class StepFunctionsMatcher implements EventTypeMatcherCore<unknown, unkno
   readonly matchTier = 'catchAll';
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: StepFunctionsMiddleware[];
+  private middleware: StepFunctionsMiddlewareCore[];
   private readonly matchedRoutes = new WeakMap<Record<string, unknown>, InternalRoute>();
 
   constructor(options?: StepFunctionsMatcherOptions) {
@@ -101,10 +101,10 @@ export class StepFunctionsMatcher implements EventTypeMatcherCore<unknown, unkno
     return matched !== undefined;
   }
 
-  route<TInput>(definition: StepFunctionsTaskTokenRouteDefinition<TInput>): this;
-  route<TInput>(definition: StepFunctionsRouteDefinition<TInput>): this;
+  route<TInput>(definition: StepFunctionsTaskTokenRouteDefinitionCore<TInput>): this;
+  route<TInput>(definition: StepFunctionsRouteDefinitionCore<TInput>): this;
   route<TInput>(
-    definition: StepFunctionsRouteDefinition<TInput> | StepFunctionsTaskTokenRouteDefinition<TInput>,
+    definition: StepFunctionsRouteDefinitionCore<TInput> | StepFunctionsTaskTokenRouteDefinitionCore<TInput>,
   ): this {
     const isTaskToken = definition.filters.taskToken === true;
     this.routes.push({
@@ -112,7 +112,7 @@ export class StepFunctionsMatcher implements EventTypeMatcherCore<unknown, unkno
       eventSchema: definition.eventSchema,
       // Cast needed: storing a payload-typed chain in general storage (contravariance). Both request
       // shapes reach the chain through runRoute, which casts the request the same way.
-      middleware: (definition.middleware ?? []) as StepFunctionsMiddleware[],
+      middleware: (definition.middleware ?? []) as StepFunctionsMiddlewareCore[],
       handler: definition.handler as (request: never) => Promise<unknown>,
       isTaskTokenRoute: isTaskToken,
     });
@@ -147,7 +147,7 @@ export class StepFunctionsMatcher implements EventTypeMatcherCore<unknown, unkno
     }
 
     const validatedInput = await validateSchema(input, route.eventSchema, 'Event validation failed');
-    const request: StepFunctionsTaskTokenRequest = {
+    const request: StepFunctionsTaskTokenRequestCore = {
       taskToken: TaskToken,
       input: validatedInput,
       event,
@@ -157,14 +157,14 @@ export class StepFunctionsMatcher implements EventTypeMatcherCore<unknown, unkno
     return this.runRoute(route, request);
   }
 
-  // A task token request carries the two keys StepFunctionsRequest declares, so the cast lets both
+  // A task token request carries the two keys StepFunctionsRequestCore declares, so the cast lets both
   // request shapes run through one chain.
-  private async runRoute(route: InternalRoute, request: StepFunctionsRequest): Promise<unknown> {
+  private async runRoute(route: InternalRoute, request: StepFunctionsRequestCore): Promise<unknown> {
     const allMiddleware = [...this.middleware, ...route.middleware];
     return handleEventWithMiddleware(
       allMiddleware,
       request,
-      route.handler as (r: StepFunctionsRequest) => Promise<unknown>,
+      route.handler as (r: StepFunctionsRequestCore) => Promise<unknown>,
     );
   }
 
