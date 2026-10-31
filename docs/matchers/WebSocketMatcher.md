@@ -187,7 +187,7 @@ nothing.
 import type { WebSocketMessageRequest } from '@latcher/apigateway'
 import { postToConnection } from '@latcher/apigateway'
 
-export async function sendMessage(request: WebSocketMessageRequest<SendMessage>): Promise<void> {
+export async function sendMessage(request: WebSocketMessageRequest<{ body: SendMessage }>): Promise<void> {
   const { connectionId, domainName, stage, body } = request
 
   await postToConnection({
@@ -218,7 +218,7 @@ On top of those, each event type carries the one field that belongs to it.
 | Request | Extra field | Type |
 | --- | --- | --- |
 | `WebSocketConnectRequest` | `queryStringParameters` | `Record<string, string> \| undefined` |
-| `WebSocketMessageRequest<TBody>` | `body` | `TBody` |
+| `WebSocketMessageRequest<{ body }>` | `body` | The `body` key, default `unknown` |
 | `WebSocketDisconnectRequest` | none | |
 
 `Context` comes from `aws-lambda`, not from this package. `WebSocketEvent` types `event` and is
@@ -297,7 +297,7 @@ export const SendMessageSchema = z.object({
 })
 type SendMessage = z.infer<typeof SendMessageSchema>
 
-export async function sendMessage(request: WebSocketMessageRequest<SendMessage>): Promise<void> {
+export async function sendMessage(request: WebSocketMessageRequest<{ body: SendMessage }>): Promise<void> {
   const { connectionId, domainName, stage, body } = request
   const data = JSON.stringify({ roomId: body.roomId, content: body.content, from: connectionId })
 
@@ -328,13 +328,13 @@ Derive the type from the schema with `z.infer` rather than hand-writing an inter
 [Annotated handlers](/docs/handlers#annotated-handlers) has the worked version.
 
 One request type per event type saves you naming the parameters at all, so
-`WebSocketMessageRequest<SendMessage>` above rather than the `WebSocketRequest` union.
+`WebSocketMessageRequest<{ body: SendMessage }>` above rather than the `WebSocketRequest` union.
 [Types](#types) lists all four.
 
 Annotate a route you write in its own file with the type for its event type:
-`WebSocketConnectRouteDefinition`, `WebSocketMessageRouteDefinition<TBody>` or
+`WebSocketConnectRouteDefinition`, `WebSocketMessageRouteDefinition<{ body }>` or
 `WebSocketDisconnectRouteDefinition`. Each pins the filters, the request and the return type, so a
-connect handler will not assign to a message route. `WebSocketRouteDefinition<TBody>` covers a route
+connect handler will not assign to a message route. `WebSocketRouteDefinition<{ body }>` covers a route
 that handles more than one event type, and its handler takes all three requests.
 
 ## Schema validation
@@ -495,7 +495,7 @@ export const withTiming: WebSocketMiddleware = async (request, next) => {
 }
 ```
 
-`WebSocketMiddleware<TBody>` takes the body type, so route middleware on a route with a `bodySchema`
+`WebSocketMiddleware<{ body }>` takes the body type, so route middleware on a route with a `bodySchema`
 reads the same typed `request.body` the handler does. Leave it off for `unknown`.
 
 ```ts
@@ -521,24 +521,25 @@ All exported from `@latcher/apigateway`.
 | Type | Description |
 | --- | --- |
 | `WebSocketConnectRequest` | A connect handler's argument, carrying the query string |
-| `WebSocketMessageRequest<TBody>` | A message handler's argument, carrying the body |
+| `WebSocketMessageRequest<{ body }>` | A message handler's argument, carrying the body |
 | `WebSocketDisconnectRequest` | A disconnect handler's argument, carrying neither |
-| `WebSocketRequest<TBody>` | The union of those three, for a handler serving more than one |
+| `WebSocketRequest<{ body }>` | The union of those three, for a handler serving more than one |
 | `WebSocketBaseRequest` | The fields all three share |
 | `WebSocketConnectResponse` | Handler return type, a bare `{ statusCode: number }` or `undefined` |
 | `WebSocketResult` | `{ statusCode: number }`, what the matcher hands back to Lambda |
-| `WebSocketHandler<TBody>` | The `handler` function, returning a status code or nothing |
-| `WebSocketMiddleware<TBody>` | Matcher and route middleware |
+| `WebSocketHandler<{ body }>` | The `handler` function, returning a status code or nothing |
+| `WebSocketMiddleware<{ body }>` | Matcher and route middleware |
 | `WebSocketConnectRouteDefinition` | A full connect route, and the argument to `connect()` |
-| `WebSocketMessageRouteDefinition<TBody>` | A full message route, and the argument to `message()` |
+| `WebSocketMessageRouteDefinition<{ body }>` | A full message route, and the argument to `message()` |
 | `WebSocketDisconnectRouteDefinition` | A full disconnect route, and the argument to `disconnect()` |
-| `WebSocketRouteDefinition<TBody>` | A full route for any event type, as `defineWebSocketRoute` builds it |
+| `WebSocketRouteDefinition<{ body }>` | A full route for any event type, as `defineWebSocketRoute` builds it |
 | `WebSocketMatcherOptions` | Options for `createWebSocketMatcher` |
 | `PostToConnectionInput` | The argument to `postToConnection` |
 | `WebSocketFilters` | The `filters` key |
 | `WebSocketFilterInput` | What a `custom` is given |
 | `WebSocketEvent` | `request.event` |
 | `WebSocketEventType` | `'CONNECT' \| 'MESSAGE' \| 'DISCONNECT'` |
+| `WebSocketTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 `Context` on the request comes from `aws-lambda`, and `WebSocketEvent` extends that package's
 `APIGatewayProxyWebsocketEventV2WithRequestContext` with the `headers` and `queryStringParameters` a
@@ -548,15 +549,18 @@ The `WebSocketMatcher` class and the `createWebSocketMatcher` and `defineWebSock
 from the same place, along with the three response helpers, `isWebSocketResponse` and
 `postToConnection`.
 
-### Generic parameters
+### Type arguments
 
-| Parameter | Types | Default |
+The generic types above take one object. Its keys are the names of the properties they type.
+
+| Key | Types | Default |
 | --- | --- | --- |
-| `TBody` | `request.body` | `unknown` |
+| `body` | `request.body` | `unknown` |
 
-`TBody` is the only one. `WebSocketRequest`, `WebSocketMessageRequest`, `WebSocketMessageRouteDefinition`,
-`WebSocketRouteDefinition`, `WebSocketHandler` and `WebSocketMiddleware` all take it.
-`WebSocketConnectRequest` and `WebSocketDisconnectRequest` take nothing, since neither carries a body.
+Leave `body` out and it takes its default. `WebSocketRequest`, `WebSocketMessageRequest`,
+`WebSocketMessageRouteDefinition`, `WebSocketRouteDefinition`, `WebSocketHandler` and `WebSocketMiddleware` all
+take it. `WebSocketConnectRequest` and `WebSocketDisconnectRequest` take nothing, since neither carries a body.
+See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers both.
 
@@ -643,14 +647,14 @@ export async function onDisconnect({ connectionId }: WebSocketDisconnectRequest)
   logger.info(\`Connection \${connectionId} closed\`)
 }
 
-export async function joinRoom(request: WebSocketMessageRequest<JoinRoom>): Promise<void> {
+export async function joinRoom(request: WebSocketMessageRequest<{ body: JoinRoom }>): Promise<void> {
   const { connectionId, body } = request
 
   await connections.join(connectionId, body.roomId)
   logger.info(\`Connection \${connectionId} joined room \${body.roomId}\`)
 }
 
-export async function sendMessage(request: WebSocketMessageRequest<SendMessage>): Promise<void> {
+export async function sendMessage(request: WebSocketMessageRequest<{ body: SendMessage }>): Promise<void> {
   const { connectionId, domainName, stage, body } = request
   const data = JSON.stringify({ roomId: body.roomId, content: body.content, from: connectionId })
 

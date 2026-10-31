@@ -89,7 +89,7 @@ suite('WebSocketMatcher filter types', () => {
 
       type Request = Parameters<Parameters<typeof builder.handle>[0]>[0];
 
-      expectTypeOf<Request>().toEqualTypeOf<WebSocketMessageRequest<unknown>>();
+      expectTypeOf<Request>().toEqualTypeOf<WebSocketMessageRequest<{ body: unknown }>>();
     });
 
     test('a route with no eventType filter gets all three', () => {
@@ -97,14 +97,14 @@ suite('WebSocketMatcher filter types', () => {
 
       type Request = Parameters<Parameters<typeof builder.handle>[0]>[0];
 
-      expectTypeOf<Request>().toEqualTypeOf<WebSocketRequest<unknown>>();
+      expectTypeOf<Request>().toEqualTypeOf<WebSocketRequest<{ body: unknown }>>();
     });
 
     test('message() hands the handler a message request, with no query string on it', () => {
       type MessageDefinition = Parameters<ReturnType<typeof createWebSocketMatcher>['message']>[0];
       type Request = Parameters<MessageDefinition['handler']>[0];
 
-      expectTypeOf<Request>().toEqualTypeOf<WebSocketMessageRequest<unknown>>();
+      expectTypeOf<Request>().toEqualTypeOf<WebSocketMessageRequest<{ body: unknown }>>();
     });
 
     test('disconnect() hands the handler a disconnect request', () => {
@@ -157,9 +157,9 @@ suite('WebSocketMatcher filter types', () => {
     });
 
     test('the per-event definition types pin their own handler', () => {
-      type Request = Parameters<WebSocketMessageRouteDefinition<{ content: string }>['handler']>[0];
+      type Request = Parameters<WebSocketMessageRouteDefinition<{ body: { content: string } }>['handler']>[0];
 
-      expectTypeOf<Request>().toEqualTypeOf<WebSocketMessageRequest<{ content: string }>>();
+      expectTypeOf<Request>().toEqualTypeOf<WebSocketMessageRequest<{ body: { content: string } }>>();
     });
   });
 });

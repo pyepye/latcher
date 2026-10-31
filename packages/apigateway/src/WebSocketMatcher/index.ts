@@ -24,6 +24,7 @@ export type {
   WebSocketRequest,
   WebSocketResult,
   WebSocketRouteDefinition,
+  WebSocketTypes,
 } from './types.js';
 export type { WebSocketMatcherOptions } from './WebSocketMatcher.js';
 export { createWebSocketMatcher, defineWebSocketRoute, WebSocketMatcher } from './WebSocketMatcher.js';

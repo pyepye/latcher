@@ -10,7 +10,7 @@ export async function broadcastAlert({
   domainName,
   stage,
   body,
-}: WebSocketMessageRequest<TStockAlert>): Promise<void> {
+}: WebSocketMessageRequest<{ body: TStockAlert }>): Promise<void> {
   const quantity = STOCK[body.sku]?.quantity;
 
   logger.info({ message: 'Stock alert broadcast', sku: body.sku, quantity });

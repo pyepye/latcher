@@ -6,7 +6,7 @@ import type {
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { MiddlewareCore } from '@latcher/base';
+import type { MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 export interface WebSocketEvent
   extends APIGatewayProxyWebsocketEventV2WithRequestContext<APIGatewayEventWebsocketRequestContextV2> {
@@ -47,7 +47,7 @@ export interface WebSocketConnectRequest extends WebSocketBaseRequest {
   queryStringParameters: Record<string, string> | undefined;
 }
 
-export interface WebSocketMessageRequest<TBody = unknown> extends WebSocketBaseRequest {
+export interface WebSocketMessageRequestCore<TBody = unknown> extends WebSocketBaseRequest {
   eventType: 'MESSAGE';
   body: TBody;
 }
@@ -56,9 +56,9 @@ export interface WebSocketDisconnectRequest extends WebSocketBaseRequest {
   eventType: 'DISCONNECT';
 }
 
-export type WebSocketRequest<TBody = unknown> =
+export type WebSocketRequestCore<TBody = unknown> =
   | WebSocketConnectRequest
-  | WebSocketMessageRequest<TBody>
+  | WebSocketMessageRequestCore<TBody>
   | WebSocketDisconnectRequest;
 
 // body and headers are never sent: the matcher hands Lambda a WebSocketResult, which is the status code
@@ -70,34 +70,68 @@ export interface WebSocketResult {
 }
 
 // A connect handler answers with a status code; message and disconnect handlers answer with nothing
-export type WebSocketHandler<TBody = unknown> = (
-  request: WebSocketRequest<TBody>,
+export type WebSocketHandlerCore<TBody = unknown> = (
+  request: WebSocketRequestCore<TBody>,
 ) => Promise<WebSocketConnectResponse> | Promise<void>;
 
-export type WebSocketMiddleware<TBody = unknown> = MiddlewareCore<WebSocketRequest<TBody>, WebSocketConnectResponse>;
+export type WebSocketMiddlewareCore<TBody = unknown> = MiddlewareCore<
+  WebSocketRequestCore<TBody>,
+  WebSocketConnectResponse
+>;
 
 export interface WebSocketConnectRouteDefinition {
   filters?: Omit<WebSocketFilters, 'eventType'>;
-  middleware?: WebSocketMiddleware[];
+  middleware?: WebSocketMiddlewareCore[];
   handler: (request: WebSocketConnectRequest) => Promise<WebSocketConnectResponse>;
 }
 
-export interface WebSocketMessageRouteDefinition<TBody = unknown> {
+export interface WebSocketMessageRouteDefinitionCore<TBody = unknown> {
   filters?: Omit<WebSocketFilters, 'eventType'>;
   bodySchema?: StandardSchemaV1<unknown, TBody>;
-  middleware?: WebSocketMiddleware<TBody>[];
-  handler: (request: WebSocketMessageRequest<TBody>) => Promise<void>;
+  middleware?: WebSocketMiddlewareCore<TBody>[];
+  handler: (request: WebSocketMessageRequestCore<TBody>) => Promise<void>;
 }
 
 export interface WebSocketDisconnectRouteDefinition {
   filters?: Omit<WebSocketFilters, 'eventType'>;
-  middleware?: WebSocketMiddleware[];
+  middleware?: WebSocketMiddlewareCore[];
   handler: (request: WebSocketDisconnectRequest) => Promise<void>;
 }
 
-export interface WebSocketRouteDefinition<TBody = unknown> {
+export interface WebSocketRouteDefinitionCore<TBody = unknown> {
   filters: WebSocketFilters;
   bodySchema?: StandardSchemaV1<unknown, TBody>;
-  middleware?: WebSocketMiddleware<TBody>[];
-  handler: WebSocketHandler<TBody>;
+  middleware?: WebSocketMiddlewareCore<TBody>[];
+  handler: WebSocketHandlerCore<TBody>;
 }
+
+export interface WebSocketTypes {
+  body?: unknown;
+}
+
+interface WebSocketDefaults {
+  body: unknown;
+}
+
+export type WebSocketRequest<T extends TypeArgs<T, WebSocketTypes> = object> = WebSocketRequestCore<
+  TypeArg<T, 'body', WebSocketDefaults>
+>;
+
+export type WebSocketMessageRequest<T extends TypeArgs<T, WebSocketTypes> = object> = WebSocketMessageRequestCore<
+  TypeArg<T, 'body', WebSocketDefaults>
+>;
+
+export type WebSocketHandler<T extends TypeArgs<T, WebSocketTypes> = object> = WebSocketHandlerCore<
+  TypeArg<T, 'body', WebSocketDefaults>
+>;
+
+export type WebSocketMiddleware<T extends TypeArgs<T, WebSocketTypes> = object> = WebSocketMiddlewareCore<
+  TypeArg<T, 'body', WebSocketDefaults>
+>;
+
+export type WebSocketMessageRouteDefinition<T extends TypeArgs<T, WebSocketTypes> = object> =
+  WebSocketMessageRouteDefinitionCore<TypeArg<T, 'body', WebSocketDefaults>>;
+
+export type WebSocketRouteDefinition<T extends TypeArgs<T, WebSocketTypes> = object> = WebSocketRouteDefinitionCore<
+  TypeArg<T, 'body', WebSocketDefaults>
+>;

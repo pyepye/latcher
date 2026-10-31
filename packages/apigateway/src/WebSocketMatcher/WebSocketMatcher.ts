@@ -21,27 +21,27 @@ import type {
   WebSocketEventType,
   WebSocketFilterInput,
   WebSocketFilters,
-  WebSocketMessageRouteDefinition,
-  WebSocketMiddleware,
-  WebSocketRequest,
+  WebSocketMessageRouteDefinitionCore,
+  WebSocketMiddlewareCore,
+  WebSocketRequestCore,
   WebSocketResult,
-  WebSocketRouteDefinition,
+  WebSocketRouteDefinitionCore,
 } from './types.js';
 
 interface InternalRoute {
   filters: WebSocketFilters;
   bodySchema?: StandardSchemaV1;
-  middleware?: WebSocketMiddleware[];
-  handler: (request: WebSocketRequest) => Promise<WebSocketConnectResponse>;
+  middleware?: WebSocketMiddlewareCore[];
+  handler: (request: WebSocketRequestCore) => Promise<WebSocketConnectResponse>;
 }
 
 export interface WebSocketMatcherOptions {
-  middleware?: WebSocketMiddleware[];
+  middleware?: WebSocketMiddlewareCore[];
 }
 
 type FiltersToRequest<TEventType extends WebSocketEventType | undefined, TBody> = TEventType extends WebSocketEventType
-  ? Extract<WebSocketRequest<TBody>, { eventType: TEventType }>
-  : WebSocketRequest<TBody>;
+  ? Extract<WebSocketRequestCore<TBody>, { eventType: TEventType }>
+  : WebSocketRequestCore<TBody>;
 
 // eventType picks the request branch and routeKey the literal type, so both are re-declared
 // generically over the WebSocketFilters base
@@ -61,13 +61,13 @@ interface RouteInput<
 > {
   filters: WebSocketRouteInputFilters<TEventType, TRouteKey>;
   bodySchema?: TBodySchema;
-  middleware?: WebSocketMiddleware<TBody>[];
+  middleware?: WebSocketMiddlewareCore<TBody>[];
 }
 
 interface RouteBuilder<TRequest, TBody> {
   handle(
     handler: (request: TRequest) => Promise<WebSocketConnectResponse> | Promise<void>,
-  ): WebSocketRouteDefinition<TBody>;
+  ): WebSocketRouteDefinitionCore<TBody>;
 }
 
 export function defineWebSocketRoute<
@@ -78,8 +78,8 @@ export function defineWebSocketRoute<
 >(config: RouteInput<TEventType, TRouteKey, TBodySchema>): RouteBuilder<FiltersToRequest<TEventType, TBody>, TBody> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): WebSocketRouteDefinition<TBody> {
-      return { ...config, handler } as unknown as WebSocketRouteDefinition<TBody>;
+    handle(handler): WebSocketRouteDefinitionCore<TBody> {
+      return { ...config, handler } as unknown as WebSocketRouteDefinitionCore<TBody>;
     },
   };
 }
@@ -87,7 +87,7 @@ export function defineWebSocketRoute<
 export class WebSocketMatcher implements EventTypeMatcherCore<WebSocketEvent, WebSocketResult> {
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: WebSocketMiddleware[];
+  private middleware: WebSocketMiddlewareCore[];
 
   constructor(options?: WebSocketMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -115,13 +115,13 @@ export class WebSocketMatcher implements EventTypeMatcherCore<WebSocketEvent, We
   >(definition: {
     filters: WebSocketRouteInputFilters<TEventType, TRouteKey>;
     bodySchema?: TBodySchema;
-    middleware?: WebSocketMiddleware<TBody>[];
+    middleware?: WebSocketMiddlewareCore<TBody>[];
     handler: (request: FiltersToRequest<TEventType, TBody>) => Promise<WebSocketConnectResponse> | Promise<void>;
   }): this {
     this.routes.push({
       filters: definition.filters,
       bodySchema: definition.bodySchema,
-      middleware: definition.middleware as WebSocketMiddleware[] | undefined,
+      middleware: definition.middleware as WebSocketMiddlewareCore[] | undefined,
       handler: definition.handler as InternalRoute['handler'],
     });
     this.routesOrdered = false;
@@ -148,7 +148,7 @@ export class WebSocketMatcher implements EventTypeMatcherCore<WebSocketEvent, We
     return this;
   }
 
-  message<TBody>({ filters, bodySchema, middleware, handler }: WebSocketMessageRouteDefinition<TBody>): this {
+  message<TBody>({ filters, bodySchema, middleware, handler }: WebSocketMessageRouteDefinitionCore<TBody>): this {
     this.routes.push({
       filters: { ...filters, eventType: 'MESSAGE' },
       bodySchema,
@@ -183,7 +183,7 @@ export class WebSocketMatcher implements EventTypeMatcherCore<WebSocketEvent, We
       'Body validation failed for WebSocket body',
     );
 
-    const request: WebSocketRequest = {
+    const request: WebSocketRequestCore = {
       connectionId,
       domainName,
       stage,
