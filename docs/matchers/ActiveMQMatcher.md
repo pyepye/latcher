@@ -156,7 +156,7 @@ import { logger } from '@latcher/base'
 import type { ActiveMQResponse, ActiveMQTextMessageRequest } from '@latcher/mq'
 
 export async function processOrder(
-  request: ActiveMQTextMessageRequest<Order>,
+  request: ActiveMQTextMessageRequest<{ body: Order }>,
 ): Promise<ActiveMQResponse> {
   const { orderId, total } = request.body
   logger.info(`Processing order ${orderId} for ${total} from ${request.destination}`)
@@ -169,7 +169,7 @@ export async function processOrder(
 | --- | --- | --- |
 | `message` | `ActiveMQMessage` | The message. On a text message `data` is decoded to text; on a bytes message `data` is the base64 AWS sent |
 | `destination` | `string` | The queue or topic the message came from, taken from `destination.physicalName` |
-| `body` | `TBody` on text, `Buffer` on bytes | A text body is the decoded data parsed as JSON, or the raw string if it is not JSON. A bytes body is a `Buffer` of the raw bytes |
+| `body` | The `body` key, default `unknown`, on text. `Buffer` on bytes | A text body is the decoded data parsed as JSON, or the raw string if it is not JSON. A bytes body is a `Buffer` of the raw bytes |
 | `messageType` | `ActiveMQMessageType` | Which of the two types this message is. See [Message types](#message-types) |
 | `record` | `ActiveMQMessage` | The untouched message from AWS, so `data` is still base64 |
 | `context` | `Context` | The Lambda context |
@@ -223,7 +223,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`ActiveMQTextMessageRequest`](#generic-parameters) and your own types.
+[`ActiveMQTextMessageRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/processOrder.ts
@@ -235,7 +235,7 @@ export const OrderSchema = z.object({ orderId: z.string(), total: z.number() })
 type Order = z.infer<typeof OrderSchema>
 
 export async function processOrder(
-  request: ActiveMQTextMessageRequest<Order>,
+  request: ActiveMQTextMessageRequest<{ body: Order }>,
 ): Promise<ActiveMQResponse> {
   logger.info(`Processing order ${request.body.orderId}`)
 }
@@ -372,8 +372,8 @@ activeMQMatcher.textMessage({
 ```
 
 **Route middleware carries the route's body type and message type.** A `textMessage()` route with a
-`bodySchema` needs `ActiveMQMiddleware<Order, 'jms/text-message'>`. That gives `request.body` the
-schema output. Leave the second parameter off and `request` is the union of both message types. Matcher
+`bodySchema` needs `ActiveMQMiddleware<{ body: Order; messageType: 'jms/text-message' }>`. That gives `request.body` the
+schema output. Leave `messageType` off and `request` is the union of both message types. Matcher
 middleware takes no type argument, because it runs for every route.
 
 See [middleware](/docs/middleware) for the execution order and the three levels it attaches at.
@@ -384,18 +384,20 @@ All exported from `@latcher/mq`.
 
 | Type | Description |
 | --- | --- |
-| `ActiveMQRequest<TBody>` | The handler argument, the union of the two below |
-| `ActiveMQTextMessageRequest<TBody>` | The handler argument on a text message route |
+| `ActiveMQRequest<{ body }>` | The handler argument, the union of the two below |
+| `ActiveMQTextMessageRequest<{ body }>` | The handler argument on a text message route |
 | `ActiveMQBytesMessageRequest` | The handler argument on a bytes message route, its `body` a `Buffer` |
 | `ActiveMQResponse` | Handler return type, `undefined` |
 | `ActiveMQMessageType` | `'jms/text-message' \| 'jms/bytes-message'` |
 | `ActiveMQFilters` | The `filters` object |
 | `ActiveMQFilterInput` | What `custom` receives |
-| `ActiveMQRouteDefinition<TBody>` | A full route passed to `route()` |
-| `ActiveMQTextMessageRouteDefinition<TBody>` | A route passed to `textMessage()`, with no `messageType` filter |
+| `ActiveMQRouteDefinition<{ body, messageType }>` | A full route passed to `route()` |
+| `ActiveMQTextMessageRouteDefinition<{ body }>` | A route passed to `textMessage()`, with no `messageType` filter |
 | `ActiveMQBytesMessageRouteDefinition` | A route passed to `bytesMessage()`, with no `messageType` filter and no `bodySchema` |
+| `ActiveMQTypes` | The keys `ActiveMQRequest`, `ActiveMQTextMessageRequest` and `ActiveMQTextMessageRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `ActiveMQRouteTypes` | The keys `ActiveMQMiddleware` and `ActiveMQRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `ActiveMQMatcherOptions` | Options for `createActiveMQMatcher` |
-| `ActiveMQMiddleware<TBody, TMessageType>` | Matcher and route middleware |
+| `ActiveMQMiddleware<{ body, messageType }>` | Matcher and route middleware |
 | `ActiveMQMessage` | One message, as `request.message` and `request.record` |
 | `ActiveMQDestination` | The `destination` on a message, holding `physicalName` |
 | `ActiveMQEvent` | The whole event, with its messages in one array |
@@ -403,18 +405,21 @@ All exported from `@latcher/mq`.
 The `ActiveMQMatcher` class and the `createActiveMQMatcher` and `defineActiveMQRoute` functions come from
 the same place.
 
-### Generic parameters
+### Type arguments
 
-The types above take one or both of these.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TBody` | `request.body` | `unknown` |
-| `TMessageType` | Which request shape a middleware takes | `undefined`, meaning the union |
+| `body` | `ActiveMQRequest`, `ActiveMQTextMessageRequest`, `ActiveMQTextMessageRouteDefinition` | `unknown` |
+| `body`, `messageType` | `ActiveMQMiddleware`, `ActiveMQRouteDefinition` | `unknown` and `undefined` |
 
-Only `ActiveMQMiddleware` takes the second parameter. Leave `TBody` off and the body is `unknown`,
-which is what `ActiveMQFilterInput` sees however the route is typed. You only need it for
-[annotated handlers](#annotated-handlers), since inference covers the rest.
+`body` types `request.body` on a text message. `messageType` picks the request shape a middleware or route
+takes. Its default, `undefined`, means the union of both message types.
+
+Leave `body` out and it stays `unknown`, which is what `ActiveMQFilterInput` sees however the route is
+typed. You only need it for [annotated handlers](#annotated-handlers), since inference covers the rest.
+See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 
@@ -483,7 +488,7 @@ import type {
 import type { Order } from '../schemas/order.js'
 
 export async function processOrder(
-  request: ActiveMQTextMessageRequest<Order>,
+  request: ActiveMQTextMessageRequest<{ body: Order }>,
 ): Promise<ActiveMQResponse> {
   logger.info(\`Processing order \${request.body.orderId} for \${request.body.total}\`)
 }

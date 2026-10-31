@@ -11,4 +11,5 @@ export type {
   RabbitMQRequest,
   RabbitMQResponse,
   RabbitMQRouteDefinition,
+  RabbitMQTypes,
 } from './types.js';

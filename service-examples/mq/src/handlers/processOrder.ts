@@ -5,7 +5,7 @@ import type { TOrder } from '../utils/schemas.js';
 
 // The normal run. Registered with textMessage(), which sets the messageType filter, so the request
 // is a text message and the body is the parsed JSON rather than a Buffer.
-export async function processOrder(request: ActiveMQTextMessageRequest<TOrder>): Promise<void> {
+export async function processOrder(request: ActiveMQTextMessageRequest<{ body: TOrder }>): Promise<void> {
   logger.info({
     message: 'Order processed',
     orderId: request.body.orderId,

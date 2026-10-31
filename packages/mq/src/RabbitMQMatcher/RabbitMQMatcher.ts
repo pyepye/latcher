@@ -19,10 +19,10 @@ import type {
   RabbitMQInternalRoute,
   RabbitMQMatcherOptions,
   RabbitMQMessage,
-  RabbitMQMiddleware,
-  RabbitMQRequest,
+  RabbitMQMiddlewareCore,
+  RabbitMQRequestCore,
   RabbitMQRouteBuilder,
-  RabbitMQRouteDefinition,
+  RabbitMQRouteDefinitionCore,
   RabbitMQRouteInput,
 } from './types.js';
 
@@ -54,12 +54,12 @@ export function defineRabbitMQRoute<
 >(config: RabbitMQRouteInput<TBodySchema, TBody>): RabbitMQRouteBuilder<TBody> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): RabbitMQRouteDefinition<TBody> {
+    handle(handler): RabbitMQRouteDefinitionCore<TBody> {
       return {
         filters: config.filters as RabbitMQFilters,
         bodySchema: config.bodySchema as StandardSchemaV1<unknown, TBody> | undefined,
-        middleware: config.middleware as RabbitMQRouteDefinition<TBody>['middleware'],
-        handler: handler as (request: RabbitMQRequest<TBody>) => Promise<void>,
+        middleware: config.middleware as RabbitMQRouteDefinitionCore<TBody>['middleware'],
+        handler: handler as (request: RabbitMQRequestCore<TBody>) => Promise<void>,
       };
     },
   };
@@ -68,7 +68,7 @@ export function defineRabbitMQRoute<
 export class RabbitMQMatcher implements EventTypeMatcherCore<RabbitMQEvent, undefined> {
   private routes: RabbitMQInternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: RabbitMQMiddleware[];
+  private middleware: RabbitMQMiddlewareCore[];
 
   constructor(options?: RabbitMQMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -79,7 +79,7 @@ export class RabbitMQMatcher implements EventTypeMatcherCore<RabbitMQEvent, unde
     return event.eventSource === 'aws:rmq' && isObject(event.rmqMessagesByQueue);
   }
 
-  route<TBody>(definition: RabbitMQRouteDefinition<TBody>): this {
+  route<TBody>(definition: RabbitMQRouteDefinitionCore<TBody>): this {
     this.routes.push(definition as RabbitMQInternalRoute);
     this.routesOrdered = false;
     return this;
@@ -108,7 +108,7 @@ export class RabbitMQMatcher implements EventTypeMatcherCore<RabbitMQEvent, unde
         const parsedBody = safeJsonParse(decodedData);
         const body = await validateSchema(parsedBody, route.bodySchema, 'Body validation failed');
 
-        const request: RabbitMQRequest = {
+        const request: RabbitMQRequestCore = {
           message: decodedMessage,
           queue: queueName,
           virtualHost,

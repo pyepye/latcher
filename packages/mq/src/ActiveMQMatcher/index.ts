@@ -14,6 +14,8 @@ export type {
   ActiveMQRequest,
   ActiveMQResponse,
   ActiveMQRouteDefinition,
+  ActiveMQRouteTypes,
   ActiveMQTextMessageRequest,
   ActiveMQTextMessageRouteDefinition,
+  ActiveMQTypes,
 } from './types.js';

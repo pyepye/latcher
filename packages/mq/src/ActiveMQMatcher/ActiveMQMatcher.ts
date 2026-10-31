@@ -19,12 +19,12 @@ import type {
   ActiveMQMatcherOptions,
   ActiveMQMessage,
   ActiveMQMessageType,
-  ActiveMQMiddleware,
-  ActiveMQRequest,
+  ActiveMQMiddlewareCore,
+  ActiveMQRequestCore,
   ActiveMQRouteBuilder,
-  ActiveMQRouteDefinition,
+  ActiveMQRouteDefinitionCore,
   ActiveMQRouteInput,
-  ActiveMQTextMessageRouteDefinition,
+  ActiveMQTextMessageRouteDefinitionCore,
 } from './types.js';
 
 export function defineActiveMQRoute<
@@ -33,7 +33,7 @@ export function defineActiveMQRoute<
 >(config: ActiveMQRouteInput<TBody, TMessageType>): ActiveMQRouteBuilder<TBody, TMessageType> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): ActiveMQRouteDefinition<TBody, TMessageType> {
+    handle(handler): ActiveMQRouteDefinitionCore<TBody, TMessageType> {
       return {
         filters: config.filters,
         bodySchema: config.bodySchema,
@@ -47,7 +47,7 @@ export function defineActiveMQRoute<
 export class ActiveMQMatcher implements EventTypeMatcherCore<ActiveMQEvent, undefined> {
   private routes: ActiveMQInternalRoute[] = [];
   private routesOrdered = false;
-  private middleware: ActiveMQMiddleware[];
+  private middleware: ActiveMQMiddlewareCore[];
 
   constructor(options?: ActiveMQMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -59,14 +59,14 @@ export class ActiveMQMatcher implements EventTypeMatcherCore<ActiveMQEvent, unde
   }
 
   route<TBody = unknown, TMessageType extends ActiveMQMessageType | undefined = undefined>(
-    definition: ActiveMQRouteDefinition<TBody, TMessageType>,
+    definition: ActiveMQRouteDefinitionCore<TBody, TMessageType>,
   ): this {
     this.routes.push(definition as ActiveMQInternalRoute);
     this.routesOrdered = false;
     return this;
   }
 
-  textMessage<TBody>(definition: ActiveMQTextMessageRouteDefinition<TBody>): this {
+  textMessage<TBody>(definition: ActiveMQTextMessageRouteDefinitionCore<TBody>): this {
     this.routes.push({
       ...definition,
       filters: { ...definition.filters, messageType: 'jms/text-message' },
@@ -105,7 +105,7 @@ export class ActiveMQMatcher implements EventTypeMatcherCore<ActiveMQEvent, unde
       }
 
       const base = { message: decodedMessage, destination, record: message, context };
-      let request: ActiveMQRequest;
+      let request: ActiveMQRequestCore;
       if (isBytesMessage) {
         request = { ...base, body: Buffer.from(message.data, 'base64'), messageType: 'jms/bytes-message' };
       } else {

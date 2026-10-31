@@ -142,7 +142,7 @@ import { logger } from '@latcher/base'
 import type { RabbitMQRequest, RabbitMQResponse } from '@latcher/mq'
 
 export async function processOrder(
-  request: RabbitMQRequest<Order>,
+  request: RabbitMQRequest<{ body: Order }>,
 ): Promise<RabbitMQResponse> {
   const { orderId, total } = request.body
   logger.info(`Processing order ${orderId} for ${total} from ${request.queue}`)
@@ -156,7 +156,7 @@ export async function processOrder(
 | `message` | `RabbitMQMessage` | The message with `data` decoded from base64 to text |
 | `queue` | `string` | The queue name, without the virtual host |
 | `virtualHost` | `string \| undefined` | The virtual host the queue lives on. `undefined` when the queue key carries none |
-| `body` | `TBody` | The decoded data parsed as JSON. Data that is not JSON reaches you as the raw string |
+| `body` | The `body` key, default `unknown` | The decoded data parsed as JSON. Data that is not JSON reaches you as the raw string |
 | `timestamp` | `Date \| null` | The AMQP `timestamp` property as a `Date`. See [Timestamp](#timestamp) |
 | `record` | `RabbitMQMessage` | The untouched message from AWS, so `data` is still base64 |
 | `context` | `Context` | The Lambda context |
@@ -237,7 +237,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`RabbitMQRequest`](#generic-parameters) and your own types.
+[`RabbitMQRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/processOrder.ts
@@ -248,7 +248,7 @@ import { z } from 'zod'
 export const OrderSchema = z.object({ orderId: z.string(), total: z.number() })
 type Order = z.infer<typeof OrderSchema>
 
-export async function processOrder(request: RabbitMQRequest<Order>): Promise<RabbitMQResponse> {
+export async function processOrder(request: RabbitMQRequest<{ body: Order }>): Promise<RabbitMQResponse> {
   logger.info(`Processing order ${request.body.orderId}`)
 }
 ```
@@ -341,7 +341,7 @@ rabbitMQMatcher.route({
 ```
 
 **Route middleware carries the route's body type.** A route with a `bodySchema` needs
-`RabbitMQMiddleware<Order>`. `RabbitMQMiddleware` on its own does not compile there. Matcher middleware
+`RabbitMQMiddleware<{ body: Order }>`. `RabbitMQMiddleware` on its own does not compile there. Matcher middleware
 takes no type argument, because it runs for every route.
 
 See [middleware](/docs/middleware) for the execution order and the three levels it attaches at.
@@ -352,13 +352,14 @@ All exported from `@latcher/mq`.
 
 | Type | Description |
 | --- | --- |
-| `RabbitMQRequest<TBody>` | The handler argument |
+| `RabbitMQRequest<{ body }>` | The handler argument |
 | `RabbitMQResponse` | Handler return type, `undefined` |
 | `RabbitMQFilters` | The `filters` object |
 | `RabbitMQFilterInput` | What `custom` receives |
-| `RabbitMQRouteDefinition<TBody>` | A full route passed to `route()` |
+| `RabbitMQRouteDefinition<{ body }>` | A full route passed to `route()` |
+| `RabbitMQTypes` | The keys `RabbitMQRequest`, `RabbitMQMiddleware` and `RabbitMQRouteDefinition` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `RabbitMQMatcherOptions` | Options for `createRabbitMQMatcher` |
-| `RabbitMQMiddleware<TBody>` | Matcher and route middleware |
+| `RabbitMQMiddleware<{ body }>` | Matcher and route middleware |
 | `RabbitMQMessage` | One message, as `request.message` and `request.record` |
 | `RabbitMQBasicProperties` | The AMQP properties on a message |
 | `RabbitMQHeaderValue` | One value in `basicProperties.headers`. See [Headers](#headers) |
@@ -367,17 +368,17 @@ All exported from `@latcher/mq`.
 The `RabbitMQMatcher` class and the `createRabbitMQMatcher` and `defineRabbitMQRoute` functions come from
 the same place.
 
-### Generic parameters
+### Type arguments
 
-The types above that take a parameter all take the same one.
+The types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Keys | Types | Default |
 | --- | --- | --- |
-| `TBody` | `request.body` | `unknown` |
+| `body` | `RabbitMQRequest`, `RabbitMQMiddleware`, `RabbitMQRouteDefinition` | `unknown` |
 
-Leave it off and the body is `unknown`, which is what `RabbitMQFilterInput` sees however the route is
-typed. You only need it for [annotated handlers](#annotated-handlers), since inference covers the
-rest.
+`body` types `request.body`. Leave it out and the body is `unknown`, which is what `RabbitMQFilterInput`
+sees however the route is typed. You only need it for [annotated handlers](#annotated-handlers), since
+inference covers the rest. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 
@@ -442,11 +443,11 @@ import type { RabbitMQRequest, RabbitMQResponse } from '@latcher/mq'
 
 import type { Order } from '../schemas/order.js'
 
-export async function processOrder(request: RabbitMQRequest<Order>): Promise<RabbitMQResponse> {
+export async function processOrder(request: RabbitMQRequest<{ body: Order }>): Promise<RabbitMQResponse> {
   logger.info(\`Processing order \${request.body.orderId}\`)
 }
 
-export async function refundOrder(request: RabbitMQRequest<Order>): Promise<RabbitMQResponse> {
+export async function refundOrder(request: RabbitMQRequest<{ body: Order }>): Promise<RabbitMQResponse> {
   logger.info(\`Refunding order \${request.body.orderId} for \${request.body.total}\`)
 }
 

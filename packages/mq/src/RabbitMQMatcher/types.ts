@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 // --- AWS Event Types (not in @types/aws-lambda) ---
 
@@ -50,7 +50,7 @@ export interface RabbitMQEvent {
 
 // --- Request Type ---
 
-export interface RabbitMQRequest<TBody = unknown> {
+export interface RabbitMQRequestCore<TBody = unknown> {
   message: RabbitMQMessage;
   queue: string;
   virtualHost: string | undefined;
@@ -81,13 +81,13 @@ export interface RabbitMQFilters {
 
 // --- Route Definition Types ---
 
-export type RabbitMQMiddleware<TBody = unknown> = MiddlewareCore<RabbitMQRequest<TBody>, void>;
+export type RabbitMQMiddlewareCore<TBody = unknown> = MiddlewareCore<RabbitMQRequestCore<TBody>, void>;
 
-export interface RabbitMQRouteDefinition<TBody = unknown> {
+export interface RabbitMQRouteDefinitionCore<TBody = unknown> {
   filters: RabbitMQFilters;
   bodySchema?: StandardSchemaV1<unknown, TBody>;
-  middleware?: RabbitMQMiddleware<NoInfer<TBody>>[];
-  handler: (request: RabbitMQRequest<TBody>) => Promise<void>;
+  middleware?: RabbitMQMiddlewareCore<NoInfer<TBody>>[];
+  handler: (request: RabbitMQRequestCore<TBody>) => Promise<void>;
 }
 
 // --- Internal Route Type ---
@@ -95,8 +95,8 @@ export interface RabbitMQRouteDefinition<TBody = unknown> {
 export interface RabbitMQInternalRoute {
   filters: RabbitMQFilters;
   bodySchema?: StandardSchemaV1;
-  middleware?: RabbitMQMiddleware[];
-  handler: (request: RabbitMQRequest) => Promise<void>;
+  middleware?: RabbitMQMiddlewareCore[];
+  handler: (request: RabbitMQRequestCore) => Promise<void>;
 }
 
 // --- Route Builder Types ---
@@ -106,16 +106,36 @@ export interface RabbitMQRouteInput<
   TBody = TBodySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TBodySchema> : unknown,
 > {
   filters: RabbitMQFilters;
-  middleware?: RabbitMQMiddleware<TBody>[];
+  middleware?: RabbitMQMiddlewareCore<TBody>[];
   bodySchema?: TBodySchema;
 }
 
 export interface RabbitMQRouteBuilder<TBody> {
-  handle(handler: (request: RabbitMQRequest<TBody>) => Promise<void>): RabbitMQRouteDefinition<TBody>;
+  handle(handler: (request: RabbitMQRequestCore<TBody>) => Promise<void>): RabbitMQRouteDefinitionCore<TBody>;
 }
 
 export interface RabbitMQMatcherOptions {
-  middleware?: RabbitMQMiddleware[];
+  middleware?: RabbitMQMiddlewareCore[];
 }
 
 export type RabbitMQResponse = undefined;
+
+export interface RabbitMQTypes {
+  body?: unknown;
+}
+
+interface RabbitMQDefaults {
+  body: unknown;
+}
+
+export type RabbitMQRequest<T extends TypeArgs<T, RabbitMQTypes> = object> = RabbitMQRequestCore<
+  TypeArg<T, 'body', RabbitMQDefaults>
+>;
+
+export type RabbitMQMiddleware<T extends TypeArgs<T, RabbitMQTypes> = object> = RabbitMQMiddlewareCore<
+  TypeArg<T, 'body', RabbitMQDefaults>
+>;
+
+export type RabbitMQRouteDefinition<T extends TypeArgs<T, RabbitMQTypes> = object> = RabbitMQRouteDefinitionCore<
+  TypeArg<T, 'body', RabbitMQDefaults>
+>;
