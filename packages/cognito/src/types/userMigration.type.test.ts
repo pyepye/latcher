@@ -29,8 +29,8 @@ testCognitoTriggerTypes<
   UserMigrationTriggerSource,
   UserMigrationTriggerEvent,
   UserMigrationRequest,
-  UserMigrationRequest<CustomAttributes>,
+  UserMigrationRequest<{ userAttributes: CustomAttributes }>,
   UserMigrationHandler,
-  UserMigrationHandler<CustomAttributes>,
+  UserMigrationHandler<{ userAttributes: CustomAttributes }>,
   UserMigrationRouteDefinition
 >('UserMigration');

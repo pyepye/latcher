@@ -29,8 +29,8 @@ testCognitoTriggerTypes<
   PostConfirmationTriggerSource,
   PostConfirmationTriggerEvent,
   PostConfirmationRequest,
-  PostConfirmationRequest<CustomAttributes>,
+  PostConfirmationRequest<{ userAttributes: CustomAttributes }>,
   PostConfirmationHandler,
-  PostConfirmationHandler<CustomAttributes>,
+  PostConfirmationHandler<{ userAttributes: CustomAttributes }>,
   PostConfirmationRouteDefinition
 >('PostConfirmation');

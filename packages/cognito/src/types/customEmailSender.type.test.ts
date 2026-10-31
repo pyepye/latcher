@@ -36,8 +36,8 @@ testCognitoTriggerTypes<
   CustomEmailSenderTriggerSource,
   CustomEmailSenderTriggerEvent,
   CustomEmailSenderRequest,
-  CustomEmailSenderRequest<CustomAttributes>,
+  CustomEmailSenderRequest<{ userAttributes: CustomAttributes }>,
   CustomEmailSenderHandler,
-  CustomEmailSenderHandler<CustomAttributes>,
+  CustomEmailSenderHandler<{ userAttributes: CustomAttributes }>,
   CustomEmailSenderRouteDefinition
 >('CustomEmailSender');

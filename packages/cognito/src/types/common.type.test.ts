@@ -18,7 +18,7 @@ export function testCognitoTriggerTypes<
   _HandlerWithCustom extends (request: RequestWithCustom) => Promise<Event>,
   _RouteDefinition extends {
     handler: Handler;
-    filters?: CognitoFilters<TriggerSource>;
+    filters?: CognitoFilters<{ triggerSource: TriggerSource }>;
     userAttributesSchema?: unknown;
   },
 >(name: string): void {
@@ -93,7 +93,9 @@ suite('CognitoFilterInput', () => {
   });
 
   test('narrows triggerSource with generic', () => {
-    expectTypeOf<CognitoFilterInput<'PreSignUp_SignUp'>['triggerSource']>().toEqualTypeOf<'PreSignUp_SignUp'>();
+    expectTypeOf<
+      CognitoFilterInput<{ triggerSource: 'PreSignUp_SignUp' }>['triggerSource']
+    >().toEqualTypeOf<'PreSignUp_SignUp'>();
   });
 });
 
@@ -119,7 +121,7 @@ suite('CognitoFilters', () => {
   });
 
   test('narrows triggerSource with generic', () => {
-    type Narrowed = NonNullable<CognitoFilters<'PreSignUp_SignUp'>['triggerSource']>;
+    type Narrowed = NonNullable<CognitoFilters<{ triggerSource: 'PreSignUp_SignUp' }>['triggerSource']>;
     expectTypeOf<Narrowed>().toEqualTypeOf<'PreSignUp_SignUp' | 'PreSignUp_SignUp'[]>();
   });
 });

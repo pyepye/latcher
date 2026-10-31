@@ -8,9 +8,11 @@ export type {
   CognitoEvent,
   CognitoFilterInput,
   CognitoFilters,
+  CognitoFilterTypes,
   CognitoMatcherOptions,
   CognitoMiddleware,
   CognitoTriggerSource,
+  CognitoTypes,
   // CreateAuthChallenge
   CreateAuthChallengeHandler,
   CreateAuthChallengeRequest,
@@ -65,6 +67,7 @@ export type {
   PreTokenGenerationResponse,
   PreTokenGenerationRouteDefinition,
   PreTokenGenerationTriggerSource,
+  TypedRouteDefinitionTypes,
   UserAttributeFilter,
   UserAttributes,
   // UserMigration

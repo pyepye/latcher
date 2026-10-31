@@ -29,8 +29,8 @@ testCognitoTriggerTypes<
   PreSignUpTriggerSource,
   PreSignUpTriggerEvent,
   PreSignUpRequest,
-  PreSignUpRequest<CustomAttributes>,
+  PreSignUpRequest<{ userAttributes: CustomAttributes }>,
   PreSignUpHandler,
-  PreSignUpHandler<CustomAttributes>,
+  PreSignUpHandler<{ userAttributes: CustomAttributes }>,
   PreSignUpRouteDefinition
 >('PreSignUp');

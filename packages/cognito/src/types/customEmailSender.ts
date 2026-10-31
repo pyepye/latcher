@@ -2,8 +2,10 @@ import type { Context, CustomEmailSenderTriggerEvent } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { CognitoFilters, UserAttributes } from './common.js';
-import type { CognitoMiddleware } from './matcher.js';
+import type { TypeArg, TypeArgs } from '@latcher/base';
+
+import type { CognitoDefaults, CognitoFiltersCore, CognitoTypes, UserAttributes } from './common.js';
+import type { CognitoMiddlewareCore } from './matcher.js';
 
 // CustomEmailSender trigger sources - derived from aws-lambda
 export type CustomEmailSenderTriggerSource = CustomEmailSenderTriggerEvent['triggerSource'];
@@ -12,7 +14,7 @@ export type CustomEmailSenderTriggerSource = CustomEmailSenderTriggerEvent['trig
 export type CustomEmailSenderResponse = undefined;
 
 // CustomEmailSender request - simplified to just essential fields
-export interface CustomEmailSenderRequest<TUserAttributes = UserAttributes> {
+export interface CustomEmailSenderRequestCore<TUserAttributes = UserAttributes> {
   triggerSource: CustomEmailSenderTriggerSource;
   userAttributes: TUserAttributes;
   event: CustomEmailSenderTriggerEvent;
@@ -21,14 +23,25 @@ export interface CustomEmailSenderRequest<TUserAttributes = UserAttributes> {
 
 // CustomEmailSender handler type
 // Handlers modify the cloned event and return it
-export type CustomEmailSenderHandler<TUserAttributes = UserAttributes> = (
-  request: CustomEmailSenderRequest<TUserAttributes>,
+type CustomEmailSenderHandlerCore<TUserAttributes = UserAttributes> = (
+  request: CustomEmailSenderRequestCore<TUserAttributes>,
 ) => Promise<CustomEmailSenderTriggerEvent>;
 
 // CustomEmailSender route definition
-export interface CustomEmailSenderRouteDefinition<TUserAttributes = UserAttributes> {
-  filters?: CognitoFilters<CustomEmailSenderTriggerSource>;
+export interface CustomEmailSenderRouteDefinitionCore<TUserAttributes = UserAttributes> {
+  filters?: CognitoFiltersCore<CustomEmailSenderTriggerSource>;
   userAttributesSchema?: StandardSchemaV1<unknown, TUserAttributes>;
-  middleware?: CognitoMiddleware<NoInfer<TUserAttributes>>[];
-  handler: CustomEmailSenderHandler<TUserAttributes>;
+  middleware?: CognitoMiddlewareCore<NoInfer<TUserAttributes>>[];
+  handler: CustomEmailSenderHandlerCore<TUserAttributes>;
 }
+
+export type CustomEmailSenderRequest<T extends TypeArgs<T, CognitoTypes> = object> = CustomEmailSenderRequestCore<
+  TypeArg<T, 'userAttributes', CognitoDefaults>
+>;
+
+export type CustomEmailSenderHandler<T extends TypeArgs<T, CognitoTypes> = object> = CustomEmailSenderHandlerCore<
+  TypeArg<T, 'userAttributes', CognitoDefaults>
+>;
+
+export type CustomEmailSenderRouteDefinition<T extends TypeArgs<T, CognitoTypes> = object> =
+  CustomEmailSenderRouteDefinitionCore<TypeArg<T, 'userAttributes', CognitoDefaults>>;

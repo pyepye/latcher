@@ -286,7 +286,9 @@ suite('defineRoute type inference', () => {
       });
 
       type HandleReturn = ReturnType<typeof builder.handle>;
-      expectTypeOf<HandleReturn>().toEqualTypeOf<TypedRouteDefinition<'PreSignUp_SignUp', UserAttributes>>();
+      expectTypeOf<HandleReturn>().toEqualTypeOf<
+        TypedRouteDefinition<{ trigger: 'PreSignUp_SignUp'; userAttributes: UserAttributes }>
+      >();
     });
 
     test('returns TypedRouteDefinition narrowed to PreAuthentication trigger', () => {
@@ -296,7 +298,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'PreAuthentication_Authentication', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'PreAuthentication_Authentication'; userAttributes: UserAttributes }>
       >();
     });
 
@@ -307,7 +309,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'PostAuthentication_Authentication', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'PostAuthentication_Authentication'; userAttributes: UserAttributes }>
       >();
     });
 
@@ -318,7 +320,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'PostConfirmation_ConfirmSignUp', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'PostConfirmation_ConfirmSignUp'; userAttributes: UserAttributes }>
       >();
     });
 
@@ -329,7 +331,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'DefineAuthChallenge_Authentication', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'DefineAuthChallenge_Authentication'; userAttributes: UserAttributes }>
       >();
     });
 
@@ -340,7 +342,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'CreateAuthChallenge_Authentication', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'CreateAuthChallenge_Authentication'; userAttributes: UserAttributes }>
       >();
     });
 
@@ -351,7 +353,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'VerifyAuthChallengeResponse_Authentication', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'VerifyAuthChallengeResponse_Authentication'; userAttributes: UserAttributes }>
       >();
     });
 
@@ -361,7 +363,9 @@ suite('defineRoute type inference', () => {
       });
 
       type HandleReturn = ReturnType<typeof builder.handle>;
-      expectTypeOf<HandleReturn>().toEqualTypeOf<TypedRouteDefinition<'CustomMessage_SignUp', UserAttributes>>();
+      expectTypeOf<HandleReturn>().toEqualTypeOf<
+        TypedRouteDefinition<{ trigger: 'CustomMessage_SignUp'; userAttributes: UserAttributes }>
+      >();
     });
 
     test('returns TypedRouteDefinition narrowed to CustomEmailSender trigger', () => {
@@ -370,7 +374,9 @@ suite('defineRoute type inference', () => {
       });
 
       type HandleReturn = ReturnType<typeof builder.handle>;
-      expectTypeOf<HandleReturn>().toEqualTypeOf<TypedRouteDefinition<'CustomEmailSender_SignUp', UserAttributes>>();
+      expectTypeOf<HandleReturn>().toEqualTypeOf<
+        TypedRouteDefinition<{ trigger: 'CustomEmailSender_SignUp'; userAttributes: UserAttributes }>
+      >();
     });
 
     test('returns TypedRouteDefinition narrowed to PreTokenGeneration trigger', () => {
@@ -379,7 +385,9 @@ suite('defineRoute type inference', () => {
       });
 
       type HandleReturn = ReturnType<typeof builder.handle>;
-      expectTypeOf<HandleReturn>().toEqualTypeOf<TypedRouteDefinition<'TokenGeneration_HostedAuth', UserAttributes>>();
+      expectTypeOf<HandleReturn>().toEqualTypeOf<
+        TypedRouteDefinition<{ trigger: 'TokenGeneration_HostedAuth'; userAttributes: UserAttributes }>
+      >();
     });
 
     test('returns TypedRouteDefinition narrowed to UserMigration trigger', () => {
@@ -389,7 +397,7 @@ suite('defineRoute type inference', () => {
 
       type HandleReturn = ReturnType<typeof builder.handle>;
       expectTypeOf<HandleReturn>().toEqualTypeOf<
-        TypedRouteDefinition<'UserMigration_Authentication', UserAttributes>
+        TypedRouteDefinition<{ trigger: 'UserMigration_Authentication'; userAttributes: UserAttributes }>
       >();
     });
   });
@@ -427,7 +435,7 @@ suite('defineRoute type inference', () => {
 
       expectTypeOf<NonNullable<Filters['custom']>>()
         .parameter(0)
-        .toEqualTypeOf<CognitoFilterInput<'PreSignUp_SignUp'>>();
+        .toEqualTypeOf<CognitoFilterInput<{ triggerSource: 'PreSignUp_SignUp' }>>();
     });
 
     test('accepts an async custom filter', () => {
@@ -531,7 +539,7 @@ suite('route', () => {
     async function onPreSignUp({
       event,
       userAttributes,
-    }: PreSignUpRequest<VerifiedAttributes>): Promise<PreSignUpTriggerEvent> {
+    }: PreSignUpRequest<{ userAttributes: VerifiedAttributes }>): Promise<PreSignUpTriggerEvent> {
       expectTypeOf(userAttributes.emailVerified).toEqualTypeOf<boolean>();
       return event;
     }
@@ -546,7 +554,7 @@ suite('route', () => {
   });
 
   test('accepts a route middleware typed to a coerced attribute schema', () => {
-    type VerifiedRequest = CognitoRequest<VerifiedAttributes>;
+    type VerifiedRequest = CognitoRequest<{ userAttributes: VerifiedAttributes }>;
 
     async function requireVerified(
       request: VerifiedRequest,
@@ -562,7 +570,7 @@ suite('route', () => {
       middleware: [requireVerified],
     }).handle(async ({ event }) => event);
 
-    expectTypeOf(requireVerified).toMatchTypeOf<CognitoMiddleware<VerifiedAttributes>>();
+    expectTypeOf(requireVerified).toMatchTypeOf<CognitoMiddleware<{ userAttributes: VerifiedAttributes }>>();
     expect(definition.middleware).toEqual([requireVerified]);
   });
 });

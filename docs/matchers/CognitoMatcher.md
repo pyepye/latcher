@@ -232,7 +232,7 @@ compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using the
-[request type](#generic-parameters) for the family and returning its event.
+[request type](#type-arguments) for the family and returning its event.
 
 ```ts
 // handlers/allowSignUp.ts
@@ -262,7 +262,7 @@ A handler typed `PreSignUpRequest` fits the `preSignUp()` method. It also fits `
 `filters.triggerSource` names the trigger it is written for. Without that filter nothing tells `route()`
 which trigger the handler expects, so annotate against `CognitoRequest` and narrow on `triggerSource`
 inside. When you validate attributes, derive the type with `z.infer` and pass it as
-`PreSignUpRequest<Attributes>` rather than hand-writing one. See
+`PreSignUpRequest<{ userAttributes: Attributes }>` rather than hand-writing one. See
 [annotated handlers](/docs/handlers#annotated-handlers) for the worked version.
 
 ## Schema validation
@@ -347,8 +347,8 @@ cognitoMatcher.preSignUp({
 ```
 
 **Route middleware carries the route's user attributes type.** A route with a
-`userAttributesSchema` needs `CognitoMiddleware<Attributes>`. `CognitoMiddleware` on its own does not
-compile there. Matcher middleware takes no type argument, because it runs for every route.
+`userAttributesSchema` needs `CognitoMiddleware<{ userAttributes: Attributes }>`. `CognitoMiddleware` on its own does not
+compile there. Matcher middleware takes no type arguments, because it runs for every route.
 
 Matcher middleware runs before route middleware, and a schema failure throws before either runs. See
 [middleware](/docs/middleware) for the execution order and the three levels it attaches at.
@@ -359,33 +359,41 @@ All exported from `@latcher/cognito`.
 
 | Type | Description |
 | --- | --- |
-| `CognitoRequest<TUserAttributes>` | The wide handler argument, a union over every trigger |
+| `CognitoRequest<{ userAttributes }>` | The wide handler argument, a union over every trigger |
 | `CognitoEvent` | The event you return, a union of every trigger event |
 | `CognitoFilters` | The `filters` object |
 | `CognitoFilterInput` | What `custom` receives |
-| `CognitoRouteDefinition<TUserAttributes>` | A full route passed to `route()` |
-| `TypedRouteDefinition<TTrigger, TUserAttributes>` | A route pinned to one trigger, which `route()` also takes |
+| `CognitoRouteDefinition<{ userAttributes }>` | A full route passed to `route()` |
+| `TypedRouteDefinition<{ trigger, userAttributes }>` | A route pinned to one trigger, which `route()` also takes |
 | `CognitoMatcherOptions` | Options for `createCognitoMatcher` |
-| `CognitoMiddleware<TUserAttributes>` | Matcher and route middleware |
+| `CognitoMiddleware<{ userAttributes }>` | Matcher and route middleware |
+| `CognitoTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `CognitoFilterTypes` | The keys `CognitoFilters` and `CognitoFilterInput` accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `TypedRouteDefinitionTypes` | The keys `TypedRouteDefinition` accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `CognitoTriggerSource` | The union of every trigger source |
 | `UserAttributes` | The user attribute record, `Record<string, string>` |
 | `UserAttributeFilter` | A single attribute matcher, `string \| RegExp \| ((value: string) => boolean)` |
 
-Each trigger family exports its own set on the same pattern: `<Family>Request<TUserAttributes>`,
-`<Family>Response`, `<Family>Handler<TUserAttributes>`, `<Family>RouteDefinition<TUserAttributes>` and
+Each trigger family exports its own set on the same pattern: `<Family>Request<{ userAttributes }>`,
+`<Family>Response`, `<Family>Handler<{ userAttributes }>`, `<Family>RouteDefinition<{ userAttributes }>` and
 `<Family>TriggerSource`, so `PreSignUpRequest`, `PreSignUpResponse` and the rest. Use these to annotate
 a handler for one family. The `CognitoMatcher` class and the `createCognitoMatcher` and `defineRoute`
 functions come from the same place.
 
-### Generic parameters
+### Type arguments
 
-| Parameter | Types | Default |
+The generic types above take one object. Its keys are the names of the properties they type.
+
+| Key | Types | Default |
 | --- | --- | --- |
-| `TUserAttributes` | `request.userAttributes`, and the `userAttributesSchema` output | `UserAttributes` |
+| `userAttributes` | `request.userAttributes`, and the `userAttributesSchema` output. Used by the request, handler, middleware and route types | `UserAttributes` |
+| `triggerSource` | `CognitoFilters` and `CognitoFilterInput`, the trigger sources they name | `string` |
+| `trigger` | `TypedRouteDefinition`, the one trigger the route is pinned to | Required, no default |
 
-You only need it for [annotated handlers](#annotated-handlers) with a validated schema, as in
-`PreSignUpRequest<Attributes>`.
-Inference covers it otherwise.
+Leave a key out and it takes its default. `trigger` has none, so `TypedRouteDefinition` always needs it. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
+
+You only need these for [annotated handlers](#annotated-handlers) with a validated schema, as in
+`PreSignUpRequest<{ userAttributes: Attributes }>`. Inference covers it otherwise.
 
 ## Trigger sources
 
@@ -483,7 +491,7 @@ export async function allowSignUp({ event, userAttributes }: PreSignUpRequest): 
 }
 
 export async function provisionUser(
-  { event, userAttributes }: PostConfirmationRequest<UserAttributes>,
+  { event, userAttributes }: PostConfirmationRequest,
 ): Promise<PostConfirmationTriggerEvent> {
   logger.info(\`Provisioning \${userAttributes.email}\`)
   return event

@@ -35,8 +35,8 @@ testCognitoTriggerTypes<
   CustomMessageTriggerSource,
   CustomMessageTriggerEvent,
   CustomMessageRequest,
-  CustomMessageRequest<CustomAttributes>,
+  CustomMessageRequest<{ userAttributes: CustomAttributes }>,
   CustomMessageHandler,
-  CustomMessageHandler<CustomAttributes>,
+  CustomMessageHandler<{ userAttributes: CustomAttributes }>,
   CustomMessageRouteDefinition
 >('CustomMessage');

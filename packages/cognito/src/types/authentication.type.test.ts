@@ -57,9 +57,9 @@ testCognitoTriggerTypes<
   PreAuthenticationTriggerSource,
   PreAuthenticationTriggerEvent,
   PreAuthenticationRequest,
-  PreAuthenticationRequest<CustomAttributes>,
+  PreAuthenticationRequest<{ userAttributes: CustomAttributes }>,
   PreAuthenticationHandler,
-  PreAuthenticationHandler<CustomAttributes>,
+  PreAuthenticationHandler<{ userAttributes: CustomAttributes }>,
   PreAuthenticationRouteDefinition
 >('PreAuthentication');
 
@@ -83,9 +83,9 @@ testCognitoTriggerTypes<
   PostAuthenticationTriggerSource,
   PostAuthenticationTriggerEvent,
   PostAuthenticationRequest,
-  PostAuthenticationRequest<CustomAttributes>,
+  PostAuthenticationRequest<{ userAttributes: CustomAttributes }>,
   PostAuthenticationHandler,
-  PostAuthenticationHandler<CustomAttributes>,
+  PostAuthenticationHandler<{ userAttributes: CustomAttributes }>,
   PostAuthenticationRouteDefinition
 >('PostAuthentication');
 
@@ -109,9 +109,9 @@ testCognitoTriggerTypes<
   DefineAuthChallengeTriggerSource,
   DefineAuthChallengeTriggerEvent,
   DefineAuthChallengeRequest,
-  DefineAuthChallengeRequest<CustomAttributes>,
+  DefineAuthChallengeRequest<{ userAttributes: CustomAttributes }>,
   DefineAuthChallengeHandler,
-  DefineAuthChallengeHandler<CustomAttributes>,
+  DefineAuthChallengeHandler<{ userAttributes: CustomAttributes }>,
   DefineAuthChallengeRouteDefinition
 >('DefineAuthChallenge');
 
@@ -135,9 +135,9 @@ testCognitoTriggerTypes<
   CreateAuthChallengeTriggerSource,
   CreateAuthChallengeTriggerEvent,
   CreateAuthChallengeRequest,
-  CreateAuthChallengeRequest<CustomAttributes>,
+  CreateAuthChallengeRequest<{ userAttributes: CustomAttributes }>,
   CreateAuthChallengeHandler,
-  CreateAuthChallengeHandler<CustomAttributes>,
+  CreateAuthChallengeHandler<{ userAttributes: CustomAttributes }>,
   CreateAuthChallengeRouteDefinition
 >('CreateAuthChallenge');
 
@@ -163,8 +163,8 @@ testCognitoTriggerTypes<
   VerifyAuthChallengeResponseTriggerSource,
   VerifyAuthChallengeResponseTriggerEvent,
   VerifyAuthChallengeResponseRequest,
-  VerifyAuthChallengeResponseRequest<CustomAttributes>,
+  VerifyAuthChallengeResponseRequest<{ userAttributes: CustomAttributes }>,
   VerifyAuthChallengeResponseHandler,
-  VerifyAuthChallengeResponseHandler<CustomAttributes>,
+  VerifyAuthChallengeResponseHandler<{ userAttributes: CustomAttributes }>,
   VerifyAuthChallengeResponseRouteDefinition
 >('VerifyAuthChallengeResponse');

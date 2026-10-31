@@ -33,8 +33,8 @@ testCognitoTriggerTypes<
   PreTokenGenerationTriggerSource,
   PreTokenGenerationTriggerEvent,
   PreTokenGenerationRequest,
-  PreTokenGenerationRequest<CustomAttributes>,
+  PreTokenGenerationRequest<{ userAttributes: CustomAttributes }>,
   PreTokenGenerationHandler,
-  PreTokenGenerationHandler<CustomAttributes>,
+  PreTokenGenerationHandler<{ userAttributes: CustomAttributes }>,
   PreTokenGenerationRouteDefinition
 >('PreTokenGeneration');

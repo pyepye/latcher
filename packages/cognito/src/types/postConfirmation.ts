@@ -2,14 +2,16 @@ import type { Context, PostConfirmationTriggerEvent } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { CognitoFilters, UserAttributes } from './common.js';
-import type { CognitoMiddleware } from './matcher.js';
+import type { TypeArg, TypeArgs } from '@latcher/base';
+
+import type { CognitoDefaults, CognitoFiltersCore, CognitoTypes, UserAttributes } from './common.js';
+import type { CognitoMiddlewareCore } from './matcher.js';
 
 // PostConfirmation trigger sources - derived from aws-lambda
 export type PostConfirmationTriggerSource = PostConfirmationTriggerEvent['triggerSource'];
 
 // PostConfirmation request - simplified to just essential fields
-export interface PostConfirmationRequest<TUserAttributes = UserAttributes> {
+export interface PostConfirmationRequestCore<TUserAttributes = UserAttributes> {
   triggerSource: PostConfirmationTriggerSource;
   userAttributes: TUserAttributes;
   event: PostConfirmationTriggerEvent;
@@ -21,14 +23,25 @@ export type PostConfirmationResponse = undefined;
 
 // PostConfirmation handler type
 // Handlers modify the cloned event and return it
-export type PostConfirmationHandler<TUserAttributes = UserAttributes> = (
-  request: PostConfirmationRequest<TUserAttributes>,
+type PostConfirmationHandlerCore<TUserAttributes = UserAttributes> = (
+  request: PostConfirmationRequestCore<TUserAttributes>,
 ) => Promise<PostConfirmationTriggerEvent>;
 
 // PostConfirmation route definition
-export interface PostConfirmationRouteDefinition<TUserAttributes = UserAttributes> {
-  filters?: CognitoFilters<PostConfirmationTriggerSource>;
+export interface PostConfirmationRouteDefinitionCore<TUserAttributes = UserAttributes> {
+  filters?: CognitoFiltersCore<PostConfirmationTriggerSource>;
   userAttributesSchema?: StandardSchemaV1<unknown, TUserAttributes>;
-  middleware?: CognitoMiddleware<NoInfer<TUserAttributes>>[];
-  handler: PostConfirmationHandler<TUserAttributes>;
+  middleware?: CognitoMiddlewareCore<NoInfer<TUserAttributes>>[];
+  handler: PostConfirmationHandlerCore<TUserAttributes>;
 }
+
+export type PostConfirmationRequest<T extends TypeArgs<T, CognitoTypes> = object> = PostConfirmationRequestCore<
+  TypeArg<T, 'userAttributes', CognitoDefaults>
+>;
+
+export type PostConfirmationHandler<T extends TypeArgs<T, CognitoTypes> = object> = PostConfirmationHandlerCore<
+  TypeArg<T, 'userAttributes', CognitoDefaults>
+>;
+
+export type PostConfirmationRouteDefinition<T extends TypeArgs<T, CognitoTypes> = object> =
+  PostConfirmationRouteDefinitionCore<TypeArg<T, 'userAttributes', CognitoDefaults>>;

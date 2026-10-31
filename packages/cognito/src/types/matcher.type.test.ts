@@ -124,28 +124,28 @@ suite('RequestForTrigger', () => {
   test('preserves custom user attributes generic for PreSignUp', () => {
     type CustomAttributes = { email: string; name: string } & Record<string, string>;
     expectTypeOf<RequestForTrigger<'PreSignUp_SignUp', CustomAttributes>>().toEqualTypeOf<
-      PreSignUpRequest<CustomAttributes>
+      PreSignUpRequest<{ userAttributes: CustomAttributes }>
     >();
   });
 
   test('preserves custom user attributes generic for PreAuthentication', () => {
     type CustomAttributes = { email: string; name: string } & Record<string, string>;
     expectTypeOf<RequestForTrigger<'PreAuthentication_Authentication', CustomAttributes>>().toEqualTypeOf<
-      PreAuthenticationRequest<CustomAttributes>
+      PreAuthenticationRequest<{ userAttributes: CustomAttributes }>
     >();
   });
 
   test('preserves custom user attributes generic for CustomMessage', () => {
     type CustomAttributes = { email: string; name: string } & Record<string, string>;
     expectTypeOf<RequestForTrigger<'CustomMessage_SignUp', CustomAttributes>>().toEqualTypeOf<
-      CustomMessageRequest<CustomAttributes>
+      CustomMessageRequest<{ userAttributes: CustomAttributes }>
     >();
   });
 
   test('preserves custom user attributes generic for UserMigration', () => {
     type CustomAttributes = { email: string; name: string } & Record<string, string>;
     expectTypeOf<RequestForTrigger<'UserMigration_Authentication', CustomAttributes>>().toEqualTypeOf<
-      UserMigrationRequest<CustomAttributes>
+      UserMigrationRequest<{ userAttributes: CustomAttributes }>
     >();
   });
 

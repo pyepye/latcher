@@ -50,7 +50,7 @@ suite('preSignUp()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<PreSignUpTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: PreSignUpTriggerSource }>>();
           return true;
         },
       },
@@ -102,7 +102,7 @@ suite('preAuthentication()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<PreAuthenticationTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: PreAuthenticationTriggerSource }>>();
           return true;
         },
       },
@@ -141,7 +141,7 @@ suite('postAuthentication()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<PostAuthenticationTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: PostAuthenticationTriggerSource }>>();
           return true;
         },
       },
@@ -180,7 +180,7 @@ suite('postConfirmation()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<PostConfirmationTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: PostConfirmationTriggerSource }>>();
           return true;
         },
       },
@@ -219,7 +219,7 @@ suite('defineAuthChallenge()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<DefineAuthChallengeTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: DefineAuthChallengeTriggerSource }>>();
           return true;
         },
       },
@@ -258,7 +258,7 @@ suite('createAuthChallenge()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<CreateAuthChallengeTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: CreateAuthChallengeTriggerSource }>>();
           return true;
         },
       },
@@ -297,7 +297,9 @@ suite('verifyAuthChallengeResponse()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<VerifyAuthChallengeResponseTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<
+            CognitoFilterInput<{ triggerSource: VerifyAuthChallengeResponseTriggerSource }>
+          >();
           return true;
         },
       },
@@ -336,7 +338,7 @@ suite('customMessage()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<CustomMessageTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: CustomMessageTriggerSource }>>();
           return true;
         },
       },
@@ -375,7 +377,7 @@ suite('customEmailSender()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<CustomEmailSenderTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: CustomEmailSenderTriggerSource }>>();
           return true;
         },
       },
@@ -414,7 +416,7 @@ suite('preTokenGeneration()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<PreTokenGenerationTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: PreTokenGenerationTriggerSource }>>();
           return true;
         },
       },
@@ -453,7 +455,7 @@ suite('userMigration()', () => {
       filters: {
         // biome-ignore lint/nursery/useExplicitType: the inferred parameter type is what this test asserts
         custom: (input) => {
-          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<UserMigrationTriggerSource>>();
+          expectTypeOf(input).toEqualTypeOf<CognitoFilterInput<{ triggerSource: UserMigrationTriggerSource }>>();
           return true;
         },
       },
