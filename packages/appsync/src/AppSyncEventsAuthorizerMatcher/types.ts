@@ -1,6 +1,6 @@
 import type { Context } from 'aws-lambda';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 export type AppSyncEventsAuthorizerOperation = 'EVENT_CONNECT' | 'EVENT_PUBLISH' | 'EVENT_SUBSCRIBE';
 
@@ -66,19 +66,19 @@ export interface AppSyncEventsAuthorizerFilters {
   custom?: (input: AppSyncEventsAuthorizerFilterInput) => boolean | Promise<boolean>;
 }
 
-export type AppSyncEventsAuthorizerMiddleware<TRequest = AppSyncEventsAuthorizerRequest> = MiddlewareCore<
+export type AppSyncEventsAuthorizerMiddlewareCore<TRequest = AppSyncEventsAuthorizerRequest> = MiddlewareCore<
   TRequest,
   AppSyncEventsAuthorizerResponse
 >;
 
-export type AppSyncEventsAuthorizerHandler<TRequest = AppSyncEventsAuthorizerRequest> = (
+export type AppSyncEventsAuthorizerHandlerCore<TRequest = AppSyncEventsAuthorizerRequest> = (
   request: TRequest,
 ) => Promise<AppSyncEventsAuthorizerResponse>;
 
 export interface AppSyncEventsAuthorizerRouteDefinition {
   filters?: AppSyncEventsAuthorizerFilters;
-  middleware?: AppSyncEventsAuthorizerMiddleware[];
-  handler: AppSyncEventsAuthorizerHandler;
+  middleware?: AppSyncEventsAuthorizerMiddlewareCore[];
+  handler: AppSyncEventsAuthorizerHandlerCore;
 }
 
 export type AppSyncEventsAuthorizerChannelFilters = Pick<AppSyncEventsAuthorizerFilters, 'custom'>;
@@ -86,29 +86,29 @@ export type AppSyncEventsAuthorizerChannelFilters = Pick<AppSyncEventsAuthorizer
 export interface AppSyncEventsAuthorizerChannelInput {
   channelPath: FilterStringMatcher;
   filters?: AppSyncEventsAuthorizerChannelFilters;
-  middleware?: AppSyncEventsAuthorizerMiddleware<AppSyncEventsAuthorizerChannelRequest>[];
-  handler: AppSyncEventsAuthorizerHandler<AppSyncEventsAuthorizerChannelRequest>;
+  middleware?: AppSyncEventsAuthorizerMiddlewareCore<AppSyncEventsAuthorizerChannelRequest>[];
+  handler: AppSyncEventsAuthorizerHandlerCore<AppSyncEventsAuthorizerChannelRequest>;
 }
 
 export interface AppSyncEventsAuthorizerConnectInput {
   filters?: AppSyncEventsAuthorizerChannelFilters;
-  middleware?: AppSyncEventsAuthorizerMiddleware<AppSyncEventsAuthorizerConnectRequest>[];
-  handler: AppSyncEventsAuthorizerHandler<AppSyncEventsAuthorizerConnectRequest>;
+  middleware?: AppSyncEventsAuthorizerMiddlewareCore<AppSyncEventsAuthorizerConnectRequest>[];
+  handler: AppSyncEventsAuthorizerHandlerCore<AppSyncEventsAuthorizerConnectRequest>;
 }
 
-export interface AppSyncEventsAuthorizerRouteInput<
+export interface AppSyncEventsAuthorizerRouteInputCore<
   TOperation extends AppSyncEventsAuthorizerFilters['operation'] = AppSyncEventsAuthorizerFilters['operation'],
 > {
   filters?: Omit<AppSyncEventsAuthorizerFilters, 'operation'> & { operation?: TOperation };
-  middleware?: AppSyncEventsAuthorizerMiddleware<InferAuthorizerRequest<TOperation>>[];
+  middleware?: AppSyncEventsAuthorizerMiddlewareCore<InferAuthorizerRequest<TOperation>>[];
 }
 
 export interface AppSyncEventsAuthorizerMatcherOptions {
-  middleware?: AppSyncEventsAuthorizerMiddleware[];
+  middleware?: AppSyncEventsAuthorizerMiddlewareCore[];
 }
 
 export interface AppSyncEventsAuthorizerRouteBuilder<TRequest = AppSyncEventsAuthorizerRequest> {
-  handle(handler: AppSyncEventsAuthorizerHandler<TRequest>): AppSyncEventsAuthorizerRouteDefinition;
+  handle(handler: AppSyncEventsAuthorizerHandlerCore<TRequest>): AppSyncEventsAuthorizerRouteDefinition;
 }
 
 // The operation filter says which shape of request the route can receive, the way the `type` filter
@@ -123,6 +123,38 @@ export type InferAuthorizerRequest<TOperation> = [OperationsOf<TOperation>] exte
 
 export interface InternalEventsAuthorizerRoute {
   filters: AppSyncEventsAuthorizerFilters;
-  middleware?: AppSyncEventsAuthorizerMiddleware[];
-  handler: AppSyncEventsAuthorizerHandler;
+  middleware?: AppSyncEventsAuthorizerMiddlewareCore[];
+  handler: AppSyncEventsAuthorizerHandlerCore;
 }
+
+// ─── Named Type Arguments ────────────────────────────────────────────────────
+
+export interface AppSyncEventsAuthorizerTypes {
+  request?: unknown;
+}
+
+interface AppSyncEventsAuthorizerDefaults {
+  request: AppSyncEventsAuthorizerRequest;
+}
+
+export type AppSyncEventsAuthorizerMiddleware<T extends TypeArgs<T, AppSyncEventsAuthorizerTypes> = object> =
+  AppSyncEventsAuthorizerMiddlewareCore<TypeArg<T, 'request', AppSyncEventsAuthorizerDefaults>>;
+
+export type AppSyncEventsAuthorizerHandler<T extends TypeArgs<T, AppSyncEventsAuthorizerTypes> = object> =
+  AppSyncEventsAuthorizerHandlerCore<TypeArg<T, 'request', AppSyncEventsAuthorizerDefaults>>;
+
+export interface AppSyncEventsAuthorizerRouteInputTypes {
+  operation?: AppSyncEventsAuthorizerFilters['operation'];
+}
+
+interface AppSyncEventsAuthorizerRouteInputDefaults {
+  operation: AppSyncEventsAuthorizerFilters['operation'];
+}
+
+export type AppSyncEventsAuthorizerRouteInput<T extends TypeArgs<T, AppSyncEventsAuthorizerRouteInputTypes> = object> =
+  AppSyncEventsAuthorizerRouteInputCore<
+    Extract<
+      TypeArg<T, 'operation', AppSyncEventsAuthorizerRouteInputDefaults>,
+      AppSyncEventsAuthorizerFilters['operation']
+    >
+  >;

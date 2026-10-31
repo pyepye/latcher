@@ -2,13 +2,13 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, JsonValue, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, JsonValue, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 export type AppSyncEventsOperation = 'PUBLISH' | 'SUBSCRIBE';
 
 // AppSync refuses a publish whose event is not a stringified JSON value, so a handler is only ever
 // given one it has already parsed.
-export interface AppSyncEventsPublishedEvent<TPayload = JsonValue> {
+export interface AppSyncEventsPublishedEventCore<TPayload = JsonValue> {
   id: string;
   payload: TPayload;
 }
@@ -53,19 +53,19 @@ export interface AppSyncEventsEvent {
     operation: AppSyncEventsOperation;
   };
   stash: Record<string, unknown>;
-  events: AppSyncEventsPublishedEvent[] | null;
+  events: AppSyncEventsPublishedEventCore[] | null;
   prev: { result: Record<string, unknown> } | null;
   result: unknown;
   error: unknown;
   outErrors: unknown[];
 }
 
-export interface AppSyncEventsRequest<TPayload = JsonValue> {
+export interface AppSyncEventsRequestCore<TPayload = JsonValue> {
   channelPath: string;
   channelNamespace: string;
   operation: AppSyncEventsOperation;
   identity: AppSyncEventsIdentity | null | undefined;
-  events: AppSyncEventsPublishedEvent<TPayload>[];
+  events: AppSyncEventsPublishedEventCore<TPayload>[];
   info: AppSyncEventsEvent['info'];
   request: AppSyncEventsEvent['request'];
   stash: Record<string, unknown>;
@@ -90,13 +90,13 @@ export interface AppSyncEventsFilters {
 
 // Middleware is invariant in its request and also registers matcher-wide, where no route's schema
 // applies, so it sees the unvalidated payload.
-export type AppSyncEventsMiddleware = MiddlewareCore<AppSyncEventsRequest, unknown>;
+export type AppSyncEventsMiddleware = MiddlewareCore<AppSyncEventsRequestCore, unknown>;
 
-export interface AppSyncEventsRouteDefinition<TPayload = JsonValue> {
+export interface AppSyncEventsRouteDefinitionCore<TPayload = JsonValue> {
   filters: AppSyncEventsFilters;
   payloadSchema?: StandardSchemaV1;
   middleware?: AppSyncEventsMiddleware[];
-  handler: (request: AppSyncEventsRequest<TPayload>) => Promise<unknown>;
+  handler: (request: AppSyncEventsRequestCore<TPayload>) => Promise<unknown>;
 }
 
 export type PayloadOf<TPayloadSchema> = TPayloadSchema extends StandardSchemaV1
@@ -105,18 +105,18 @@ export type PayloadOf<TPayloadSchema> = TPayloadSchema extends StandardSchemaV1
 
 export type AppSyncEventsOperationFilters = Pick<AppSyncEventsFilters, 'custom'>;
 
-export interface AppSyncEventsChannelInput<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> {
+export interface AppSyncEventsChannelInputCore<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> {
   channelPath: FilterStringMatcher;
   filters?: AppSyncEventsOperationFilters;
   payloadSchema?: TPayloadSchema;
   middleware?: AppSyncEventsMiddleware[];
-  handler: (request: AppSyncEventsRequest<PayloadOf<TPayloadSchema>>) => Promise<unknown>;
+  handler: (request: AppSyncEventsRequestCore<PayloadOf<TPayloadSchema>>) => Promise<unknown>;
 }
 
-export type AppSyncPublishInput<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> =
-  AppSyncEventsChannelInput<TPayloadSchema>;
-export type AppSyncSubscribeInput<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> =
-  AppSyncEventsChannelInput<TPayloadSchema>;
+export type AppSyncPublishInputCore<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> =
+  AppSyncEventsChannelInputCore<TPayloadSchema>;
+export type AppSyncSubscribeInputCore<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> =
+  AppSyncEventsChannelInputCore<TPayloadSchema>;
 
 export interface AppSyncEventsRouteInput<TPayloadSchema extends StandardSchemaV1 | undefined = undefined> {
   filters?: AppSyncEventsFilters;
@@ -130,13 +130,56 @@ export interface AppSyncEventsMatcherOptions {
 
 export interface AppSyncEventsRouteBuilder<TPayload = JsonValue> {
   handle(
-    handler: (request: AppSyncEventsRequest<TPayload>) => Promise<unknown>,
-  ): AppSyncEventsRouteDefinition<TPayload>;
+    handler: (request: AppSyncEventsRequestCore<TPayload>) => Promise<unknown>,
+  ): AppSyncEventsRouteDefinitionCore<TPayload>;
 }
 
 export interface InternalEventsRoute {
   filters: AppSyncEventsFilters;
   payloadSchema?: StandardSchemaV1;
   middleware?: AppSyncEventsMiddleware[];
-  handler: (request: AppSyncEventsRequest) => Promise<unknown>;
+  handler: (request: AppSyncEventsRequestCore) => Promise<unknown>;
 }
+
+// ─── Named Type Arguments ────────────────────────────────────────────────────
+
+export interface AppSyncEventsTypes {
+  payload?: unknown;
+}
+
+interface AppSyncEventsDefaults {
+  payload: JsonValue;
+}
+
+export type AppSyncEventsPublishedEvent<T extends TypeArgs<T, AppSyncEventsTypes> = object> =
+  AppSyncEventsPublishedEventCore<TypeArg<T, 'payload', AppSyncEventsDefaults>>;
+
+export type AppSyncEventsRequest<T extends TypeArgs<T, AppSyncEventsTypes> = object> = AppSyncEventsRequestCore<
+  TypeArg<T, 'payload', AppSyncEventsDefaults>
+>;
+
+export type AppSyncEventsRouteDefinition<T extends TypeArgs<T, AppSyncEventsTypes> = object> =
+  AppSyncEventsRouteDefinitionCore<TypeArg<T, 'payload', AppSyncEventsDefaults>>;
+
+export interface AppSyncEventsChannelInputTypes {
+  payloadSchema?: StandardSchemaV1 | undefined;
+}
+
+interface AppSyncEventsChannelInputDefaults {
+  payloadSchema: undefined;
+}
+
+export type AppSyncEventsChannelInput<T extends TypeArgs<T, AppSyncEventsChannelInputTypes> = object> =
+  AppSyncEventsChannelInputCore<
+    Extract<TypeArg<T, 'payloadSchema', AppSyncEventsChannelInputDefaults>, StandardSchemaV1 | undefined>
+  >;
+
+export type AppSyncPublishInput<T extends TypeArgs<T, AppSyncEventsChannelInputTypes> = object> =
+  AppSyncPublishInputCore<
+    Extract<TypeArg<T, 'payloadSchema', AppSyncEventsChannelInputDefaults>, StandardSchemaV1 | undefined>
+  >;
+
+export type AppSyncSubscribeInput<T extends TypeArgs<T, AppSyncEventsChannelInputTypes> = object> =
+  AppSyncSubscribeInputCore<
+    Extract<TypeArg<T, 'payloadSchema', AppSyncEventsChannelInputDefaults>, StandardSchemaV1 | undefined>
+  >;

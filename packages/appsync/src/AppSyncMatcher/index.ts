@@ -11,5 +11,6 @@ export type {
   AppSyncResolverMiddleware,
   AppSyncResolverRequest,
   AppSyncResolverRouteDefinition,
+  AppSyncResolverTypes,
   AppSyncSubscriptionInput,
 } from './types.js';

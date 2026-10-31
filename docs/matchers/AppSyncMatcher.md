@@ -143,7 +143,7 @@ Handlers take one argument and return the value of the field.
 import type { AppSyncResolverRequest } from '@latcher/appsync'
 import { logger } from '@latcher/base'
 
-export async function getOrder(request: AppSyncResolverRequest<GetOrderArgs>): Promise<Order> {
+export async function getOrder(request: AppSyncResolverRequest<{ arguments: GetOrderArgs }>): Promise<Order> {
   const { id } = request.arguments
   logger.info(`Resolving order ${id}`)
 
@@ -155,7 +155,7 @@ export async function getOrder(request: AppSyncResolverRequest<GetOrderArgs>): P
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `arguments` | `TArgs` | The field's arguments, validated when the route has an `argumentsSchema` |
+| `arguments` | The `arguments` key, default `Record<string, unknown>` | The field's arguments, validated when the route has an `argumentsSchema` |
 | `identity` | `AppSyncIdentity` | Who the caller is. The shape follows the API's authorisation mode, and it is `undefined` under an API key |
 | `source` | `Record<string, unknown> \| null` | The object the parent resolver returned, and `null` on a top level field |
 | `info` | `{ selectionSetList, selectionSetGraphQL, parentTypeName, fieldName, variables }` | Which field is being resolved and which parts of it the client asked for |
@@ -163,7 +163,7 @@ export async function getOrder(request: AppSyncResolverRequest<GetOrderArgs>): P
 | `domainName` | `string \| null` | The custom domain the request arrived on, and `null` on the API's default one |
 | `prev` | `{ result: Record<string, unknown> } \| null` | What the function before yours returned in a pipeline resolver |
 | `stash` | `Record<string, unknown>` | State shared across the functions of a pipeline resolver |
-| `event` | `AppSyncResolverEvent<TArgs>` | The untouched event from AWS |
+| `event` | `AppSyncResolverEvent`, typed by the `arguments` key | The untouched event from AWS |
 | `context` | `Context` | The Lambda context |
 
 `AppSyncResolverEvent`, `AppSyncIdentity` and `Context` all come from `aws-lambda` rather than from
@@ -222,7 +222,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`AppSyncResolverRequest`](#generic-parameters) and your own types.
+[`AppSyncResolverRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/orders.ts
@@ -235,7 +235,7 @@ export const CreateOrderSchema = z.object({
 })
 type CreateOrderArgs = z.infer<typeof CreateOrderSchema>
 
-export async function createOrder(request: AppSyncResolverRequest<CreateOrderArgs>): Promise<Order> {
+export async function createOrder(request: AppSyncResolverRequest<{ arguments: CreateOrderArgs }>): Promise<Order> {
   const { sku, quantity } = request.arguments.input
   logger.info(`Creating ${quantity} of ${sku}`)
 
@@ -345,16 +345,17 @@ All exported from `@latcher/appsync`.
 
 | Type | Description |
 | --- | --- |
-| `AppSyncResolverRequest<TArgs>` | The handler argument |
+| `AppSyncResolverRequest<{ arguments }>` | The handler argument |
 | `AppSyncResolverFilters` | The `filters` object |
 | `AppSyncResolverFilterInput` | What `custom` receives |
 | `AppSyncResolverFieldFilters` | The `filters` object on the convenience methods, which is `custom` on its own |
-| `AppSyncResolverRouteDefinition<TArgs>` | A full route passed to `route()` |
-| `AppSyncResolverFieldInput<TArgs>` | A route passed to one of the convenience methods |
-| `AppSyncQueryInput<TArgs>`, `AppSyncMutationInput<TArgs>`, `AppSyncSubscriptionInput<TArgs>` | Aliases of `AppSyncResolverFieldInput<TArgs>`, one per method |
-| `AppSyncResolverMiddleware<TArgs>` | Matcher and route middleware |
+| `AppSyncResolverRouteDefinition<{ arguments }>` | A full route passed to `route()` |
+| `AppSyncResolverFieldInput<{ arguments }>` | A route passed to one of the convenience methods |
+| `AppSyncQueryInput<{ arguments }>`, `AppSyncMutationInput<{ arguments }>`, `AppSyncSubscriptionInput<{ arguments }>` | Aliases of `AppSyncResolverFieldInput<{ arguments }>`, one per method |
+| `AppSyncResolverMiddleware<{ arguments }>` | Matcher and route middleware |
 | `AppSyncMatcherOptions` | Options for `createAppSyncMatcher` |
 | `AppSyncBatchResult` | One entry of the list a batched resolver returns |
+| `AppSyncResolverTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `AppSyncMatcher` class and the `createAppSyncMatcher` and `defineRoute` functions come from the same
 place. Most of the type names carry `Resolver`, which is what keeps them apart from the other two
@@ -362,16 +363,17 @@ matchers in the package, and the three aliases are named after their method inst
 
 There is no response type, since a handler's return type is yours to name.
 
-### Generic parameters
+### Type arguments
 
-Every type above that takes a parameter takes the same one.
+The generic types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TArgs` | `request.arguments` | `Record<string, unknown>` |
+| `arguments` | `request.arguments` | `Record<string, unknown>` |
 
-`AppSyncResolverRequest<CreateOrderArgs>` types the arguments and leaves the rest of the request alone.
-You only need this for [annotated handlers](#annotated-handlers). Inference covers it.
+`AppSyncResolverRequest<{ arguments: CreateOrderArgs }>` types the arguments and leaves the rest of the request
+alone. You only need this for [annotated handlers](#annotated-handlers). Inference covers it. See
+[Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Nested field resolvers
 
@@ -543,7 +545,7 @@ interface OrderLine {
 
 export async function getOrder({
   arguments: args,
-}: AppSyncResolverRequest<GetOrderArgs>): Promise<Order> {
+}: AppSyncResolverRequest<{ arguments: GetOrderArgs }>): Promise<Order> {
   logger.info(\`Resolving order \${args.id}\`)
 
   // e.g. read the order from DynamoDB
@@ -560,7 +562,7 @@ export async function listOrders({ identity }: AppSyncResolverRequest): Promise<
 
 export async function createOrder({
   arguments: args,
-}: AppSyncResolverRequest<CreateOrderArgs>): Promise<Order> {
+}: AppSyncResolverRequest<{ arguments: CreateOrderArgs }>): Promise<Order> {
   const { sku, quantity } = args.input
   logger.info(\`Creating \${quantity} of \${sku}\`)
 

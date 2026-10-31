@@ -3,6 +3,7 @@ import { createAppSyncEventsAuthorizerMatcher, defineEventsAuthorizerRoute } fro
 import type {
   AppSyncEventsAuthorizerChannelRequest,
   AppSyncEventsAuthorizerConnectRequest,
+  AppSyncEventsAuthorizerHandler,
   AppSyncEventsAuthorizerRequest,
 } from './types.js';
 
@@ -72,5 +73,13 @@ suite('defineEventsAuthorizerRoute operation narrowing', () => {
     type Request = Parameters<Parameters<typeof builder.handle>[0]>[0];
 
     expectTypeOf<Request>().toEqualTypeOf<AppSyncEventsAuthorizerRequest>();
+  });
+});
+
+suite('named type arguments', () => {
+  test('types the request of a handler from the request key', () => {
+    type Handler = AppSyncEventsAuthorizerHandler<{ request: AppSyncEventsAuthorizerChannelRequest }>;
+
+    expectTypeOf<Parameters<Handler>[0]>().toEqualTypeOf<AppSyncEventsAuthorizerChannelRequest>();
   });
 });

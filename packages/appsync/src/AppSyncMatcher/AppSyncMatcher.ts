@@ -14,14 +14,14 @@ import {
 
 import type {
   AppSyncBatchResult,
-  AppSyncMutationInput,
-  AppSyncQueryInput,
-  AppSyncResolverMiddleware,
-  AppSyncResolverRequest,
+  AppSyncMutationInputCore,
+  AppSyncQueryInputCore,
+  AppSyncResolverMiddlewareCore,
+  AppSyncResolverRequestCore,
   AppSyncResolverRouteBuilder,
-  AppSyncResolverRouteDefinition,
+  AppSyncResolverRouteDefinitionCore,
   AppSyncResolverRouteInput,
-  AppSyncSubscriptionInput,
+  AppSyncSubscriptionInputCore,
   InternalResolverRoute,
 } from './types.js';
 
@@ -52,12 +52,12 @@ export function defineRoute<TArgumentsSchema extends StandardSchemaV1 | undefine
 
   return {
     handle(
-      handler: (request: AppSyncResolverRequest<TArgs>) => Promise<unknown>,
-    ): AppSyncResolverRouteDefinition<TArgs> {
+      handler: (request: AppSyncResolverRequestCore<TArgs>) => Promise<unknown>,
+    ): AppSyncResolverRouteDefinitionCore<TArgs> {
       return {
         filters: config.filters,
         argumentsSchema: config.argumentsSchema as StandardSchemaV1<unknown, TArgs> | undefined,
-        middleware: config.middleware as AppSyncResolverMiddleware<TArgs>[] | undefined,
+        middleware: config.middleware as AppSyncResolverMiddlewareCore<TArgs>[] | undefined,
         handler,
       };
     },
@@ -65,14 +65,14 @@ export function defineRoute<TArgumentsSchema extends StandardSchemaV1 | undefine
 }
 
 export interface AppSyncMatcherOptions {
-  middleware?: AppSyncResolverMiddleware[];
+  middleware?: AppSyncResolverMiddlewareCore[];
   batchItemFailures?: boolean;
 }
 
 export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, unknown> {
   private routes: InternalResolverRoute[] = [];
   private routesOrdered = false;
-  private middleware: AppSyncResolverMiddleware[];
+  private middleware: AppSyncResolverMiddlewareCore[];
   private batchItemFailures: boolean;
 
   constructor(options?: AppSyncMatcherOptions) {
@@ -88,7 +88,7 @@ export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, 
     return isResolverEvent(event);
   }
 
-  route<TArgs>(definition: AppSyncResolverRouteDefinition<TArgs>): this {
+  route<TArgs>(definition: AppSyncResolverRouteDefinitionCore<TArgs>): this {
     this.routes.push({
       filters: definition.filters,
       argumentsSchema: definition.argumentsSchema,
@@ -100,7 +100,7 @@ export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, 
     return this;
   }
 
-  query<TArgs = Record<string, unknown>>(input: AppSyncQueryInput<TArgs>): this {
+  query<TArgs = Record<string, unknown>>(input: AppSyncQueryInputCore<TArgs>): this {
     return this.route({
       filters: {
         ...input.filters,
@@ -113,7 +113,7 @@ export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, 
     });
   }
 
-  mutation<TArgs = Record<string, unknown>>(input: AppSyncMutationInput<TArgs>): this {
+  mutation<TArgs = Record<string, unknown>>(input: AppSyncMutationInputCore<TArgs>): this {
     return this.route({
       filters: {
         ...input.filters,
@@ -126,7 +126,7 @@ export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, 
     });
   }
 
-  subscription<TArgs = Record<string, unknown>>(input: AppSyncSubscriptionInput<TArgs>): this {
+  subscription<TArgs = Record<string, unknown>>(input: AppSyncSubscriptionInputCore<TArgs>): this {
     return this.route({
       filters: {
         ...input.filters,
@@ -185,7 +185,7 @@ export class AppSyncMatcher implements EventTypeMatcherCore<ResolverEventInput, 
       `Arguments validation failed for ${parentTypeName}.${fieldName}`,
     );
 
-    const request: AppSyncResolverRequest = {
+    const request: AppSyncResolverRequestCore = {
       arguments: validatedArguments,
       identity: event.identity,
       source: event.source,

@@ -9,15 +9,15 @@ import type {
   AppSyncEventsAuthorizerConnectInput,
   AppSyncEventsAuthorizerEvent,
   AppSyncEventsAuthorizerFilters,
-  AppSyncEventsAuthorizerHandler,
+  AppSyncEventsAuthorizerHandlerCore,
   AppSyncEventsAuthorizerMatcherOptions,
-  AppSyncEventsAuthorizerMiddleware,
+  AppSyncEventsAuthorizerMiddlewareCore,
   AppSyncEventsAuthorizerOperation,
   AppSyncEventsAuthorizerRequest,
   AppSyncEventsAuthorizerResponse,
   AppSyncEventsAuthorizerRouteBuilder,
   AppSyncEventsAuthorizerRouteDefinition,
-  AppSyncEventsAuthorizerRouteInput,
+  AppSyncEventsAuthorizerRouteInputCore,
   InferAuthorizerRequest,
   InternalEventsAuthorizerRoute,
 } from './types.js';
@@ -29,16 +29,16 @@ function isAuthorizerOperation(value: unknown): value is AppSyncEventsAuthorizer
 }
 
 export function defineEventsAuthorizerRoute<TOperation extends AppSyncEventsAuthorizerFilters['operation'] = undefined>(
-  config?: AppSyncEventsAuthorizerRouteInput<TOperation>,
+  config?: AppSyncEventsAuthorizerRouteInputCore<TOperation>,
 ): AppSyncEventsAuthorizerRouteBuilder<InferAuthorizerRequest<TOperation>> {
   return {
     handle(
-      handler: AppSyncEventsAuthorizerHandler<InferAuthorizerRequest<TOperation>>,
+      handler: AppSyncEventsAuthorizerHandlerCore<InferAuthorizerRequest<TOperation>>,
     ): AppSyncEventsAuthorizerRouteDefinition {
       return {
         filters: config?.filters as AppSyncEventsAuthorizerFilters | undefined,
-        middleware: config?.middleware as AppSyncEventsAuthorizerMiddleware[] | undefined,
-        handler: handler as AppSyncEventsAuthorizerHandler,
+        middleware: config?.middleware as AppSyncEventsAuthorizerMiddlewareCore[] | undefined,
+        handler: handler as AppSyncEventsAuthorizerHandlerCore,
       };
     },
   };
@@ -49,7 +49,7 @@ export class AppSyncEventsAuthorizerMatcher
 {
   private routes: InternalEventsAuthorizerRoute[] = [];
   private routesOrdered = false;
-  private middleware: AppSyncEventsAuthorizerMiddleware[];
+  private middleware: AppSyncEventsAuthorizerMiddlewareCore[];
 
   constructor(options?: AppSyncEventsAuthorizerMatcherOptions) {
     this.middleware = options?.middleware ?? [];
@@ -85,24 +85,24 @@ export class AppSyncEventsAuthorizerMatcher
   connect(input: AppSyncEventsAuthorizerConnectInput): this {
     return this.route({
       filters: { ...input.filters, operation: 'EVENT_CONNECT' },
-      middleware: input.middleware as AppSyncEventsAuthorizerMiddleware[] | undefined,
-      handler: input.handler as AppSyncEventsAuthorizerHandler,
+      middleware: input.middleware as AppSyncEventsAuthorizerMiddlewareCore[] | undefined,
+      handler: input.handler as AppSyncEventsAuthorizerHandlerCore,
     });
   }
 
   publish(input: AppSyncEventsAuthorizerChannelInput): this {
     return this.route({
       filters: { ...input.filters, operation: 'EVENT_PUBLISH', channelPath: input.channelPath },
-      middleware: input.middleware as AppSyncEventsAuthorizerMiddleware[] | undefined,
-      handler: input.handler as AppSyncEventsAuthorizerHandler,
+      middleware: input.middleware as AppSyncEventsAuthorizerMiddlewareCore[] | undefined,
+      handler: input.handler as AppSyncEventsAuthorizerHandlerCore,
     });
   }
 
   subscribe(input: AppSyncEventsAuthorizerChannelInput): this {
     return this.route({
       filters: { ...input.filters, operation: 'EVENT_SUBSCRIBE', channelPath: input.channelPath },
-      middleware: input.middleware as AppSyncEventsAuthorizerMiddleware[] | undefined,
-      handler: input.handler as AppSyncEventsAuthorizerHandler,
+      middleware: input.middleware as AppSyncEventsAuthorizerMiddlewareCore[] | undefined,
+      handler: input.handler as AppSyncEventsAuthorizerHandlerCore,
     });
   }
 

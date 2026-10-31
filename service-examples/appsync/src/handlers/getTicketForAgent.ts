@@ -14,7 +14,7 @@ export function isAgent({ event }: AppSyncResolverFilterInput): boolean {
 
 export async function getTicketForAgent({
   arguments: args,
-}: AppSyncResolverRequest<TTicketId>): Promise<Ticket | null> {
+}: AppSyncResolverRequest<{ arguments: TTicketId }>): Promise<Ticket | null> {
   const ticket = findTicket(args.id);
 
   logger.info({ message: 'Ticket read by agent', ticketId: args.id, found: Boolean(ticket) });

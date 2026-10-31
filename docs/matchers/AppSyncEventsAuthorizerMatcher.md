@@ -240,8 +240,25 @@ All exported from `@latcher/appsync`.
 | `AppSyncEventsAuthorizerFilterInput` | What `custom` receives |
 | `AppSyncEventsAuthorizerChannelFilters` | The `filters` object on the convenience methods, which is `custom` on its own |
 | `AppSyncEventsAuthorizerRouteDefinition` | A full route passed to `route()` |
-| `AppSyncEventsAuthorizerMiddleware` | Matcher and route middleware |
+| `AppSyncEventsAuthorizerMiddleware<{ request }>` | Matcher and route middleware |
+| `AppSyncEventsAuthorizerHandler<{ request }>` | The `handler` function |
+| `AppSyncEventsAuthorizerRouteInput<{ operation }>` | The route passed to `defineEventsAuthorizerRoute()` |
 | `AppSyncEventsAuthorizerMatcherOptions` | Options for `createAppSyncEventsAuthorizerMatcher` |
+| `AppSyncEventsAuthorizerTypes` | The keys the `request` types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `AppSyncEventsAuthorizerRouteInputTypes` | The keys the `operation` types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+
+### Type arguments
+
+The `request` key types the request a middleware or handler receives. The `operation` key types the
+route's operation filter, and the request follows from it. Each key takes its default when you leave it
+out.
+
+| Key | Types | Default |
+| --- | --- | --- |
+| `request` | the handler's request | `AppSyncEventsAuthorizerRequest` |
+| `operation` | The request the operation narrows to | `AppSyncEventsAuthorizerOperation` or an array of them |
+
+See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 ## Code example
 

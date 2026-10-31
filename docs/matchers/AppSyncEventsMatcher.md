@@ -289,9 +289,8 @@ eventsMatcher.publish({
 })
 ```
 
-`AppSyncEventsRequest` takes no generic parameter, so there is one request type for every route and
-nothing to derive from a schema. What varies is the payloads you were sent, and those are yours to
-narrow. [Annotated handlers](/docs/handlers#annotated-handlers) has the worked version.
+Without a `payload` key, `AppSyncEventsRequest` is one request type for every route, and nothing derives
+it from a schema. What varies is the payloads you were sent, and those are yours to narrow. [Annotated handlers](/docs/handlers#annotated-handlers) has the worked version.
 
 ## Responses
 
@@ -398,8 +397,8 @@ All exported from `@latcher/appsync`.
 
 | Type | Description |
 | --- | --- |
-| `AppSyncEventsRequest` | The handler argument |
-| `AppSyncEventsPublishedEvent` | One published event, an `id` and a `payload` |
+| `AppSyncEventsRequest<{ payload }>` | The handler argument |
+| `AppSyncEventsPublishedEvent<{ payload }>` | One published event, an `id` and a `payload` |
 | `AppSyncEventsOutgoingEvent` | One entry of a publish result, carrying a `payload` or an `error` |
 | `AppSyncEventsPublishResult` | What a `PUBLISH` handler returns |
 | `AppSyncEventsSubscribeResult` | What a `SUBSCRIBE` handler returns |
@@ -410,13 +409,27 @@ All exported from `@latcher/appsync`.
 | `AppSyncEventsFilterInput` | What `custom` receives |
 | `AppSyncEventsMiddleware` | Matcher and route middleware |
 | `AppSyncEventsOperationFilters` | The `filters` object on `publish()` and `subscribe()`, which is `custom` on its own |
-| `AppSyncEventsRouteDefinition` | A full route passed to `route()` |
+| `AppSyncEventsRouteDefinition<{ payload }>` | A full route passed to `route()` |
 | `AppSyncEventsMatcherOptions` | Options for `createAppSyncEventsMatcher` |
-| `AppSyncEventsChannelInput` | A route passed to `publish()` or `subscribe()` |
-| `AppSyncPublishInput`, `AppSyncSubscribeInput` | Aliases of `AppSyncEventsChannelInput`, one per method |
+| `AppSyncEventsChannelInput<{ payloadSchema }>` | A route passed to `publish()` or `subscribe()` |
+| `AppSyncPublishInput<{ payloadSchema }>`, `AppSyncSubscribeInput<{ payloadSchema }>` | Aliases of `AppSyncEventsChannelInput<{ payloadSchema }>`, one per method |
+| `AppSyncEventsTypes` | The keys the `payload` types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
+| `AppSyncEventsChannelInputTypes` | The keys the `payloadSchema` types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 
 The `AppSyncEventsMatcher` class and the `createAppSyncEventsMatcher` and `defineEventsRoute` functions
 come from the same place.
+
+### Type arguments
+
+The `payload` key types the events in the request. The `payloadSchema` key types the channel inputs, and
+its schema's output becomes the payload type.
+
+| Key | Types | Default |
+| --- | --- | --- |
+| `payload` | `request.events[].payload` | `JsonValue` |
+| `payloadSchema` | `request.events[].payload`, as the schema's output | `undefined` |
+
+Leave a key out and it takes its default. See [Typing a request](/docs/handlers#typing-a-request) for the rules.
 
 `AppSyncEventsRequest`, `AppSyncEventsPublishedEvent`, `AppSyncEventsRouteDefinition` and the route
 inputs take the payload type as a parameter, defaulting to `JsonValue`. A `payloadSchema` fills it in

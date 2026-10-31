@@ -119,6 +119,12 @@ suite('AppSyncEventsMatcher', () => {
       expect(definition.filters).toEqual({});
       expect(definition.handler).toBe(handler);
     });
+
+    test('types the payload from a named type argument', () => {
+      type Request = AppSyncEventsRequest<{ payload: { orderId: string } }>;
+
+      expectTypeOf<Request['events'][number]['payload']>().toEqualTypeOf<{ orderId: string }>();
+    });
   });
 
   suite('route', () => {

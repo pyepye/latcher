@@ -23,5 +23,7 @@ export type {
   AppSyncEventsAuthorizerResponse,
   AppSyncEventsAuthorizerRouteDefinition,
   AppSyncEventsAuthorizerRouteInput,
+  AppSyncEventsAuthorizerRouteInputTypes,
+  AppSyncEventsAuthorizerTypes,
   InferAuthorizerRequest,
 } from './types.js';

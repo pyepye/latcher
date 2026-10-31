@@ -5,6 +5,7 @@ export {
 } from './AppSyncEventsMatcher.js';
 export type {
   AppSyncEventsChannelInput,
+  AppSyncEventsChannelInputTypes,
   AppSyncEventsEvent,
   AppSyncEventsFilterInput,
   AppSyncEventsFilters,
@@ -19,6 +20,7 @@ export type {
   AppSyncEventsRequest,
   AppSyncEventsRouteDefinition,
   AppSyncEventsSubscribeResult,
+  AppSyncEventsTypes,
   AppSyncPublishInput,
   AppSyncSubscribeInput,
 } from './types.js';

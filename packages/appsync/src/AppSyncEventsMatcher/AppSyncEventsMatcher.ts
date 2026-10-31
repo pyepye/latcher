@@ -15,13 +15,13 @@ import type {
   AppSyncEventsEvent,
   AppSyncEventsMatcherOptions,
   AppSyncEventsMiddleware,
-  AppSyncEventsPublishedEvent,
-  AppSyncEventsRequest,
+  AppSyncEventsPublishedEventCore,
+  AppSyncEventsRequestCore,
   AppSyncEventsRouteBuilder,
-  AppSyncEventsRouteDefinition,
+  AppSyncEventsRouteDefinitionCore,
   AppSyncEventsRouteInput,
-  AppSyncPublishInput,
-  AppSyncSubscribeInput,
+  AppSyncPublishInputCore,
+  AppSyncSubscribeInputCore,
   InternalEventsRoute,
   PayloadOf,
 } from './types.js';
@@ -31,8 +31,8 @@ export function defineEventsRoute<TPayloadSchema extends StandardSchemaV1 | unde
 ): AppSyncEventsRouteBuilder<PayloadOf<TPayloadSchema>> {
   return {
     handle(
-      handler: (request: AppSyncEventsRequest<PayloadOf<TPayloadSchema>>) => Promise<unknown>,
-    ): AppSyncEventsRouteDefinition<PayloadOf<TPayloadSchema>> {
+      handler: (request: AppSyncEventsRequestCore<PayloadOf<TPayloadSchema>>) => Promise<unknown>,
+    ): AppSyncEventsRouteDefinitionCore<PayloadOf<TPayloadSchema>> {
       return {
         filters: config.filters ?? {},
         payloadSchema: config.payloadSchema,
@@ -65,14 +65,14 @@ export class AppSyncEventsMatcher implements EventTypeMatcherCore<AppSyncEventsE
     return true;
   }
 
-  route<TPayload>(definition: AppSyncEventsRouteDefinition<TPayload>): this {
+  route<TPayload>(definition: AppSyncEventsRouteDefinitionCore<TPayload>): this {
     this.routes.push(definition as InternalEventsRoute);
     this.routesOrdered = false;
     return this;
   }
 
   publish<TPayloadSchema extends StandardSchemaV1 | undefined = undefined>(
-    input: AppSyncPublishInput<TPayloadSchema>,
+    input: AppSyncPublishInputCore<TPayloadSchema>,
   ): this {
     return this.route({
       filters: {
@@ -87,7 +87,7 @@ export class AppSyncEventsMatcher implements EventTypeMatcherCore<AppSyncEventsE
   }
 
   subscribe<TPayloadSchema extends StandardSchemaV1 | undefined = undefined>(
-    input: AppSyncSubscribeInput<TPayloadSchema>,
+    input: AppSyncSubscribeInputCore<TPayloadSchema>,
   ): this {
     return this.route({
       filters: {
@@ -111,7 +111,7 @@ export class AppSyncEventsMatcher implements EventTypeMatcherCore<AppSyncEventsE
       throw new Error(`No route matched for ${operation} on channel ${channelPath}`);
     }
 
-    const request: AppSyncEventsRequest = {
+    const request: AppSyncEventsRequestCore = {
       channelPath,
       channelNamespace,
       operation,
@@ -132,10 +132,10 @@ export class AppSyncEventsMatcher implements EventTypeMatcherCore<AppSyncEventsE
   // A publish carries at most five events, and one bad payload fails the whole publish rather than
   // reporting per event, so the first failure is the one the caller sees.
   private async validatePayloads(
-    events: AppSyncEventsPublishedEvent[],
+    events: AppSyncEventsPublishedEventCore[],
     payloadSchema: StandardSchemaV1 | undefined,
-  ): Promise<AppSyncEventsPublishedEvent[]> {
-    const validated: AppSyncEventsPublishedEvent[] = [];
+  ): Promise<AppSyncEventsPublishedEventCore[]> {
+    const validated: AppSyncEventsPublishedEventCore[] = [];
 
     for (const event of events) {
       validated.push({
