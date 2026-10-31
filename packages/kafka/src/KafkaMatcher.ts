@@ -23,9 +23,9 @@ import type {
   KafkaMSKEvent,
   KafkaRecord,
   KafkaRecordHeader,
-  KafkaRequest,
+  KafkaRequestCore,
   KafkaRetryEvent,
-  KafkaRouteDefinition,
+  KafkaRouteDefinitionCore,
 } from './types.js';
 
 export function defineRoute<
@@ -34,12 +34,12 @@ export function defineRoute<
 >(config: RouteInput<TValueSchema, TValue>): RouteBuilder<TValue> {
   return {
     // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
-    handle(handler): KafkaRouteDefinition<TValue> {
+    handle(handler): KafkaRouteDefinitionCore<TValue> {
       return {
         filters: config.filters,
         valueSchema: config.valueSchema as StandardSchemaV1<unknown, TValue> | undefined,
-        middleware: config.middleware as KafkaRouteDefinition<TValue>['middleware'],
-        handler: handler as (request: KafkaRequest<TValue>) => Promise<void>,
+        middleware: config.middleware as KafkaRouteDefinitionCore<TValue>['middleware'],
+        handler: handler as (request: KafkaRequestCore<TValue>) => Promise<void>,
       };
     },
   };
@@ -49,7 +49,7 @@ export class KafkaMatcher implements EventTypeMatcherCore<KafkaEvent, undefined 
   private routes: InternalRoute[] = [];
   private routesOrdered = false;
   private batchItemFailures: boolean;
-  private middleware: MiddlewareCore<KafkaRequest, void>[];
+  private middleware: MiddlewareCore<KafkaRequestCore, void>[];
 
   constructor(options?: KafkaMatcherOptions) {
     this.batchItemFailures = options?.batchItemFailures ?? false;
@@ -68,7 +68,7 @@ export class KafkaMatcher implements EventTypeMatcherCore<KafkaEvent, undefined 
     return eventSource === undefined && this.holdsKafkaRecords(event.records);
   }
 
-  route<TValue>(definition: KafkaRouteDefinition<TValue>): this {
+  route<TValue>(definition: KafkaRouteDefinitionCore<TValue>): this {
     this.routes.push({
       filters: definition.filters,
       valueSchema: definition.valueSchema,
@@ -214,7 +214,7 @@ export class KafkaMatcher implements EventTypeMatcherCore<KafkaEvent, undefined 
       `Value validation failed for record on topic ${record.topic} partition ${record.partition}`,
     );
 
-    const request: KafkaRequest = {
+    const request: KafkaRequestCore = {
       value: validatedValue,
       key,
       topic: record.topic,

@@ -127,7 +127,7 @@ import { logger } from '@latcher/base'
 import type { KafkaRequest, KafkaResponse } from '@latcher/kafka'
 
 export async function onStockMoved(
-  request: KafkaRequest<StockMovement>,
+  request: KafkaRequest<{ value: StockMovement }>,
 ): Promise<KafkaResponse> {
   const { sku, quantity } = request.value
   logger.info(`Moved ${quantity} of ${sku} at offset ${request.offset}`)
@@ -138,7 +138,7 @@ export async function onStockMoved(
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `value` | `TValue` | The record value, base64 decoded and JSON parsed. A value that is not valid JSON reaches you as the decoded string, and a record carrying no value at all as `undefined`. An empty value arrives as `undefined` too, so use `tombstone` to tell a delete from an empty payload |
+| `value` | The `value` key, default `unknown` | The record value, base64 decoded and JSON parsed. A value that is not valid JSON reaches you as the decoded string, and a record carrying no value at all as `undefined`. An empty value arrives as `undefined` too, so use `tombstone` to tell a delete from an empty payload |
 | `key` | `string \| undefined` | The record key, base64 decoded to text. Kafka partitions on this, so every record with the same key lands on the same partition. A producer can publish without a key, and then this is `undefined` and the broker spreads those records round robin |
 | `topic` | `string` | The topic the record came from |
 | `partition` | `number` | The partition within that topic |
@@ -203,7 +203,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`KafkaRequest`](#generic-parameters) and your own types.
+[`KafkaRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/onStockMoved.ts
@@ -214,7 +214,7 @@ import { z } from 'zod'
 export const StockMovementSchema = z.object({ sku: z.string(), quantity: z.number() })
 type StockMovement = z.infer<typeof StockMovementSchema>
 
-export async function onStockMoved(request: KafkaRequest<StockMovement>): Promise<KafkaResponse> {
+export async function onStockMoved(request: KafkaRequest<{ value: StockMovement }>): Promise<KafkaResponse> {
   logger.info(`Moved ${request.value.quantity} of ${request.value.sku}`)
 }
 ```
@@ -328,7 +328,7 @@ export const logInvocation: KafkaMiddleware = async (request, next) => {
   return next(request)
 }
 
-export const withWarehouseContext: KafkaMiddleware<StockMovement> = async (request, next) => {
+export const withWarehouseContext: KafkaMiddleware<{ value: StockMovement }> = async (request, next) => {
   logger.info(`Handling movement of ${request.value.sku}`)
   return next(request)
 }
@@ -346,8 +346,8 @@ kafkaMatcher.route({
 ```
 
 **Route middleware carries the route's value type.** A route with a `valueSchema` needs
-`KafkaMiddleware<StockMovement>`. `KafkaMiddleware` on its own does not compile there. Matcher
-middleware takes no type argument, because it runs for every route.
+`KafkaMiddleware<{ value: StockMovement }>`. `KafkaMiddleware` on its own does not compile there. Matcher
+middleware takes no keys, because it runs for every route.
 
 Records are handled one at a time, so `appendKeys` on the shared logger cannot interleave the way it
 does on SQS. Keys are cleared per invocation rather than per record, so one you set for a record stays
@@ -360,13 +360,14 @@ All exported from `@latcher/kafka`.
 
 | Type | Description |
 | --- | --- |
-| `KafkaRequest<TValue>` | The handler argument |
+| `KafkaRequest<{ value }>` | The handler argument |
 | `KafkaResponse` | Handler return type, `undefined` |
 | `KafkaFilters` | The `filters` object |
 | `KafkaFilterInput` | What `custom` receives |
-| `KafkaRouteDefinition<TValue>` | A full route passed to `route()` |
+| `KafkaRouteDefinition<{ value }>` | A full route passed to `route()` |
 | `KafkaMatcherOptions` | Options for `createKafkaMatcher` |
-| `KafkaMiddleware<TValue>` | Matcher and route middleware |
+| `KafkaMiddleware<{ value }>` | Matcher and route middleware |
+| `KafkaTypes` | The keys the generic types accept, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `KafkaHeaders` | Headers keyed by name, `Record<string, string>` |
 | `KafkaDecodedHeader` | One entry of `headerList`, `Record<string, string>` |
 | `KafkaBatchResponse` | What the matcher returns with `batchItemFailures` on |
@@ -380,16 +381,17 @@ All exported from `@latcher/kafka`.
 The `KafkaMatcher` class and the `createKafkaMatcher` and `defineRoute` functions come from the same
 place.
 
-### Generic parameters
+### Type arguments
 
-The three types above that take a parameter take the same one.
+The three types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TValue` | `request.value` | `unknown` |
+| `value` | `request.value` | `unknown` |
 
-Leave it off and `value` is `unknown`, so `KafkaRequest` on its own is the right annotation for
-middleware that only reads the topic, the offset or the headers.
+Leave it out and `value` is `unknown`, so `KafkaRequest` on its own is the right annotation for
+middleware that only reads the topic, the offset or the headers. See [Typing a request](/docs/handlers#typing-a-request)
+for the rules.
 
 You only need this for [annotated handlers](#annotated-handlers). Inference covers it.
 
@@ -522,13 +524,13 @@ import type { KafkaRequest, KafkaResponse } from '@latcher/kafka'
 import type { StockAlert, StockMovement } from '../schemas/stock.js'
 
 export async function onStockMoved(
-  request: KafkaRequest<StockMovement>,
+  request: KafkaRequest<{ value: StockMovement }>,
 ): Promise<KafkaResponse> {
   const { sku, quantity, warehouse } = request.value
   logger.info(\`Moved \${quantity} of \${sku} in \${warehouse} at offset \${request.offset}\`)
 }
 
-export async function onStockAlert(request: KafkaRequest<StockAlert>): Promise<KafkaResponse> {
+export async function onStockAlert(request: KafkaRequest<{ value: StockAlert }>): Promise<KafkaResponse> {
   const { sku, remaining, threshold } = request.value
   if (remaining > threshold) return
 

@@ -2,7 +2,7 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
+import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
 export interface KafkaRecordHeader {
   [headerKey: string]: number[];
@@ -66,7 +66,7 @@ export interface KafkaFilters {
   custom?: (input: KafkaFilterInput) => boolean | Promise<boolean>;
 }
 
-export interface KafkaRequest<TValue = unknown> {
+export interface KafkaRequestCore<TValue = unknown> {
   value: TValue;
   key: string | undefined;
   topic: string;
@@ -82,18 +82,18 @@ export interface KafkaRequest<TValue = unknown> {
 
 export type KafkaResponse = undefined;
 
-export type KafkaMiddleware<TValue = unknown> = MiddlewareCore<KafkaRequest<TValue>, void>;
+export type KafkaMiddlewareCore<TValue = unknown> = MiddlewareCore<KafkaRequestCore<TValue>, void>;
 
-export interface KafkaRouteDefinition<TValue = unknown> {
+export interface KafkaRouteDefinitionCore<TValue = unknown> {
   filters: KafkaFilters;
   valueSchema?: StandardSchemaV1<unknown, TValue>;
-  middleware?: KafkaMiddleware<NoInfer<TValue>>[];
-  handler: (request: KafkaRequest<TValue>) => Promise<void>;
+  middleware?: KafkaMiddlewareCore<NoInfer<TValue>>[];
+  handler: (request: KafkaRequestCore<TValue>) => Promise<void>;
 }
 
 export interface KafkaMatcherOptions {
   batchItemFailures?: boolean;
-  middleware?: KafkaMiddleware[];
+  middleware?: KafkaMiddlewareCore[];
 }
 
 export interface KafkaBatchItemIdentifier {
@@ -104,3 +104,23 @@ export interface KafkaBatchItemIdentifier {
 export interface KafkaBatchResponse {
   batchItemFailures: Array<{ itemIdentifier: KafkaBatchItemIdentifier }>;
 }
+
+export interface KafkaTypes {
+  value?: unknown;
+}
+
+interface KafkaDefaults {
+  value: unknown;
+}
+
+export type KafkaRequest<T extends TypeArgs<T, KafkaTypes> = object> = KafkaRequestCore<
+  TypeArg<T, 'value', KafkaDefaults>
+>;
+
+export type KafkaMiddleware<T extends TypeArgs<T, KafkaTypes> = object> = KafkaMiddlewareCore<
+  TypeArg<T, 'value', KafkaDefaults>
+>;
+
+export type KafkaRouteDefinition<T extends TypeArgs<T, KafkaTypes> = object> = KafkaRouteDefinitionCore<
+  TypeArg<T, 'value', KafkaDefaults>
+>;

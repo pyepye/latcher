@@ -17,4 +17,5 @@ export type {
   KafkaRetryEvent,
   KafkaRouteDefinition,
   KafkaSelfManagedEvent,
+  KafkaTypes,
 } from './types.js';

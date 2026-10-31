@@ -5,7 +5,7 @@ import type { TOrder } from '../utils/schemas.js';
 
 // Route middleware for the order route. Typed to the route's value so it slots onto processOrder
 // without widening it.
-export const withOrderContext: KafkaMiddleware<TOrder> = async (request, next) => {
+export const withOrderContext: KafkaMiddleware<{ value: TOrder }> = async (request, next) => {
   logger.info({
     message: 'Order context resolved',
     orderId: request.value.orderId,
