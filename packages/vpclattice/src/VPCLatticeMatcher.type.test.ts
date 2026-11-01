@@ -1,5 +1,6 @@
 import { HTTPMatcher } from '@latcher/http';
 
+import type { VPCLatticeIamAuth } from './auth.js';
 import type { ApiHandler, ApiRequest, HTTPFilterInput, HTTPFilters, HTTPMiddleware, RouteDefinition } from './types.js';
 import { createVPCLatticeMatcher, defineRoute } from './VPCLatticeMatcher.js';
 import type { VPCLatticeEvent } from './vpcLatticeAdapter.js';
@@ -60,5 +61,11 @@ suite('VPC Lattice event type', () => {
         expectTypeOf(request.event).toEqualTypeOf<VPCLatticeEventV2>();
       },
     });
+  });
+});
+
+suite('named type arguments', () => {
+  test('ApiRequest takes its auth from the auth key', () => {
+    expectTypeOf<ApiRequest<{ auth: VPCLatticeIamAuth }>['auth']>().toEqualTypeOf<VPCLatticeIamAuth>();
   });
 });

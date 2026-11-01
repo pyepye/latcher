@@ -5,11 +5,11 @@ import { safeJsonParse, validateSchemaResult } from '@latcher/base';
 import { decodeBody } from './binaryBody.js';
 import type { InternalRoute } from './PathRouter.js';
 import { Response } from './Response.js';
-import type { ApiRequest, BodyMethod, HttpMethod, NormalizedHTTPEvent } from './types.js';
+import type { ApiRequestCore, BodyMethod, HttpMethod, NormalizedHTTPEventCore } from './types.js';
 
 const BODY_METHODS: ReadonlySet<HttpMethod> = new Set<BodyMethod>(['POST', 'PUT', 'PATCH']);
 
-export type MatcherRequest<TAuth, TEvent = unknown> = ApiRequest<
+export type MatcherRequest<TAuth, TEvent = unknown> = ApiRequestCore<
   Record<string, string>,
   Record<string, string | undefined>,
   TAuth,
@@ -27,7 +27,7 @@ export class Request<TAuth = unknown, TEvent = unknown> {
   private _bodyParsed = false;
 
   constructor(
-    readonly normalizedEvent: NormalizedHTTPEvent<TAuth>,
+    readonly normalizedEvent: NormalizedHTTPEventCore<TAuth>,
     readonly rawEvent: TEvent,
     readonly context: Context,
     readonly route: InternalRoute<TAuth>,

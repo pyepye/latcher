@@ -6,7 +6,9 @@ import { STOCK, type StockItem } from '../utils/inventory.js';
 
 // Builds the same response the GET route does. The matcher drops the body and keeps the status and
 // the headers, so a HEAD answers 200 with nothing in it.
-export async function headStockItem(request: ApiRequest<{ sku: string }>): Promise<ApiResponse<StockItem>> {
+export async function headStockItem(
+  request: ApiRequest<{ path: { sku: string } }>,
+): Promise<ApiResponse<{ body: StockItem }>> {
   const item = STOCK[request.path.sku];
   if (!item) throw NotFound(`SKU ${request.path.sku} is not stocked`);
 

@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
+import type { TypeArg, TypeArgs } from '@latcher/base';
 import type { AuthCheckResult, AuthPreset } from '@latcher/http';
 
 import type { LambdaAuthorizerContext } from '../LambdaAuthorizerMatcher/types.js';
@@ -10,22 +11,30 @@ export { noAuth } from '@latcher/http';
 
 type RawAuth = APIGatewayAuth;
 
-export interface ClaimsPresetOptions<TClaims extends Record<string, ClaimValue>> {
+interface ClaimsPresetOptionsCore<TClaims extends Record<string, ClaimValue>> {
   claims: StandardSchemaV1<unknown, TClaims>;
 }
 
-function wrongType(expected: NonNullable<APIGatewayAuth>['type'], auth: RawAuth): AuthCheckResult<never> {
+export interface ClaimsPresetOptionsTypes {
+  claims: Record<string, ClaimValue>;
+}
+
+export type ClaimsPresetOptions<T extends TypeArgs<T, ClaimsPresetOptionsTypes>> = ClaimsPresetOptionsCore<
+  Extract<TypeArg<T, 'claims', ClaimsPresetOptionsTypes>, Record<string, ClaimValue>>
+>;
+
+function wrongType(expected: NonNullable<APIGatewayAuth>['type'], auth: RawAuth): AuthCheckResult<{ auth: never }> {
   const reason = auth === undefined ? 'missing' : 'wrongType';
   return { success: false, reason, message: `Expected ${expected} auth, got ${auth?.type ?? 'none'}` };
 }
 
-export function lambdaAuth(): AuthPreset<RawAuth, LambdaAuth>;
+export function lambdaAuth(): AuthPreset<{ input: RawAuth; output: LambdaAuth }>;
 export function lambdaAuth<TContext extends LambdaAuthorizerContext>(
   contextSchema: StandardSchemaV1<unknown, TContext>,
-): AuthPreset<RawAuth, LambdaAuth<TContext>>;
+): AuthPreset<{ input: RawAuth; output: LambdaAuth<{ context: TContext }> }>;
 export function lambdaAuth<TContext extends LambdaAuthorizerContext>(
   contextSchema?: StandardSchemaV1<unknown, TContext>,
-): AuthPreset<RawAuth, LambdaAuth<TContext> | LambdaAuth> {
+): AuthPreset<{ input: RawAuth; output: LambdaAuth<{ context: TContext }> | LambdaAuth }> {
   return {
     name: 'lambdaAuth',
     check: async (auth: RawAuth) => {
@@ -46,13 +55,13 @@ export function lambdaAuth<TContext extends LambdaAuthorizerContext>(
   };
 }
 
-export function cognitoAuth(): AuthPreset<RawAuth, CognitoAuth>;
+export function cognitoAuth(): AuthPreset<{ input: RawAuth; output: CognitoAuth }>;
 export function cognitoAuth<TClaims extends Record<string, ClaimValue>>(
-  options: ClaimsPresetOptions<TClaims>,
-): AuthPreset<RawAuth, CognitoAuth<Claims & TClaims>>;
+  options: ClaimsPresetOptions<{ claims: TClaims }>,
+): AuthPreset<{ input: RawAuth; output: CognitoAuth<{ claims: Claims & TClaims }> }>;
 export function cognitoAuth<TClaims extends Record<string, ClaimValue>>(
-  options?: ClaimsPresetOptions<TClaims>,
-): AuthPreset<RawAuth, CognitoAuth<Claims & TClaims> | CognitoAuth> {
+  options?: ClaimsPresetOptions<{ claims: TClaims }>,
+): AuthPreset<{ input: RawAuth; output: CognitoAuth<{ claims: Claims & TClaims }> | CognitoAuth }> {
   return {
     name: 'cognitoAuth',
     check: async (auth: RawAuth) => {
@@ -73,13 +82,13 @@ export function cognitoAuth<TClaims extends Record<string, ClaimValue>>(
   };
 }
 
-export function jwtAuth(): AuthPreset<RawAuth, JwtAuth>;
+export function jwtAuth(): AuthPreset<{ input: RawAuth; output: JwtAuth }>;
 export function jwtAuth<TClaims extends Record<string, ClaimValue>>(
-  options: ClaimsPresetOptions<TClaims>,
-): AuthPreset<RawAuth, JwtAuth<Claims & TClaims>>;
+  options: ClaimsPresetOptions<{ claims: TClaims }>,
+): AuthPreset<{ input: RawAuth; output: JwtAuth<{ claims: Claims & TClaims }> }>;
 export function jwtAuth<TClaims extends Record<string, ClaimValue>>(
-  options?: ClaimsPresetOptions<TClaims>,
-): AuthPreset<RawAuth, JwtAuth<Claims & TClaims> | JwtAuth> {
+  options?: ClaimsPresetOptions<{ claims: TClaims }>,
+): AuthPreset<{ input: RawAuth; output: JwtAuth<{ claims: Claims & TClaims }> | JwtAuth }> {
   return {
     name: 'jwtAuth',
     check: async (auth: RawAuth) => {
@@ -100,7 +109,7 @@ export function jwtAuth<TClaims extends Record<string, ClaimValue>>(
   };
 }
 
-export function iamAuth(): AuthPreset<RawAuth, IamAuth> {
+export function iamAuth(): AuthPreset<{ input: RawAuth; output: IamAuth }> {
   return {
     name: 'iamAuth',
     check: async (auth: RawAuth) => {

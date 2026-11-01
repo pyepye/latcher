@@ -11,7 +11,7 @@ import { buildValueMaps, type FinalizedHTTPResponse, type HTTPAdapter, type Norm
 import {
   type APIGatewayAuth,
   type APIGatewayAuthorizer,
-  type LambdaAuth,
+  type LambdaAuthCore,
   readApiKey,
   readClaims,
   readClientCert,
@@ -32,7 +32,7 @@ function isHttpApiEvent(event: APIGatewayV1EventType): boolean {
 }
 
 // REST sets principalId and integrationLatency itself, over any context keys of the same name
-function readRestLambdaAuth(authorizer: Record<string, unknown>): LambdaAuth {
+function readRestLambdaAuth(authorizer: Record<string, unknown>): LambdaAuthCore {
   const { principalId, integrationLatency, ...context } = authorizer;
   return {
     type: 'lambda',
@@ -42,7 +42,7 @@ function readRestLambdaAuth(authorizer: Record<string, unknown>): LambdaAuth {
 }
 
 // HTTP API adds claims and scopes as null, and never passes the authorizer's principalId
-function readHttpLambdaAuth(authorizer: Record<string, unknown>): LambdaAuth {
+function readHttpLambdaAuth(authorizer: Record<string, unknown>): LambdaAuthCore {
   const { claims, scopes, ...context } = authorizer;
   return { type: 'lambda', principalId: undefined, context: readLambdaContext(context) };
 }
@@ -68,7 +68,11 @@ function extractV1Auth(event: APIGatewayV1EventType): APIGatewayAuth {
   return withExtras(readV1Authorizer(event), { apiKey: readApiKey(identity), clientCert: readClientCert(identity) });
 }
 
-export const apiGatewayV1Adapter: HTTPAdapter<APIGatewayV1EventType, APIGatewayProxyResult, APIGatewayAuth> = {
+export const apiGatewayV1Adapter: HTTPAdapter<{
+  event: APIGatewayV1EventType;
+  result: APIGatewayProxyResult;
+  auth: APIGatewayAuth;
+}> = {
   canHandleEvent(event: unknown): event is APIGatewayV1EventType {
     if (!isObject(event)) return false;
     if (typeof event.path !== 'string') return false; // Guard against VPCLatticeV1, APIGatewayV2
@@ -83,7 +87,7 @@ export const apiGatewayV1Adapter: HTTPAdapter<APIGatewayV1EventType, APIGatewayP
     return true;
   },
 
-  normalize(event: APIGatewayV1EventType): NormalizedHTTPEvent<APIGatewayAuth> {
+  normalize(event: APIGatewayV1EventType): NormalizedHTTPEvent<{ auth: APIGatewayAuth }> {
     // API Gateway V1 sends both the single-value and multi-value forms; read both so a repeated
     // query param or header is not lost when the flat map keeps only the last value.
     const headers = buildValueMaps({

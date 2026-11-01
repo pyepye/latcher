@@ -7,8 +7,8 @@ import { logger } from '@latcher/base';
 // matcher hands the decoded bytes over as a Buffer, so gunzip only works on a body that survived
 // the trip whole.
 export async function replaceReturnNote(
-  request: ApiRequest<{ returnId: string }, Record<string, string | undefined>, undefined, Buffer>,
-): Promise<ApiResponse<{ returnId: string; lines: number; bytes: number; encoded: boolean }>> {
+  request: ApiRequest<{ path: { returnId: string }; body: Buffer }>,
+): Promise<ApiResponse<{ body: { returnId: string; lines: number; bytes: number; encoded: boolean } }>> {
   const note = gunzipSync(request.body).toString('utf-8');
   const lines = note.split('\n').filter((line) => line.length > 0).length;
 

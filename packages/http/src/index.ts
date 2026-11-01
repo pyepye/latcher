@@ -1,4 +1,14 @@
-export { type AuthCheckResult, type AuthFailureReason, type AuthOf, type AuthPreset, noAuth } from './auth.js';
+export {
+  type AuthCheckResult,
+  type AuthCheckResultCore,
+  type AuthCheckResultTypes,
+  type AuthFailureReason,
+  type AuthOf,
+  type AuthPreset,
+  type AuthPresetCore,
+  type AuthPresetTypes,
+  noAuth,
+} from './auth.js';
 export { BinaryBody } from './binaryBody.js';
 export { HTTP_STATUS_CODES } from './constants.js';
 export type { CorsConfig, CorsOriginFunction } from './cors.js';
@@ -6,9 +16,13 @@ export { HTTPException } from './HTTPException.js';
 export {
   createDefineRoute,
   type DefineRouteFn,
+  type DefineRouteFnCore,
+  type DefineRouteFnTypes,
   defineRoute,
   HTTPMatcher,
   type HTTPMatcherOptions,
+  type HTTPMatcherOptionsCore,
+  type HTTPMatcherOptionsTypes,
 } from './HTTPMatcher.js';
 export { Html } from './html.js';
 export {
@@ -30,8 +44,14 @@ export type {
   AnyHttpMethod,
   AnyResponseKind,
   ApiHandler,
+  ApiHandlerCore,
+  ApiHandlerTypes,
   ApiRequest,
+  ApiRequestCore,
+  ApiRequestTypes,
   ApiResponse,
+  ApiResponseCore,
+  ApiResponseTypes,
   Bytes,
   ErrorContext,
   ErrorFunctions,
@@ -39,20 +59,35 @@ export type {
   ErrorStatusCode,
   FinalizedHTTPResponse,
   HandlerResponse,
+  HandlerResponseCore,
   HTTPAdapter,
+  HTTPAdapterCore,
+  HTTPAdapterTypes,
   HTTPFilterInput,
+  HTTPFilterInputCore,
+  HTTPFilterInputTypes,
   HTTPFilters,
+  HTTPFiltersCore,
+  HTTPFiltersTypes,
   HTTPMiddleware,
+  HTTPMiddlewareCore,
   HTTPResponse,
+  HTTPResponseCore,
   HtmlMatcherErrors,
   HttpMethod,
   JsonBody,
   NormalizedHTTPEvent,
+  NormalizedHTTPEventCore,
+  NormalizedHTTPEventTypes,
   PathParams,
   ResponseBody,
   ResponseKind,
   ResponseTypeOption,
+  ResponseTypeOptionCore,
+  ResponseTypeOptionTypes,
   RouteDefinition,
+  RouteDefinitionCore,
+  RouteDefinitionTypes,
   RouteKind,
 } from './types.js';
 export { type BuildValueMapsInput, buildValueMaps, type HttpValueMaps } from './valueMaps.js';

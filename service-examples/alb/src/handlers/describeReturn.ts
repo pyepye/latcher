@@ -4,7 +4,9 @@ import { logger } from '@latcher/base';
 
 // A registered OPTIONS route wins over the automatic CORS preflight for this path. The CORS
 // headers are still added on top of whatever it returns.
-export async function describeReturn(request: ApiRequest<{ returnId: string }>): Promise<ApiResponse<undefined>> {
+export async function describeReturn(
+  request: ApiRequest<{ path: { returnId: string } }>,
+): Promise<ApiResponse<{ body: undefined }>> {
   logger.info({ message: 'Return options described', returnId: request.path.returnId });
 
   return {

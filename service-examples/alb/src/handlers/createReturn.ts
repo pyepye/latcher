@@ -5,8 +5,8 @@ import { RETURNS, type ReturnRecord } from '../utils/returns.js';
 import type { TNewReturn } from '../utils/schemas.js';
 
 export async function createReturn(
-  request: ApiRequest<Record<string, string>, Record<string, string | undefined>, undefined, TNewReturn>,
-): Promise<ApiResponse<ReturnRecord>> {
+  request: ApiRequest<{ body: TNewReturn }>,
+): Promise<ApiResponse<{ body: ReturnRecord }>> {
   const { returnId, orderId, units } = request.body;
   if (RETURNS[returnId]) throw Conflict(`Return ${returnId} already exists`);
 

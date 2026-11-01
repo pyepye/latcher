@@ -223,8 +223,8 @@ import type { ApiRequest, ApiResponse } from '@latcher/vpclattice'
 import { NotFound, Ok } from '@latcher/vpclattice'
 
 export async function getOrder(
-  request: ApiRequest<{ orderId: string }>,
-): Promise<ApiResponse<Order>> {
+  request: ApiRequest<{ path: { orderId: string } }>,
+): Promise<ApiResponse<{ body: Order }>> {
   const order = await orders.get(request.path.orderId)
   if (!order) {
     throw NotFound(`Order ${request.path.orderId} not found`)
@@ -239,11 +239,11 @@ export async function getOrder(
 | Field | Type | Description |
 | --- | --- | --- |
 | `method` | `string` | The request method, upper case |
-| `path` | `TPath` | The params named in the route's path pattern. Empty when the pattern names none |
+| `path` | The `path` key, default `Record<string, string>` | The params named in the route's path pattern. Empty when the pattern names none |
 | `rawPath` | `string` | The path string the caller asked for, the same on a 1.0 or 2.0 payload |
-| `query` | `TQuery` | Query string params, one value per key. Where a name repeats, this is the last value |
+| `query` | The `query` key, default `Record<string, string \| undefined>` | Query string params, one value per key. Where a name repeats, this is the last value |
 | `multiValueQuery` | `Record<string, string[] \| undefined>` | Every value for each query param, in the order they arrived |
-| `body` | `TBody` | The parsed body. See [request body](#request-body) for when the matcher parses it. A body that is not valid JSON arrives as the raw string, a binary body as a `Buffer`, and no body at all as `null` |
+| `body` | The `body` key, default `unknown` | The parsed body. See [request body](#request-body) for when the matcher parses it. A body that is not valid JSON arrives as the raw string, a binary body as a `Buffer`, and no body at all as `null` |
 | `rawBody` | `string \| undefined` | The body exactly as the service sent it, still base64 where `isBase64Encoded` is true |
 | `isBase64Encoded` | `boolean` | Whether the service base64 encoded the body it sent |
 | `headers` | `Record<string, string \| undefined>` | Request headers, lower cased by the matcher. Where a name repeats, this is the last value |
@@ -303,8 +303,8 @@ than in the handler. It still happens only once.
 The handler can return the body on its own or a full `{ statusCode, body, headers }`, which is `ApiResponse`.
 See [Responses](#responses) for what the matcher does with each.
 
-`HandlerResponse<T>` is `ApiResponse<T> | T | HTTPException`, where `T` is the body the route's
-[response type](#response-types) takes. You can return the body on its own, a full
+`HandlerResponse<{ body: Order }>` is `ApiResponse<{ body: Order }> | Order | HTTPException`. The `body` key
+is the body the route's [response type](#response-types) takes. You can return the body on its own, a full
 `{ statusCode, body, headers }` or an error helper. It defaults to a JSON body. See
 [Responses](#responses) for what the matcher does with each.
 
@@ -347,11 +347,11 @@ both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`ApiRequest`](#generic-parameters) and your own types.
+[`ApiRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/orders.ts
-import type { ApiRequest, ApiResponse, VPCLatticeAuth } from '@latcher/vpclattice'
+import type { ApiRequest, ApiResponse } from '@latcher/vpclattice'
 import { Created } from '@latcher/vpclattice'
 import { z } from 'zod'
 
@@ -359,8 +359,8 @@ export const NewOrderSchema = z.object({ sku: z.string(), quantity: z.number() }
 type NewOrder = z.infer<typeof NewOrderSchema>
 
 export async function createOrder(
-  request: ApiRequest<{ orgId: string }, Record<string, string | undefined>, VPCLatticeAuth, NewOrder>,
-): Promise<ApiResponse<Order>> {
+  request: ApiRequest<{ path: { orgId: string }; body: NewOrder }>,
+): Promise<ApiResponse<{ body: Order }>> {
   const { orgId } = request.path
   const { sku, quantity } = request.body
 
@@ -394,9 +394,9 @@ of the pattern so you are not keeping a second copy of it in step. Check it agai
 patterns](#path-patterns) first, since a pattern ending in a literal segment gives you nothing and writing the
 type out by hand is the answer there.
 
-`ApiRequest` takes its parameters in the order `TPath`, `TQuery`, `TAuth`, `TBody`, so typing only the body
-means passing the query and auth types through as well. [Generic parameters](#generic-parameters) has each
-one, its default and which types take them in a different order.
+`ApiRequest` takes one object whose keys are `path`, `query`, `auth`, `body` and `event`. A key you leave out
+keeps its default, so `ApiRequest<{ body: NewOrder }>` types only the body. [Type arguments](#type-arguments)
+has each key and its default.
 
 ## Schema validation
 
@@ -912,8 +912,8 @@ route's shape.
 
 **The bare alias cannot answer with a body of its own,** since it runs on routes of every
 [response type](#response-types). It can return what `next()` gives it or an error helper, and nothing
-else compiles. A middleware that reads or builds a body names it as the fifth parameter, so
-`HTTPMiddleware<..., JsonBody>` fits only JSON routes and never a matcher.
+else compiles. A middleware that reads or builds a body names it with the `response` key, so
+`HTTPMiddleware<{ response: JsonBody }>` fits only JSON routes and never a matcher.
 
 A route keeps its own types with the bare alias attached. The handler still gets `path.orgId` from the
 path pattern and the body from the `bodySchema`.
@@ -921,16 +921,15 @@ path pattern and the body from the `bodySchema`.
 The bare alias types each query value as `unknown`, since a route's `querySchema` can turn a value into
 a number or a boolean before the middleware runs.
 
-To read typed values inside the middleware, such as the schema's body, name the parameters in the order
-[`TPath`, `TQuery`, `TAuth`, `TBody`](#generic-parameters).
+To read typed values inside the middleware, such as the schema's body, name the [keys](#type-arguments) you
+need.
 
 ```ts
-export const withOrgContext: HTTPMiddleware<
-  { orgId: string; orderId: string },
-  Record<string, string | undefined>,
-  VPCLatticeAuth,
-  NewOrder
-> = async (request, next) => {
+export const withOrgContext: HTTPMiddleware<{
+  path: { orgId: string; orderId: string }
+  query: Record<string, string | undefined>
+  body: NewOrder
+}> = async (request, next) => {
   logger.appendKeys({ orgId: request.path.orgId, orderId: request.path.orderId })
 
   return next(request)
@@ -946,18 +945,18 @@ All exported from `@latcher/vpclattice`.
 
 | Type | Description |
 | --- | --- |
-| `ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>` | The handler argument |
-| `ApiResponse<T>` | `{ statusCode, body, headers? }`, and what a handler returning a full response returns |
-| `HTTPResponse<T>` | An alias of `ApiResponse<T>`, and what the helpers return |
-| `ApiHandler<TPath, TQuery, TAuth, TBody, TResponse>` | The handler signature |
-| `RouteDefinition<TPathString, TPath, TQuery, TAuth, TBody, TResponse, TMethod>` | A full route passed to `route()` |
-| `PathParams<TPathString>` | The params a pattern names, so `PathParams<'/orders/:orderId'>` is `{ orderId: string }` |
+| `ApiRequest<{ path, query, auth, body, event }>` | The handler argument |
+| `ApiResponse<{ body }>` | `{ statusCode, body, headers? }`, and what a handler returning a full response returns |
+| `HTTPResponse<{ body }>` | An alias of `ApiResponse<{ body }>`, and what the helpers return |
+| `ApiHandler<{ path, query, auth, body, response, event }>` | The handler signature |
+| `RouteDefinition<{ pathPattern, path, query, auth, body, response, method, event }>` | A full route passed to `route()` |
+| `PathParams<pattern>` | The params a pattern names, so `PathParams<'/orders/:orderId'>` is `{ orderId: string }` |
 | `JsonBody` | What a JSON route returns: an object, an array, `null` or `undefined` |
 | `Html` | An HTML body, which only `Html()` makes |
 | `Bytes` | `Uint8Array \| ArrayBuffer`, which a binary route returns along with a `Buffer` |
 | `ResponseKind` | `'json' \| 'html' \| 'text' \| 'binary'` |
-| `ResponseTypeOption` | The `responseType` option, a kind or `{ type, contentType }` |
-| `ResponseBody<TKind>` | The body a kind returns. With no argument, the body of any kind |
+| `ResponseTypeOption<{ type, contentType }>` | The `responseType` option, a kind or `{ type, contentType }` |
+| `ResponseBody<kind>` | The body a kind returns. With no argument, the body of any kind |
 | `ErrorFunctions` | The `errors` option |
 | `ErrorInput` | What an error function gets, `{ statusCode, statusText, message, context }` |
 | `ErrorContext` | Any JSON value, which an error helper takes as its context |
@@ -965,7 +964,8 @@ All exported from `@latcher/vpclattice`.
 | `VPCLatticeAuth` | `request.auth`, which is `VPCLatticeIamAuth` or `undefined` |
 | `CorsConfig` | The `cors` option |
 | `CorsOriginFunction` | A dynamic `origin`, `(origin, path) => string \| undefined` |
-| `VPCLatticeMatcherOptions` | Options for `createVPCLatticeMatcher` |
+| `VPCLatticeMatcherOptions<{ auth, responseType, errors, contentType }>` | Options for `createVPCLatticeMatcher` |
+| `ApiRequestTypes`, `ApiHandlerTypes`, `HTTPFiltersTypes`, `HTTPFilterInputTypes`, `RouteDefinitionTypes`, `VPCLatticeMatcherOptionsTypes` | The keys each generic type accepts, for [forwarding a generic](/docs/handlers#typing-a-request) |
 | `AnyHttpMethod` | What the `method` filter accepts, upper or lower case |
 | `HttpMethod` | The upper case methods |
 | `VPCLatticeEvent` | `request.event`, a union of both payload versions |
@@ -974,10 +974,11 @@ All exported from `@latcher/vpclattice`.
 | `VPCLatticeIdentity` | `requestContext.identity` on a V2 event |
 | `VPCLatticeResult` | What the matcher hands back to Lambda |
 
-`HandlerResponse`, `HTTPFilters`, `HTTPFilterInput` and `HTTPMiddleware` come from
-`@latcher/http`. Here `TAuth` defaults to `VPCLatticeAuth` and `TEvent` to `VPCLatticeEvent`, so
-import them from here rather than naming that package. The route definition and request types carry no `VPCLattice` prefix because
-`APIGatewayMatcher` and `ALBMatcher` use the same ones.
+`HandlerResponse` comes from `@latcher/http`. `HTTPFilters<{ pathPattern, method, auth, event }>`,
+`HTTPFilterInput<{ event, auth }>` and `HTTPMiddleware<{ path, query, auth, body, response, event }>` are
+exported from here, with `auth` defaulting to `VPCLatticeAuth` and `event` to `VPCLatticeEvent`, so import
+them from here rather than naming that package. The route definition and request types carry no `VPCLattice`
+prefix because `APIGatewayMatcher` and `ALBMatcher` use the same ones.
 
 The `VPCLatticeMatcher` class, the `createVPCLatticeMatcher` and `defineRoute` functions and the [auth
 presets](#auth-presets) come from the same place, along with the `Response` class, the response helpers,
@@ -987,27 +988,26 @@ presets](#auth-presets) come from the same place, along with the `Response` clas
 `NormalizedHTTPEvent`, `FinalizedHTTPResponse` and `HTTPAdapter` go with it for writing an adapter of
 your own, and are not something a route needs.
 
-### Generic parameters
+### Type arguments
 
-Eight parameters cover every type above, and they do not all appear in the same order.
+The generic types above take one object. Its keys are the names of the properties they type.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TPathString` | The path pattern itself, which `PathParams` reads | `string` |
-| `TPath` | `request.path` | `PathParams<TPathString>` on `RouteDefinition`, `Record<string, string>` elsewhere |
-| `TQuery` | `request.query` | `Record<string, unknown>` on `HTTPMiddleware`, `Record<string, string \| undefined>` elsewhere |
-| `TAuth` | `request.auth` | `VPCLatticeAuth` |
-| `TBody` | `request.body` | `unknown`. On a route without a `bodySchema`, `TMethod` picks `unknown` or `undefined` |
-| `TMethod` | The `method` filter on `RouteDefinition` | `AnyHttpMethod` |
-| `TResponse` | What the handler returns | Any kind on `HTTPMiddleware`, `JsonBody` elsewhere |
-| `TEvent` | `request.event` | `VPCLatticeEvent` |
+| `pathPattern` | The path pattern itself, which `PathParams` reads. `RouteDefinition` and `HTTPFilters` only | `string` |
+| `path` | `request.path` | `PathParams<pathPattern>` on `RouteDefinition`, `Record<string, string>` elsewhere |
+| `query` | `request.query` | `Record<string, unknown>` on `HTTPMiddleware`, `Record<string, string \| undefined>` elsewhere |
+| `auth` | `request.auth` | `VPCLatticeAuth` |
+| `body` | `request.body` | `unknown`. On a route without a `bodySchema`, the `method` picks `unknown` or `undefined` |
+| `method` | The `method` filter on `RouteDefinition` and `HTTPFilters` | `AnyHttpMethod` |
+| `response` | What the handler returns | Any kind on `HTTPMiddleware`, `JsonBody` elsewhere |
+| `event` | `request.event` | `VPCLatticeEvent` |
 
-`ApiRequest`, `ApiHandler` and `HTTPMiddleware` all start `TPath, TQuery, TAuth, TBody`. `ApiRequest`'s fifth
-is `TEvent`. The other two take `TResponse` fifth and `TEvent` sixth. `RouteDefinition` puts `TPathString`
-first and derives `TPath` from it. It takes `TMethod` then `TEvent` last.
-
-Pass only the ones you need up to the last one you care about, so `ApiRequest<{ orderId: string }>` types the
-path and leaves the query, auth and body loose.
+`ApiRequest` takes `path`, `query`, `auth`, `body` and `event`. `ApiHandler` and `HTTPMiddleware` add
+`response`. `RouteDefinition` adds `pathPattern`, `response` and `method`, and derives `path` from
+`pathPattern`. Leave a key out and it takes its default, so `ApiRequest<{ path: { orderId: string } }>` types
+the path and leaves the query, auth and body loose. See [Typing a request](/docs/handlers#typing-a-request)
+for the rules.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers all of them.
 
@@ -1062,7 +1062,7 @@ latticeMatcher
   {
     path: 'handlers/orders.ts',
     code: `import { logger } from '@latcher/base'
-import type { ApiRequest, ApiResponse, VPCLatticeAuth } from '@latcher/vpclattice'
+import type { ApiRequest, ApiResponse } from '@latcher/vpclattice'
 import { Created, NotFound, Ok } from '@latcher/vpclattice'
 
 import { orders } from '../orders.js'
@@ -1072,8 +1072,8 @@ type OrgPath = { orgId: string }
 type OrderPath = { orgId: string; orderId: string }
 
 export async function listOrders(
-  request: ApiRequest<OrgPath, ListOrdersQuery>,
-): Promise<ApiResponse<Order[]>> {
+  request: ApiRequest<{ path: OrgPath; query: ListOrdersQuery }>,
+): Promise<ApiResponse<{ body: Order[] }>> {
   const { orgId } = request.path
   // The schema marks status optional with no default, so the handler picks one when it is absent
   const status = request.query.status ?? 'OPEN'
@@ -1081,7 +1081,7 @@ export async function listOrders(
   return Ok(await orders.list(orgId, status))
 }
 
-export async function getOrder(request: ApiRequest<OrderPath>): Promise<ApiResponse<Order>> {
+export async function getOrder(request: ApiRequest<{ path: OrderPath }>): Promise<ApiResponse<{ body: Order }>> {
   const { orgId, orderId } = request.path
 
   const order = await orders.get(orgId, orderId)
@@ -1093,8 +1093,8 @@ export async function getOrder(request: ApiRequest<OrderPath>): Promise<ApiRespo
 }
 
 export async function createOrder(
-  request: ApiRequest<OrgPath, Record<string, string | undefined>, VPCLatticeAuth, NewOrder>,
-): Promise<ApiResponse<Order>> {
+  request: ApiRequest<{ path: OrgPath; body: NewOrder }>,
+): Promise<ApiResponse<{ body: Order }>> {
   const { orgId } = request.path
   const { sku, quantity } = request.body
 

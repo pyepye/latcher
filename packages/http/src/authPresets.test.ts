@@ -17,8 +17,8 @@ type TeamAuth = { type: 'team'; team: string };
 type OrgAuth = { type: 'org'; org: string };
 type RawAuth = TeamAuth | OrgAuth | undefined;
 type Query = Record<string, string | undefined>;
-type MatcherRequest = ApiRequest<Record<string, string>, Query, RawAuth>;
-type ItemsRequest = ApiRequest<PathParams<'/items'>, Query, TeamAuth, undefined>;
+type MatcherRequest = ApiRequest<{ query: Query; auth: RawAuth }>;
+type ItemsRequest = ApiRequest<{ path: PathParams<'/items'>; query: Query; auth: TeamAuth; body: undefined }>;
 
 interface TeamEvent {
   method: string;
@@ -27,9 +27,9 @@ interface TeamEvent {
   body?: string;
 }
 
-const teamAdapter: HTTPAdapter<TeamEvent, FinalizedHTTPResponse, RawAuth> = {
+const teamAdapter: HTTPAdapter<{ event: TeamEvent; result: FinalizedHTTPResponse; auth: RawAuth }> = {
   canHandleEvent: (event: unknown): event is TeamEvent => typeof event === 'object' && event !== null,
-  normalize: (event: TeamEvent): NormalizedHTTPEvent<RawAuth> => ({
+  normalize: (event: TeamEvent): NormalizedHTTPEvent<{ auth: RawAuth }> => ({
     method: event.method,
     path: event.path,
     headers: { 'content-type': 'application/json' },
@@ -43,7 +43,7 @@ const teamAdapter: HTTPAdapter<TeamEvent, FinalizedHTTPResponse, RawAuth> = {
   buildResult: (response: FinalizedHTTPResponse): FinalizedHTTPResponse => response,
 };
 
-const teamOnly: AuthPreset<RawAuth, TeamAuth> = {
+const teamOnly: AuthPreset<{ input: RawAuth; output: TeamAuth }> = {
   name: 'teamOnly',
   check: async (auth: RawAuth) => {
     if (auth === undefined) return { success: false, reason: 'missing', message: 'expected team auth, got none' };
@@ -53,7 +53,7 @@ const teamOnly: AuthPreset<RawAuth, TeamAuth> = {
   },
 };
 
-const orgOnly: AuthPreset<RawAuth, OrgAuth> = {
+const orgOnly: AuthPreset<{ input: RawAuth; output: OrgAuth }> = {
   name: 'orgOnly',
   check: async (auth: RawAuth) =>
     auth?.type === 'org'
@@ -210,7 +210,7 @@ suite('auth presets', () => {
   test('matcher and route middleware see the checked auth', async () => {
     const seen: unknown[] = [];
     const checkedAuth: TeamAuth = { type: 'team', team: 'checked' };
-    const rewritesTeam: AuthPreset<RawAuth, TeamAuth> = {
+    const rewritesTeam: AuthPreset<{ input: RawAuth; output: TeamAuth }> = {
       name: 'rewritesTeam',
       check: async () => ({ success: true, auth: checkedAuth }),
     };
@@ -219,8 +219,8 @@ suite('auth presets', () => {
       middleware: [
         async (
           req: MatcherRequest,
-          next: (req: MatcherRequest) => Promise<HandlerResponse<ResponseBody>>,
-        ): Promise<HandlerResponse<ResponseBody>> => {
+          next: (req: MatcherRequest) => Promise<HandlerResponse<{ body: ResponseBody }>>,
+        ): Promise<HandlerResponse<{ body: ResponseBody }>> => {
           seen.push(req.auth);
           return next(req);
         },

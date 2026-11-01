@@ -4,7 +4,9 @@ import { logger } from '@latcher/base';
 import { RETURNS } from '../utils/returns.js';
 
 // A return can only be withdrawn once it holds no units, so one still carrying stock answers 409.
-export async function withdrawReturn(request: ApiRequest<{ returnId: string }>): Promise<ApiResponse<undefined>> {
+export async function withdrawReturn(
+  request: ApiRequest<{ path: { returnId: string } }>,
+): Promise<ApiResponse<{ body: undefined }>> {
   const record = RETURNS[request.path.returnId];
   if (!record) throw NotFound(`Return ${request.path.returnId} does not exist`);
 

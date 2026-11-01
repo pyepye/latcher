@@ -37,7 +37,7 @@ interface MockResult {
   isBase64Encoded: boolean;
 }
 
-const mockAdapter: HTTPAdapter<MockEvent, MockResult> = {
+const mockAdapter: HTTPAdapter<{ event: MockEvent; result: MockResult }> = {
   canHandleEvent(event: unknown): event is MockEvent {
     return typeof event === 'object' && event !== null && 'method' in event && 'path' in event;
   },

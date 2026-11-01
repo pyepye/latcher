@@ -1,41 +1,65 @@
+import type { TypeArg, TypeArgs } from '@latcher/base';
 import type {
-  AuthPreset,
+  AuthPresetCore,
   CorsConfig,
   DefineRouteFn,
   ErrorFunctions,
-  HTTPMatcherOptions,
+  HTTPMatcherOptionsCore,
+  HTTPMiddlewareCore,
   HtmlMatcherErrors,
   ResponseBody,
   ResponseKind,
-  ResponseTypeOption,
+  ResponseTypeOptionCore,
 } from '@latcher/http';
 import { createDefineRoute, HTTPMatcher } from '@latcher/http';
 
 import type { VPCLatticeAuth } from './auth.js';
-import type { HTTPMiddleware } from './types.js';
 import { type VPCLatticeEvent, vpcLatticeAdapter } from './vpcLatticeAdapter.js';
 import type { VPCLatticeResult } from './vpcLatticeV1Adapter.js';
 
 type RawAuth = VPCLatticeAuth;
 
-export interface VPCLatticeMatcherOptions<
+interface VPCLatticeMatcherOptionsCore<
   TDefaultAuth extends RawAuth = RawAuth,
   TDefaultKind extends ResponseKind = 'json',
   TErrors extends ErrorFunctions = Record<never, never>,
   TContentType extends string = string,
 > {
-  auth?: AuthPreset<RawAuth, TDefaultAuth>;
-  responseType?: ResponseTypeOption<TDefaultKind, TContentType>;
+  auth?: AuthPresetCore<RawAuth, TDefaultAuth>;
+  responseType?: ResponseTypeOptionCore<TDefaultKind, TContentType>;
   errors?: TErrors & ErrorFunctions;
-  middleware?: HTTPMiddleware<
+  middleware?: HTTPMiddlewareCore<
     Record<string, string>,
     Record<string, string | undefined>,
     RawAuth,
     unknown,
-    ResponseBody
+    ResponseBody,
+    VPCLatticeEvent
   >[];
   cors?: CorsConfig;
 }
+
+export interface VPCLatticeMatcherOptionsTypes {
+  auth?: RawAuth;
+  responseType?: ResponseKind;
+  errors?: ErrorFunctions;
+  contentType?: string;
+}
+
+interface VPCLatticeMatcherOptionsDefaults {
+  auth: RawAuth;
+  responseType: 'json';
+  errors: Record<never, never>;
+  contentType: string;
+}
+
+export type VPCLatticeMatcherOptions<T extends TypeArgs<T, VPCLatticeMatcherOptionsTypes> = object> =
+  VPCLatticeMatcherOptionsCore<
+    Extract<TypeArg<T, 'auth', VPCLatticeMatcherOptionsDefaults>, RawAuth>,
+    Extract<TypeArg<T, 'responseType', VPCLatticeMatcherOptionsDefaults>, ResponseKind>,
+    Extract<TypeArg<T, 'errors', VPCLatticeMatcherOptionsDefaults>, ErrorFunctions>,
+    Extract<TypeArg<T, 'contentType', VPCLatticeMatcherOptionsDefaults>, string>
+  >;
 
 export class VPCLatticeMatcher<
   TDefaultAuth extends RawAuth = RawAuth,
@@ -44,7 +68,7 @@ export class VPCLatticeMatcher<
   TContentType extends string = string,
 > extends HTTPMatcher<VPCLatticeEvent, VPCLatticeResult, RawAuth, TDefaultAuth, TDefaultKind, TErrors, TContentType> {
   constructor(
-    options?: VPCLatticeMatcherOptions<TDefaultAuth, TDefaultKind, TErrors, TContentType> &
+    options?: VPCLatticeMatcherOptionsCore<TDefaultAuth, TDefaultKind, TErrors, TContentType> &
       HtmlMatcherErrors<NoInfer<TDefaultKind>>,
   ) {
     // The options already passed HtmlMatcherErrors, which TypeScript cannot resolve here for a generic kind
@@ -55,7 +79,7 @@ export class VPCLatticeMatcher<
       errors: options?.errors,
       middleware: options?.middleware,
       cors: options?.cors,
-    } as HTTPMatcherOptions<
+    } as HTTPMatcherOptionsCore<
       VPCLatticeEvent,
       VPCLatticeResult,
       RawAuth,
@@ -74,13 +98,13 @@ export function createVPCLatticeMatcher<
   TErrors extends ErrorFunctions = Record<never, never>,
   TContentType extends string = string,
 >(
-  options?: VPCLatticeMatcherOptions<TDefaultAuth, TDefaultKind, TErrors, TContentType> &
+  options?: VPCLatticeMatcherOptionsCore<TDefaultAuth, TDefaultKind, TErrors, TContentType> &
     HtmlMatcherErrors<NoInfer<TDefaultKind>>,
 ): VPCLatticeMatcher<TDefaultAuth, TDefaultKind, TErrors, TContentType> {
   return new VPCLatticeMatcher(options);
 }
 
-export const defineRoute: DefineRouteFn<RawAuth, RawAuth, 'json', VPCLatticeEvent> = createDefineRoute<
+export const defineRoute: DefineRouteFn<{ rawAuth: RawAuth; event: VPCLatticeEvent }> = createDefineRoute<
   RawAuth,
   RawAuth,
   VPCLatticeEvent

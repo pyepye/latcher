@@ -8,7 +8,7 @@ interface Item {
   name: string;
 }
 
-type ItemsRequest<TBody> = ApiRequest<Record<never, never>, Record<string, string | undefined>, unknown, TBody>;
+type ItemsRequest<TBody> = ApiRequest<{ path: Record<never, never>; body: TBody }>;
 
 function readsTenant(input: HTTPFilterInput): boolean {
   return input.headers['x-tenant'] === 'acme';

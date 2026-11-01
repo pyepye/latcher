@@ -43,7 +43,7 @@ export {
   UnprocessableContent,
 } from '@latcher/http';
 
-export type { APIGatewayMatcherOptions } from './APIGatewayMatcher.js';
+export type { APIGatewayMatcherOptions, APIGatewayMatcherOptionsTypes } from './APIGatewayMatcher.js';
 export { APIGatewayMatcher, createAPIGatewayMatcher, defineRoute } from './APIGatewayMatcher.js';
 export type { APIGatewayEvent, APIGatewayResult } from './apiGatewayAdapter.js';
 export { apiGatewayAdapter } from './apiGatewayAdapter.js';
@@ -57,20 +57,35 @@ export type {
   APIGatewayAuthExtras,
   APIGatewayAuthorizer,
   ApiKeyAuth,
+  ClaimsAuthTypes,
   ClientCertAuth,
   CognitoAuth,
   IamAuth,
   IamIdentity,
   JwtAuth,
   LambdaAuth,
+  LambdaAuthTypes,
 } from './auth.js';
 export type { Claims, ClaimValue, StandardClaims } from './claims.js';
-export { type ClaimsPresetOptions, cognitoAuth, iamAuth, jwtAuth, lambdaAuth, noAuth } from './presets.js';
+export {
+  type ClaimsPresetOptions,
+  type ClaimsPresetOptionsTypes,
+  cognitoAuth,
+  iamAuth,
+  jwtAuth,
+  lambdaAuth,
+  noAuth,
+} from './presets.js';
 export type {
   ApiHandler,
+  ApiHandlerTypes,
   ApiRequest,
+  ApiRequestTypes,
   HTTPFilterInput,
+  HTTPFilterInputTypes,
   HTTPFilters,
+  HTTPFiltersTypes,
   HTTPMiddleware,
   RouteDefinition,
+  RouteDefinitionTypes,
 } from './types.js';

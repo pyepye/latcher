@@ -10,32 +10,33 @@ type Query = Record<string, string | undefined>;
 type SeatsContext = { orgId: string; seats: number };
 
 const seatsSchema: MockSchema<{ output: SeatsContext }> = createMockSchema<SeatsContext>();
-const orgAuth: AuthPreset<APIGatewayAuth, LambdaAuth<SeatsContext>> = lambdaAuth(seatsSchema);
+const orgAuth: AuthPreset<{ input: APIGatewayAuth; output: LambdaAuth<{ context: SeatsContext }> }> =
+  lambdaAuth(seatsSchema);
 
-function handlesOrg(
-  request: ApiRequest<Record<string, string>, Query, AuthOf<typeof orgAuth>>,
-): Promise<HandlerResponse> {
+function handlesOrg(request: ApiRequest<{ query: Query; auth: AuthOf<typeof orgAuth> }>): Promise<HandlerResponse> {
   expectTypeOf(request.auth.context).toEqualTypeOf<SeatsContext>();
   return Promise.resolve({ seats: request.auth.context.seats });
 }
 
-function handlesIam(request: ApiRequest<Record<string, string>, Query, IamAuth>): Promise<HandlerResponse> {
+function handlesIam(request: ApiRequest<{ query: Query; auth: IamAuth }>): Promise<HandlerResponse> {
   return Promise.resolve({ accountId: request.auth.iam.accountId });
 }
 
 function handlesAnyAuth(
-  _request: ApiRequest<Record<string, string>, Query, APIGatewayAuth, { sku: string }>,
+  _request: ApiRequest<{ query: Query; auth: APIGatewayAuth; body: { sku: string } }>,
 ): Promise<HandlerResponse> {
   return Promise.resolve(undefined);
 }
 
-function handlesNoAuth(_request: ApiRequest<Record<string, string>, Query, undefined>): Promise<HandlerResponse> {
+function handlesNoAuth(_request: ApiRequest<{ query: Query; auth: undefined }>): Promise<HandlerResponse> {
   return Promise.resolve(undefined);
 }
 
 suite('API Gateway auth preset types', () => {
   test('lambdaAuth with a schema types the context as the schema output', () => {
-    expectTypeOf<AuthOf<ReturnType<typeof lambdaAuth<SeatsContext>>>>().toEqualTypeOf<LambdaAuth<SeatsContext>>();
+    expectTypeOf<AuthOf<ReturnType<typeof lambdaAuth<SeatsContext>>>>().toEqualTypeOf<
+      LambdaAuth<{ context: SeatsContext }>
+    >();
   });
 
   test('lambdaAuth with no schema types the context as JSON values', () => {
@@ -107,6 +108,6 @@ suite('API Gateway auth preset types', () => {
 
   test('ApiRequest refuses a type in the auth slot that is not API Gateway auth', () => {
     // @ts-expect-error - a body type in the auth slot
-    expectTypeOf<ApiRequest<Record<string, string>, Query, { sku: string }>>();
+    expectTypeOf<ApiRequest<{ query: Query; auth: { sku: string } }>>();
   });
 });

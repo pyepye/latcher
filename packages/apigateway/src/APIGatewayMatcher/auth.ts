@@ -1,6 +1,6 @@
 import type { APIGatewayEventClientCertificate } from 'aws-lambda';
 
-import { isObject, type JsonValue } from '@latcher/base';
+import { isObject, type JsonValue, type TypeArg, type TypeArgs } from '@latcher/base';
 
 import type { LambdaAuthorizerContext } from '../LambdaAuthorizerMatcher/types.js';
 import { type Claims, parseClaims } from './claims.js';
@@ -15,18 +15,18 @@ export interface APIGatewayAuthExtras {
   clientCert?: APIGatewayEventClientCertificate;
 }
 
-export interface LambdaAuth<TContext = LambdaAuthorizerContext> extends APIGatewayAuthExtras {
+export interface LambdaAuthCore<TContext = LambdaAuthorizerContext> extends APIGatewayAuthExtras {
   type: 'lambda';
   principalId: string | undefined;
   context: TContext;
 }
 
-export interface CognitoAuth<TClaims = Claims> extends APIGatewayAuthExtras {
+export interface CognitoAuthCore<TClaims = Claims> extends APIGatewayAuthExtras {
   type: 'cognito';
   claims: TClaims;
 }
 
-export interface JwtAuth<TClaims = Claims> extends APIGatewayAuthExtras {
+export interface JwtAuthCore<TClaims = Claims> extends APIGatewayAuthExtras {
   type: 'jwt';
   claims: TClaims;
   scopes: string[] | undefined;
@@ -60,9 +60,44 @@ export interface ClientCertAuth extends APIGatewayAuthExtras {
   clientCert: APIGatewayEventClientCertificate;
 }
 
-export type APIGatewayAuth = LambdaAuth | CognitoAuth | JwtAuth | IamAuth | ApiKeyAuth | ClientCertAuth | undefined;
+export interface LambdaAuthTypes {
+  context?: unknown;
+}
 
-export type APIGatewayAuthorizer = LambdaAuth | CognitoAuth | JwtAuth | IamAuth;
+interface LambdaAuthDefaults {
+  context: LambdaAuthorizerContext;
+}
+
+export interface ClaimsAuthTypes {
+  claims?: unknown;
+}
+
+interface ClaimsAuthDefaults {
+  claims: Claims;
+}
+
+export type LambdaAuth<T extends TypeArgs<T, LambdaAuthTypes> = object> = LambdaAuthCore<
+  TypeArg<T, 'context', LambdaAuthDefaults>
+>;
+
+export type CognitoAuth<T extends TypeArgs<T, ClaimsAuthTypes> = object> = CognitoAuthCore<
+  TypeArg<T, 'claims', ClaimsAuthDefaults>
+>;
+
+export type JwtAuth<T extends TypeArgs<T, ClaimsAuthTypes> = object> = JwtAuthCore<
+  TypeArg<T, 'claims', ClaimsAuthDefaults>
+>;
+
+export type APIGatewayAuth =
+  | LambdaAuthCore
+  | CognitoAuthCore
+  | JwtAuthCore
+  | IamAuth
+  | ApiKeyAuth
+  | ClientCertAuth
+  | undefined;
+
+export type APIGatewayAuthorizer = LambdaAuthCore | CognitoAuthCore | JwtAuthCore | IamAuth;
 
 const AUTHENTICATED = 'authenticated';
 const UNAUTHENTICATED = 'unauthenticated';

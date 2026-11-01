@@ -53,7 +53,11 @@ function extractV2Auth(event: APIGatewayV2EventType): APIGatewayAuth {
   return withExtras(readV2Authorizer(authorizer), { clientCert: readClientCert(authentication) });
 }
 
-export const apiGatewayV2Adapter: HTTPAdapter<APIGatewayV2EventType, APIGatewayProxyResultV2, APIGatewayAuth> = {
+export const apiGatewayV2Adapter: HTTPAdapter<{
+  event: APIGatewayV2EventType;
+  result: APIGatewayProxyResultV2;
+  auth: APIGatewayAuth;
+}> = {
   canHandleEvent(event: unknown): event is APIGatewayV2EventType {
     if (!isObject(event)) return false;
     if (typeof event.rawPath !== 'string') return false;
@@ -65,7 +69,7 @@ export const apiGatewayV2Adapter: HTTPAdapter<APIGatewayV2EventType, APIGatewayP
     return true;
   },
 
-  normalize(event: APIGatewayV2EventType): NormalizedHTTPEvent<APIGatewayAuth> {
+  normalize(event: APIGatewayV2EventType): NormalizedHTTPEvent<{ auth: APIGatewayAuth }> {
     // API Gateway V2 sends no multi-value form: it comma-joins repeated headers and query params
     // into one string before invoking the lambda. The multi-value map therefore holds that single
     // joined string; it is not split back apart, since a value may legitimately contain a comma.

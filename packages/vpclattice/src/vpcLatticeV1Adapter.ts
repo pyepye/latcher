@@ -39,7 +39,11 @@ function extractV1Auth(headers: Record<string, string | undefined>): VPCLatticeA
   return { type: 'iam', principalId: identity.principal, iam: identity };
 }
 
-export const vpcLatticeV1Adapter: HTTPAdapter<VPCLatticeEventV1, VPCLatticeResult, VPCLatticeAuth> = {
+export const vpcLatticeV1Adapter: HTTPAdapter<{
+  event: VPCLatticeEventV1;
+  result: VPCLatticeResult;
+  auth: VPCLatticeAuth;
+}> = {
   canHandleEvent(event: unknown): event is VPCLatticeEventV1 {
     if (!isObject(event)) return false;
     if (typeof event.raw_path !== 'string') return false;
@@ -50,7 +54,7 @@ export const vpcLatticeV1Adapter: HTTPAdapter<VPCLatticeEventV1, VPCLatticeResul
     return true;
   },
 
-  normalize(event: VPCLatticeEventV1): NormalizedHTTPEvent<VPCLatticeAuth> {
+  normalize(event: VPCLatticeEventV1): NormalizedHTTPEvent<{ auth: VPCLatticeAuth }> {
     // VPC Lattice 1.0 carries only single-value headers and query params; each becomes a
     // one-element entry in the multi-value maps.
     const headers = buildValueMaps({ single: event.headers, lowercaseKeys: true });

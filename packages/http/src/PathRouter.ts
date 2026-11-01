@@ -2,22 +2,22 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 import type { MiddlewareCore } from '@latcher/base';
 
-import type { AuthPreset } from './auth.js';
+import type { AuthPresetCore } from './auth.js';
 import type {
   AnyHttpMethod,
-  ApiHandler,
-  ApiRequest,
+  ApiHandlerCore,
+  ApiRequestCore,
   BodyMethod,
   DefaultBody,
-  HandlerResponse,
-  HTTPFilterInput,
+  HandlerResponseCore,
+  HTTPFilterInputCore,
   HttpMethod,
   NoBodyMethod,
   OneKind,
   PathParams,
   ResponseBody,
   ResponseKind,
-  ResponseTypeOption,
+  ResponseTypeOptionCore,
   RouteConfig,
   RouteKind,
   ValidPath,
@@ -32,22 +32,22 @@ export interface InternalRoute<TAuth = unknown> {
   pathParamNames: string[]; // path param names in order, mapped to the pattern's capture groups
   segmentKinds: SegmentKind[]; // one per segment, walked left to right to rank specificity
   registrationIndex: number; // position the route was registered in, which ranking does not disturb
-  custom?: (input: HTTPFilterInput<unknown, TAuth>) => boolean | Promise<boolean>;
-  handler: (request: ApiRequest<unknown, unknown, TAuth, unknown>) => Promise<HandlerResponse<ResponseBody>>;
+  custom?: (input: HTTPFilterInputCore<unknown, TAuth>) => boolean | Promise<boolean>;
+  handler: (request: ApiRequestCore<unknown, unknown, TAuth, unknown>) => Promise<HandlerResponseCore<ResponseBody>>;
   middleware: MiddlewareCore<
-    ApiRequest<Record<string, string>, Record<string, string | undefined>, TAuth>,
-    HandlerResponse<ResponseBody>
+    ApiRequestCore<Record<string, string>, Record<string, string | undefined>, TAuth>,
+    HandlerResponseCore<ResponseBody>
   >[];
-  responseType?: ResponseTypeOption;
+  responseType?: ResponseTypeOptionCore;
   querySchema?: StandardSchemaV1;
   bodySchema?: StandardSchemaV1;
   responseSchema?: StandardSchemaV1;
-  auth?: AuthPreset<TAuth, TAuth>;
+  auth?: AuthPresetCore<TAuth, TAuth>;
 }
 
 interface PathRouterFilters<TPathString extends string, TAuth, TEvent = unknown> {
   path: ValidPath<TPathString>;
-  custom?: (input: HTTPFilterInput<TEvent, TAuth>) => boolean | Promise<boolean>;
+  custom?: (input: HTTPFilterInputCore<TEvent, TAuth>) => boolean | Promise<boolean>;
 }
 
 // Base config shared by all route types. The filters see the auth the adapter produced, and the
@@ -55,16 +55,16 @@ interface PathRouterFilters<TPathString extends string, TAuth, TEvent = unknown>
 interface BaseRouteConfig<
   TPathString extends string,
   TQuery,
-  TRawAuth,
-  TRouteAuth,
+  TAuth,
   TResponse,
+  TRawAuth,
   TKind extends ResponseKind,
   TContentType extends string,
   TEvent,
 > {
   filters: PathRouterFilters<TPathString, TRawAuth, TEvent>;
-  auth?: AuthPreset<TRawAuth, TRouteAuth>;
-  responseType?: ResponseTypeOption<TKind, TContentType>;
+  auth?: AuthPresetCore<TRawAuth, TAuth>;
+  responseType?: ResponseTypeOptionCore<TKind, TContentType>;
   querySchema?: StandardSchemaV1<unknown, TQuery>;
   responseSchema?: StandardSchemaV1<unknown, TResponse>;
 }
@@ -74,18 +74,18 @@ interface NoBodyRouteConfig<
   TPathString extends string,
   TPath,
   TQuery,
-  TRawAuth,
-  TRouteAuth,
-  TResponse,
+  TAuth,
   TBody,
+  TResponse,
+  TRawAuth,
   TKind extends ResponseKind,
   TContentType extends string,
   TEvent,
-> extends BaseRouteConfig<TPathString, TQuery, TRawAuth, TRouteAuth, TResponse, TKind, TContentType, TEvent> {
-  handler: ApiHandler<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
+> extends BaseRouteConfig<TPathString, TQuery, TAuth, TResponse, TRawAuth, TKind, TContentType, TEvent> {
+  handler: ApiHandlerCore<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
   middleware?: MiddlewareCore<
-    ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, TEvent>,
-    HandlerResponse<NoInfer<TResponse>>
+    ApiRequestCore<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, TEvent>,
+    HandlerResponseCore<NoInfer<TResponse>>
   >[];
   bodySchema?: StandardSchemaV1<unknown, TBody>;
 }
@@ -95,18 +95,18 @@ interface BodyRouteConfig<
   TPathString extends string,
   TPath,
   TQuery,
-  TRawAuth,
-  TRouteAuth,
+  TAuth,
   TBody,
   TResponse,
+  TRawAuth,
   TKind extends ResponseKind,
   TContentType extends string,
   TEvent,
-> extends BaseRouteConfig<TPathString, TQuery, TRawAuth, TRouteAuth, TResponse, TKind, TContentType, TEvent> {
-  handler: ApiHandler<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
+> extends BaseRouteConfig<TPathString, TQuery, TAuth, TResponse, TRawAuth, TKind, TContentType, TEvent> {
+  handler: ApiHandlerCore<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
   middleware?: MiddlewareCore<
-    ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, NoInfer<TBody>, TEvent>,
-    HandlerResponse<NoInfer<TResponse>>
+    ApiRequestCore<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, TEvent>,
+    HandlerResponseCore<NoInfer<TResponse>>
   >[];
   bodySchema?: StandardSchemaV1<unknown, TBody>;
 }
@@ -114,8 +114,8 @@ interface BodyRouteConfig<
 // Method signature for route (takes a full RouteConfig with method)
 export type RouteMethodFn<
   TReturn = PathRouter,
-  TAuth = unknown,
-  TDefaultAuth extends TAuth = TAuth,
+  TRawAuth = unknown,
+  TDefaultAuth extends TRawAuth = TRawAuth,
   TDefaultKind extends ResponseKind = 'json',
   TErrors = unknown,
   TEvent = unknown,
@@ -128,17 +128,17 @@ export type RouteMethodFn<
   TKind extends RouteKind<TErrors> = TDefaultKind & RouteKind<TErrors>,
   TContentType extends string = string,
   TResponse extends ResponseBody<TKind> = ResponseBody<TKind>,
-  TRouteAuth extends TAuth = TDefaultAuth,
+  TAuth extends TRawAuth = TDefaultAuth,
 >(
   route: RouteConfig<
     TPathString,
     TPath,
     TQuery,
-    TRouteAuth,
+    TAuth,
     TBody,
     TResponse,
     TMethod,
-    TAuth,
+    TRawAuth,
     TKind,
     TContentType,
     TEvent
@@ -149,8 +149,8 @@ export type RouteMethodFn<
 // Method signature for routes with body support
 export type BodyRouteMethodFn<
   TReturn = PathRouter,
-  TAuth = unknown,
-  TDefaultAuth extends TAuth = TAuth,
+  TRawAuth = unknown,
+  TDefaultAuth extends TRawAuth = TRawAuth,
   TDefaultKind extends ResponseKind = 'json',
   TErrors = unknown,
   TEvent = unknown,
@@ -162,28 +162,17 @@ export type BodyRouteMethodFn<
   TKind extends RouteKind<TErrors> = TDefaultKind & RouteKind<TErrors>,
   TContentType extends string = string,
   TResponse extends ResponseBody<TKind> = ResponseBody<TKind>,
-  TRouteAuth extends TAuth = TDefaultAuth,
+  TAuth extends TRawAuth = TDefaultAuth,
 >(
-  config: BodyRouteConfig<
-    TPathString,
-    TPath,
-    TQuery,
-    TAuth,
-    TRouteAuth,
-    TBody,
-    TResponse,
-    TKind,
-    TContentType,
-    TEvent
-  > &
+  config: BodyRouteConfig<TPathString, TPath, TQuery, TAuth, TBody, TResponse, TRawAuth, TKind, TContentType, TEvent> &
     OneKind<NoInfer<TKind>>,
 ) => TReturn;
 
 // Method signature for routes without body support
 export type NoBodyRouteMethodFn<
   TReturn = PathRouter,
-  TAuth = unknown,
-  TDefaultAuth extends TAuth = TAuth,
+  TRawAuth = unknown,
+  TDefaultAuth extends TRawAuth = TRawAuth,
   TDefaultKind extends ResponseKind = 'json',
   TErrors = unknown,
   TEvent = unknown,
@@ -195,16 +184,16 @@ export type NoBodyRouteMethodFn<
   TContentType extends string = string,
   TResponse extends ResponseBody<TKind> = ResponseBody<TKind>,
   TBody = undefined,
-  TRouteAuth extends TAuth = TDefaultAuth,
+  TAuth extends TRawAuth = TDefaultAuth,
 >(
   config: NoBodyRouteConfig<
     TPathString,
     TPath,
     TQuery,
     TAuth,
-    TRouteAuth,
-    TResponse,
     TBody,
+    TResponse,
+    TRawAuth,
     TKind,
     TContentType,
     TEvent
@@ -318,9 +307,9 @@ export class PathRouter<
     method: HttpMethod,
     config: {
       filters: PathRouterFilters<TPathString, TAuth>;
-      auth?: AuthPreset<TAuth, TAuth>;
-      responseType?: ResponseTypeOption;
-      handler: ApiHandler<Record<string, string>, Record<string, string | undefined>, TAuth, unknown, ResponseBody>;
+      auth?: AuthPresetCore<TAuth, TAuth>;
+      responseType?: ResponseTypeOptionCore;
+      handler: ApiHandlerCore<Record<string, string>, Record<string, string | undefined>, TAuth, unknown, ResponseBody>;
       middleware?: InternalRoute<TAuth>['middleware'];
       querySchema?: StandardSchemaV1;
       bodySchema?: StandardSchemaV1;
@@ -394,7 +383,7 @@ export class PathRouter<
   async match(
     method: string,
     path: string,
-    filterInput?: HTTPFilterInput<TEvent, TAuth>,
+    filterInput?: HTTPFilterInputCore<TEvent, TAuth>,
   ): Promise<RouteMatch<TAuth> | null> {
     this.sortRoutes();
     const normalizedPath = normalizePath(path);
@@ -404,7 +393,7 @@ export class PathRouter<
       const match = normalizedPath.match(route.pattern);
       if (!match) continue;
 
-      if (route.custom && !(await route.custom(filterInput as HTTPFilterInput<unknown, TAuth>))) {
+      if (route.custom && !(await route.custom(filterInput as HTTPFilterInputCore<unknown, TAuth>))) {
         continue;
       }
 

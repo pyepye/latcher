@@ -8,9 +8,9 @@ type OrgAuth = { type: 'org'; org: string };
 type RawAuth = TeamAuth | OrgAuth | undefined;
 type Query = Record<string, string | undefined>;
 
-const rawAdapter: HTTPAdapter<unknown, unknown, RawAuth> = {
+const rawAdapter: HTTPAdapter<{ event: unknown; result: unknown; auth: RawAuth }> = {
   canHandleEvent: (event: unknown): event is unknown => event !== undefined,
-  normalize: (): NormalizedHTTPEvent<RawAuth> => ({
+  normalize: (): NormalizedHTTPEvent<{ auth: RawAuth }> => ({
     method: 'GET',
     path: '/items',
     headers: {},
@@ -24,34 +24,34 @@ const rawAdapter: HTTPAdapter<unknown, unknown, RawAuth> = {
   buildResult: (): unknown => undefined,
 };
 
-const teamOnly: AuthPreset<RawAuth, TeamAuth> = {
+const teamOnly: AuthPreset<{ input: RawAuth; output: TeamAuth }> = {
   name: 'teamOnly',
   check: async () => ({ success: true, auth: { type: 'team', team: 'goods-in' } }),
 };
 
-const orgOnly: AuthPreset<RawAuth, OrgAuth> = {
+const orgOnly: AuthPreset<{ input: RawAuth; output: OrgAuth }> = {
   name: 'orgOnly',
   check: async () => ({ success: true, auth: { type: 'org', org: 'acme' } }),
 };
 
-const otherRawPreset: AuthPreset<{ type: 'other' }, { type: 'other' }> = {
+const otherRawPreset: AuthPreset<{ input: { type: 'other' }; output: { type: 'other' } }> = {
   name: 'otherRawPreset',
   check: async (auth: { type: 'other' }) => ({ success: true, auth }),
 };
 
-function handlesTeam(_request: ApiRequest<Record<string, string>, Query, TeamAuth>): Promise<HandlerResponse> {
+function handlesTeam(_request: ApiRequest<{ query: Query; auth: TeamAuth }>): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
 }
 
-function handlesOrg(_request: ApiRequest<Record<string, string>, Query, OrgAuth>): Promise<HandlerResponse> {
+function handlesOrg(_request: ApiRequest<{ query: Query; auth: OrgAuth }>): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
 }
 
-function handlesNoAuth(_request: ApiRequest<Record<string, string>, Query, undefined>): Promise<HandlerResponse> {
+function handlesNoAuth(_request: ApiRequest<{ query: Query; auth: undefined }>): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
 }
 
-function handlesRawAuth(_request: ApiRequest<Record<string, string>, Query, RawAuth>): Promise<HandlerResponse> {
+function handlesRawAuth(_request: ApiRequest<{ query: Query; auth: RawAuth }>): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
 }
 

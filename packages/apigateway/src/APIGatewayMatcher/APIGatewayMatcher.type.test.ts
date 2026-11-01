@@ -1,8 +1,9 @@
-import { HTTPMatcher } from '@latcher/http';
+import { type AuthPreset, HTTPMatcher, type JsonBody, type ResponseTypeOption } from '@latcher/http';
 
-import { createAPIGatewayMatcher, defineRoute } from './APIGatewayMatcher.js';
+import { type APIGatewayMatcherOptions, createAPIGatewayMatcher, defineRoute } from './APIGatewayMatcher.js';
 import type { APIGatewayEvent } from './apiGatewayAdapter.js';
 import { type APIGatewayV2EventType, apiGatewayV2Adapter } from './apiGatewayV2Adapter.js';
+import type { APIGatewayAuth, IamAuth } from './auth.js';
 import type { ApiHandler, ApiRequest, HTTPFilterInput, HTTPFilters, HTTPMiddleware, RouteDefinition } from './types.js';
 
 type FilterFunction = NonNullable<HTTPFilters['custom']>;
@@ -60,5 +61,87 @@ suite('API Gateway event type', () => {
         expectTypeOf(request.event).toEqualTypeOf<APIGatewayV2EventType>();
       },
     });
+  });
+});
+
+suite('named type arguments', () => {
+  type Query = Record<string, string | undefined>;
+  type Item = { name: string };
+
+  test('ApiHandler and HTTPMiddleware name their keys', () => {
+    type Request = ApiRequest<{
+      path: { id: string };
+      query: Query;
+      auth: IamAuth;
+      body: Item;
+      event: APIGatewayV2EventType;
+    }>;
+
+    expectTypeOf<
+      Parameters<
+        ApiHandler<{
+          path: { id: string };
+          query: Query;
+          auth: IamAuth;
+          body: Item;
+          response: JsonBody;
+          event: APIGatewayV2EventType;
+        }>
+      >[0]
+    >().toEqualTypeOf<Request>();
+    expectTypeOf<
+      Parameters<
+        HTTPMiddleware<{
+          path: { id: string };
+          query: Query;
+          auth: IamAuth;
+          body: Item;
+          response: JsonBody;
+          event: APIGatewayV2EventType;
+        }>
+      >[0]
+    >().toEqualTypeOf<Request>();
+  });
+
+  test('HTTPFilters and HTTPFilterInput name their keys', () => {
+    type Filters = HTTPFilters<{ pathPattern: '/orders'; method: 'GET'; auth: IamAuth; event: APIGatewayV2EventType }>;
+
+    expectTypeOf<Filters['method']>().toEqualTypeOf<'GET'>();
+    expectTypeOf<Filters['path']>().toEqualTypeOf<'/orders'>();
+    expectTypeOf<Parameters<NonNullable<Filters['custom']>>[0]>().toEqualTypeOf<
+      HTTPFilterInput<{ event: APIGatewayV2EventType; auth: IamAuth }>
+    >();
+  });
+
+  test('RouteDefinition names its keys', () => {
+    type Route = RouteDefinition<{
+      pathPattern: '/orders/:id';
+      query: Query;
+      auth: IamAuth;
+      body: Item;
+      response: Item;
+      method: 'POST';
+      event: APIGatewayV2EventType;
+    }>;
+
+    expectTypeOf<Parameters<Route['handler']>[0]>().toEqualTypeOf<
+      ApiRequest<{ path: { id: string }; query: Query; auth: IamAuth; body: Item; event: APIGatewayV2EventType }>
+    >();
+    expectTypeOf<Route['filters']['method']>().toEqualTypeOf<'POST'>();
+    expectTypeOf<Route['auth']>().toEqualTypeOf<AuthPreset<{ input: APIGatewayAuth; output: IamAuth }> | undefined>();
+  });
+
+  test('APIGatewayMatcherOptions names its keys', () => {
+    type Options = APIGatewayMatcherOptions<{
+      auth: IamAuth;
+      responseType: 'html';
+      errors: Record<never, never>;
+      contentType: 'text/html';
+    }>;
+
+    expectTypeOf<Options['auth']>().toEqualTypeOf<AuthPreset<{ input: APIGatewayAuth; output: IamAuth }> | undefined>();
+    expectTypeOf<Options['responseType']>().toEqualTypeOf<
+      ResponseTypeOption<{ type: 'html'; contentType: 'text/html' }> | undefined
+    >();
   });
 });

@@ -5,7 +5,9 @@ import { STOCK } from '../utils/warehouse.js';
 
 // A SKU can only be discarded once its stock is down to nothing, so a SKU that still has units
 // answers 409.
-export async function discardStockRecord(request: ApiRequest<{ sku: string }>): Promise<ApiResponse<undefined>> {
+export async function discardStockRecord(
+  request: ApiRequest<{ path: { sku: string } }>,
+): Promise<ApiResponse<{ body: undefined }>> {
   const record = STOCK[request.path.sku];
   if (!record) throw NotFound(`SKU ${request.path.sku} is not stocked`);
 

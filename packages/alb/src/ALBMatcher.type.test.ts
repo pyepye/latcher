@@ -43,3 +43,11 @@ suite('ALB event type', () => {
     });
   });
 });
+
+suite('named type arguments', () => {
+  test('RouteDefinition takes its path from pathPattern', () => {
+    type Route = RouteDefinition<{ pathPattern: '/returns/:returnId'; method: 'POST' }>;
+
+    expectTypeOf<Parameters<Route['handler']>[0]['path']>().toEqualTypeOf<{ returnId: string }>();
+  });
+});

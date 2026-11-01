@@ -6,7 +6,9 @@ import { RETURNS, type ReturnRecord } from '../utils/returns.js';
 
 // Builds the same response the GET route does. The matcher drops the body and keeps the status and
 // the headers, so a HEAD answers 200 with nothing in it.
-export async function checkReturn(request: ApiRequest<{ returnId: string }>): Promise<ApiResponse<ReturnRecord>> {
+export async function checkReturn(
+  request: ApiRequest<{ path: { returnId: string } }>,
+): Promise<ApiResponse<{ body: ReturnRecord }>> {
   const record = RETURNS[request.path.returnId];
   if (!record) throw NotFound(`Return ${request.path.returnId} does not exist`);
 

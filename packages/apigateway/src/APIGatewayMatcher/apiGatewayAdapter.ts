@@ -13,12 +13,16 @@ function isV2Event(event: APIGatewayEvent): event is APIGatewayV2EventType {
   return 'rawPath' in event;
 }
 
-export const apiGatewayAdapter: HTTPAdapter<APIGatewayEvent, APIGatewayResult, APIGatewayAuth> = {
+export const apiGatewayAdapter: HTTPAdapter<{
+  event: APIGatewayEvent;
+  result: APIGatewayResult;
+  auth: APIGatewayAuth;
+}> = {
   canHandleEvent(event: unknown): event is APIGatewayEvent {
     return apiGatewayV2Adapter.canHandleEvent(event) || apiGatewayV1Adapter.canHandleEvent(event);
   },
 
-  normalize(event: APIGatewayEvent): NormalizedHTTPEvent<APIGatewayAuth> {
+  normalize(event: APIGatewayEvent): NormalizedHTTPEvent<{ auth: APIGatewayAuth }> {
     if (isV2Event(event)) {
       return apiGatewayV2Adapter.normalize(event);
     }

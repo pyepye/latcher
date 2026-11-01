@@ -6,8 +6,8 @@ import type { TOrderAmendment } from '../utils/schemas.js';
 // The general PATCH route. It shares its method and path with amendOrderOnFloor, so it is only
 // reached once that route's custom filter has said no.
 export async function amendOrder(
-  request: ApiRequest<{ orderId: string }, Record<string, string | undefined>, APIGatewayAuth, TOrderAmendment>,
-): Promise<ApiResponse<undefined>> {
+  request: ApiRequest<{ path: { orderId: string }; auth: APIGatewayAuth; body: TOrderAmendment }>,
+): Promise<ApiResponse<{ body: undefined }>> {
   logger.info({ message: 'Order amended', orderId: request.path.orderId, status: request.body.status });
 
   return NoContent();

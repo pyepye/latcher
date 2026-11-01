@@ -7,13 +7,8 @@ import { STOCK } from '../utils/warehouse.js';
 
 // Behind the HTTP API's simple-response authorizer, which answers with a boolean and no context.
 export async function adjustStock(
-  request: ApiRequest<
-    { sku: string },
-    Record<string, string | undefined>,
-    AuthOf<typeof stockAdjustmentAuth>,
-    TStockAdjustment
-  >,
-): Promise<ApiResponse<{ sku: string; quantity: number }>> {
+  request: ApiRequest<{ path: { sku: string }; auth: AuthOf<typeof stockAdjustmentAuth>; body: TStockAdjustment }>,
+): Promise<ApiResponse<{ body: { sku: string; quantity: number } }>> {
   const record = STOCK[request.path.sku];
   if (!record) throw NotFound(`SKU ${request.path.sku} is not stocked`);
 

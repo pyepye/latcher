@@ -46,13 +46,18 @@ export type { VPCLatticeAuth, VPCLatticeIamAuth } from './auth.js';
 export { iamAuth, noAuth } from './presets.js';
 export type {
   ApiHandler,
+  ApiHandlerTypes,
   ApiRequest,
+  ApiRequestTypes,
   HTTPFilterInput,
+  HTTPFilterInputTypes,
   HTTPFilters,
+  HTTPFiltersTypes,
   HTTPMiddleware,
   RouteDefinition,
+  RouteDefinitionTypes,
 } from './types.js';
-export type { VPCLatticeMatcherOptions } from './VPCLatticeMatcher.js';
+export type { VPCLatticeMatcherOptions, VPCLatticeMatcherOptionsTypes } from './VPCLatticeMatcher.js';
 export { createVPCLatticeMatcher, defineRoute, VPCLatticeMatcher } from './VPCLatticeMatcher.js';
 export type { VPCLatticeEvent } from './vpcLatticeAdapter.js';
 export { vpcLatticeAdapter } from './vpcLatticeAdapter.js';

@@ -43,7 +43,11 @@ function extractV2Auth(event: VPCLatticeEventV2): VPCLatticeAuth {
   return { type: 'iam', principalId: identity.principal, iam: { ...identity } };
 }
 
-export const vpcLatticeV2Adapter: HTTPAdapter<VPCLatticeEventV2, VPCLatticeResult, VPCLatticeAuth> = {
+export const vpcLatticeV2Adapter: HTTPAdapter<{
+  event: VPCLatticeEventV2;
+  result: VPCLatticeResult;
+  auth: VPCLatticeAuth;
+}> = {
   canHandleEvent(event: unknown): event is VPCLatticeEventV2 {
     if (!isObject(event)) return false;
     if (typeof event.path !== 'string') return false;
@@ -57,7 +61,7 @@ export const vpcLatticeV2Adapter: HTTPAdapter<VPCLatticeEventV2, VPCLatticeResul
     return true;
   },
 
-  normalize(event: VPCLatticeEventV2): NormalizedHTTPEvent<VPCLatticeAuth> {
+  normalize(event: VPCLatticeEventV2): NormalizedHTTPEvent<{ auth: VPCLatticeAuth }> {
     // VPC Lattice 2.0 always sends the multi-value form. Collapse to the last value for the flat
     // maps, matching the other adapters, and keep every value in the multi-value maps.
     const headers = buildValueMaps({ multi: event.headers, lowercaseKeys: true });

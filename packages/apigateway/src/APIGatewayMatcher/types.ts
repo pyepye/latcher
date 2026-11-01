@@ -1,76 +1,146 @@
+import type { TypeArg, TypeArgs } from '@latcher/base';
 import type {
   AnyHttpMethod,
   AnyResponseKind,
-  ApiHandler as HTTPApiHandler,
-  ApiRequest as HTTPApiRequest,
-  HTTPFilterInput as HTTPFilterInputBase,
-  HTTPFilters as HTTPFiltersBase,
-  HTTPMiddleware as HTTPMiddlewareBase,
-  RouteDefinition as HTTPRouteDefinition,
+  ApiHandlerCore,
+  ApiRequestCore,
+  HTTPFilterInputCore,
+  HTTPFiltersCore,
+  HTTPMiddlewareCore,
   JsonBody,
   PathParams,
+  RouteDefinitionCore,
 } from '@latcher/http';
 
 import type { APIGatewayEvent } from './apiGatewayAdapter.js';
 import type { APIGatewayAuth } from './auth.js';
 
-type DefaultAuth = APIGatewayAuth;
-type DefaultEvent = APIGatewayEvent;
+export interface ApiRequestTypes {
+  path?: unknown;
+  query?: unknown;
+  auth?: APIGatewayAuth;
+  body?: unknown;
+  event?: unknown;
+}
 
-export type ApiRequest<
-  TPath = Record<string, string>,
-  TQuery = Record<string, string | undefined>,
-  TAuth extends DefaultAuth = DefaultAuth,
-  TBody = unknown,
-  TEvent = DefaultEvent,
-> = HTTPApiRequest<TPath, TQuery, TAuth, TBody, TEvent>;
+interface ApiRequestDefaults {
+  path: Record<string, string>;
+  query: Record<string, string | undefined>;
+  auth: APIGatewayAuth;
+  body: unknown;
+  event: APIGatewayEvent;
+}
 
-export type ApiHandler<
-  TPath = Record<string, string>,
-  TQuery = Record<string, string | undefined>,
-  TAuth extends DefaultAuth = DefaultAuth,
-  TBody = unknown,
-  TResponse = JsonBody,
-  TEvent = DefaultEvent,
-> = HTTPApiHandler<TPath, TQuery, TAuth, TBody, TResponse, TEvent>;
+export interface ApiHandlerTypes extends ApiRequestTypes {
+  response?: unknown;
+}
 
-export type HTTPMiddleware<
-  TPath = Record<string, string>,
-  TQuery = Record<string, unknown>,
-  TAuth extends DefaultAuth = DefaultAuth,
-  TBody = unknown,
-  TResponse = AnyResponseKind,
-  TEvent = DefaultEvent,
-> = HTTPMiddlewareBase<TPath, TQuery, TAuth, TBody, TResponse, TEvent>;
+interface ApiHandlerDefaults extends ApiRequestDefaults {
+  response: JsonBody;
+}
 
-export type HTTPFilterInput<TEvent = DefaultEvent, TAuth = DefaultAuth> = HTTPFilterInputBase<TEvent, TAuth>;
+interface HTTPMiddlewareDefaults {
+  path: Record<string, string>;
+  query: Record<string, unknown>;
+  auth: APIGatewayAuth;
+  body: unknown;
+  response: AnyResponseKind;
+  event: APIGatewayEvent;
+}
 
-export type HTTPFilters<
-  TPathString extends string = string,
-  TMethod extends AnyHttpMethod = AnyHttpMethod,
-  TAuth = DefaultAuth,
-  TEvent = DefaultEvent,
-> = HTTPFiltersBase<TPathString, TMethod, TAuth, TEvent>;
+export interface HTTPFiltersTypes {
+  pathPattern?: string;
+  method?: AnyHttpMethod;
+  auth?: unknown;
+  event?: unknown;
+}
 
-export type RouteDefinition<
-  TPathString extends string = string,
-  TPath = PathParams<TPathString>,
-  TQuery = Record<string, string | undefined>,
-  TAuth extends DefaultAuth = DefaultAuth,
-  TBody = unknown,
-  TResponse = JsonBody,
-  TMethod extends AnyHttpMethod = AnyHttpMethod,
-  TEvent = DefaultEvent,
-> = HTTPRouteDefinition<
-  TPathString,
-  TPath,
-  TQuery,
-  TAuth,
-  TBody,
-  TResponse,
-  TMethod,
-  DefaultAuth,
+interface HTTPFiltersDefaults {
+  pathPattern: string;
+  method: AnyHttpMethod;
+  auth: APIGatewayAuth;
+  event: APIGatewayEvent;
+}
+
+export interface HTTPFilterInputTypes {
+  event?: unknown;
+  auth?: unknown;
+}
+
+interface HTTPFilterInputDefaults {
+  event: APIGatewayEvent;
+  auth: APIGatewayAuth;
+}
+
+export interface RouteDefinitionTypes {
+  pathPattern?: string;
+  path?: unknown;
+  query?: unknown;
+  auth?: APIGatewayAuth;
+  body?: unknown;
+  response?: unknown;
+  method?: AnyHttpMethod;
+  event?: unknown;
+}
+
+interface RouteDefinitionDefaults {
+  pathPattern: string;
+  query: Record<string, string | undefined>;
+  auth: APIGatewayAuth;
+  body: unknown;
+  response: JsonBody;
+  method: AnyHttpMethod;
+  event: APIGatewayEvent;
+}
+
+export type ApiRequest<T extends TypeArgs<T, ApiRequestTypes> = object> = ApiRequestCore<
+  TypeArg<T, 'path', ApiRequestDefaults>,
+  TypeArg<T, 'query', ApiRequestDefaults>,
+  Extract<TypeArg<T, 'auth', ApiRequestDefaults>, APIGatewayAuth>,
+  TypeArg<T, 'body', ApiRequestDefaults>,
+  TypeArg<T, 'event', ApiRequestDefaults>
+>;
+
+export type ApiHandler<T extends TypeArgs<T, ApiHandlerTypes> = object> = ApiHandlerCore<
+  TypeArg<T, 'path', ApiHandlerDefaults>,
+  TypeArg<T, 'query', ApiHandlerDefaults>,
+  Extract<TypeArg<T, 'auth', ApiHandlerDefaults>, APIGatewayAuth>,
+  TypeArg<T, 'body', ApiHandlerDefaults>,
+  TypeArg<T, 'response', ApiHandlerDefaults>,
+  TypeArg<T, 'event', ApiHandlerDefaults>
+>;
+
+export type HTTPMiddleware<T extends TypeArgs<T, ApiHandlerTypes> = object> = HTTPMiddlewareCore<
+  TypeArg<T, 'path', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'query', HTTPMiddlewareDefaults>,
+  Extract<TypeArg<T, 'auth', HTTPMiddlewareDefaults>, APIGatewayAuth>,
+  TypeArg<T, 'body', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'response', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'event', HTTPMiddlewareDefaults>
+>;
+
+export type HTTPFilters<T extends TypeArgs<T, HTTPFiltersTypes> = object> = HTTPFiltersCore<
+  Extract<TypeArg<T, 'pathPattern', HTTPFiltersDefaults>, string>,
+  Extract<TypeArg<T, 'method', HTTPFiltersDefaults>, AnyHttpMethod>,
+  TypeArg<T, 'auth', HTTPFiltersDefaults>,
+  TypeArg<T, 'event', HTTPFiltersDefaults>
+>;
+
+export type HTTPFilterInput<T extends TypeArgs<T, HTTPFilterInputTypes> = object> = HTTPFilterInputCore<
+  TypeArg<T, 'event', HTTPFilterInputDefaults>,
+  TypeArg<T, 'auth', HTTPFilterInputDefaults>
+>;
+
+export type RouteDefinition<T extends TypeArgs<T, RouteDefinitionTypes> = object> = RouteDefinitionCore<
+  Extract<TypeArg<T, 'pathPattern', RouteDefinitionDefaults>, string>,
+  TypeArg<T, 'path', { path: PathParams<Extract<TypeArg<T, 'pathPattern', RouteDefinitionDefaults>, string>> }>,
+  TypeArg<T, 'query', RouteDefinitionDefaults>,
+  Extract<TypeArg<T, 'auth', RouteDefinitionDefaults>, APIGatewayAuth>,
+  TypeArg<T, 'body', RouteDefinitionDefaults>,
+  TypeArg<T, 'response', RouteDefinitionDefaults>,
+  Extract<TypeArg<T, 'method', RouteDefinitionDefaults>, AnyHttpMethod>,
+  APIGatewayAuth,
   'json',
   string,
-  TEvent
+  TypeArg<T, 'event', RouteDefinitionDefaults>
 >;

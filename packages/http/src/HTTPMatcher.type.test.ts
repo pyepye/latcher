@@ -1,8 +1,16 @@
 import { createMockSchema } from '@latcher/testing';
 
+import type { AuthPreset } from './auth.js';
 import { HTTP_STATUS_CODES } from './constants.js';
 import { HTTPException } from './HTTPException.js';
-import { createDefineRoute, defineRoute, HTTPMatcher } from './HTTPMatcher.js';
+import {
+  createDefineRoute,
+  type DefineRouteFn,
+  type DefineRouteFnCore,
+  defineRoute,
+  HTTPMatcher,
+  type HTTPMatcherOptions,
+} from './HTTPMatcher.js';
 import { Html } from './html.js';
 import { Conflict, Created, NoContent, NotFound, Ok, Response } from './Response.js';
 import type {
@@ -15,11 +23,12 @@ import type {
   HandlerResponse,
   HTTPAdapter,
   HTTPFilterInput,
+  HTTPFilters,
   HTTPMiddleware,
   JsonBody,
   NormalizedHTTPEvent,
-  PathParams,
   ResponseBody,
+  ResponseTypeOption,
   RouteDefinition,
 } from './types.js';
 
@@ -27,7 +36,7 @@ interface Item {
   name: string;
 }
 
-type ItemsRequest<TBody> = ApiRequest<Record<never, never>, Record<string, string | undefined>, unknown, TBody>;
+type ItemsRequest<TBody> = ApiRequest<{ path: Record<never, never>; body: TBody }>;
 
 function handlesUndefinedBody(_request: ItemsRequest<undefined>): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
@@ -87,41 +96,67 @@ suite('HTTP generic order', () => {
   type ItemAuth = { principalId: string };
 
   test('ApiRequest takes auth after query and body after auth', () => {
-    expectTypeOf<ApiRequest<{ id: string }, Query, ItemAuth, Item>['auth']>().toEqualTypeOf<ItemAuth>();
-    expectTypeOf<ApiRequest<{ id: string }, Query, ItemAuth, Item>['body']>().toEqualTypeOf<Item>();
+    expectTypeOf<
+      ApiRequest<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item }>['auth']
+    >().toEqualTypeOf<ItemAuth>();
+    expectTypeOf<
+      ApiRequest<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item }>['body']
+    >().toEqualTypeOf<Item>();
   });
 
   test('ApiRequest defaults auth to unknown, which each matcher package narrows', () => {
-    expectTypeOf<ApiRequest<{ id: string }>['auth']>().toEqualTypeOf<unknown>();
+    expectTypeOf<ApiRequest<{ path: { id: string } }>['auth']>().toEqualTypeOf<unknown>();
   });
 
   test('ApiHandler and HTTPMiddleware take the event after the response type', () => {
     type OrderEvent = { orderId: string };
 
     expectTypeOf<
-      Parameters<ApiHandler<{ id: string }, Query, ItemAuth, Item, JsonBody, OrderEvent>>[0]
-    >().toEqualTypeOf<ApiRequest<{ id: string }, Query, ItemAuth, Item, OrderEvent>>();
+      Parameters<
+        ApiHandler<{
+          path: { id: string };
+          query: Query;
+          auth: ItemAuth;
+          body: Item;
+          response: JsonBody;
+          event: OrderEvent;
+        }>
+      >[0]
+    >().toEqualTypeOf<
+      ApiRequest<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item; event: OrderEvent }>
+    >();
     expectTypeOf<
-      Parameters<HTTPMiddleware<{ id: string }, Query, ItemAuth, Item, JsonBody, OrderEvent>>[0]
-    >().toEqualTypeOf<ApiRequest<{ id: string }, Query, ItemAuth, Item, OrderEvent>>();
+      Parameters<
+        HTTPMiddleware<{
+          path: { id: string };
+          query: Query;
+          auth: ItemAuth;
+          body: Item;
+          response: JsonBody;
+          event: OrderEvent;
+        }>
+      >[0]
+    >().toEqualTypeOf<
+      ApiRequest<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item; event: OrderEvent }>
+    >();
   });
 
   test('ApiHandler and HTTPMiddleware take auth after query', () => {
-    expectTypeOf<Parameters<ApiHandler<{ id: string }, Query, ItemAuth, Item>>[0]>().toEqualTypeOf<
-      ApiRequest<{ id: string }, Query, ItemAuth, Item>
-    >();
-    expectTypeOf<Parameters<HTTPMiddleware<{ id: string }, Query, ItemAuth, Item>>[0]>().toEqualTypeOf<
-      ApiRequest<{ id: string }, Query, ItemAuth, Item>
-    >();
+    expectTypeOf<
+      Parameters<ApiHandler<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item }>>[0]
+    >().toEqualTypeOf<ApiRequest<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item }>>();
+    expectTypeOf<
+      Parameters<HTTPMiddleware<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item }>>[0]
+    >().toEqualTypeOf<ApiRequest<{ path: { id: string }; query: Query; auth: ItemAuth; body: Item }>>();
   });
 });
 
 type TeamAuth = { type: 'team'; team: string } | undefined;
-type TeamRequest = ApiRequest<Record<string, string>, Record<string, string | undefined>, TeamAuth>;
+type TeamRequest = ApiRequest<{ auth: TeamAuth }>;
 
-const teamAdapter: HTTPAdapter<unknown, unknown, TeamAuth> = {
+const teamAdapter: HTTPAdapter<{ event: unknown; result: unknown; auth: TeamAuth }> = {
   canHandleEvent: (event: unknown): event is unknown => event !== undefined,
-  normalize: (): NormalizedHTTPEvent<TeamAuth> => ({
+  normalize: (): NormalizedHTTPEvent<{ auth: TeamAuth }> => ({
     method: 'GET',
     path: '/items',
     headers: {},
@@ -135,7 +170,7 @@ const teamAdapter: HTTPAdapter<unknown, unknown, TeamAuth> = {
   buildResult: (): unknown => undefined,
 };
 
-function readsTeam(input: HTTPFilterInput<unknown, TeamAuth>): boolean {
+function readsTeam(input: HTTPFilterInput<{ auth: TeamAuth }>): boolean {
   return input.auth?.team === 'goods-in';
 }
 
@@ -185,17 +220,11 @@ interface ReturnEvent {
   returnId: string;
 }
 
-type ShipmentRequest = ApiRequest<
-  Record<string, string>,
-  Record<string, string | undefined>,
-  undefined,
-  undefined,
-  ShipmentEvent
->;
+type ShipmentRequest = ApiRequest<{ auth: undefined; body: undefined; event: ShipmentEvent }>;
 
-const shipmentAdapter: HTTPAdapter<ShipmentEvent, unknown, undefined> = {
+const shipmentAdapter: HTTPAdapter<{ event: ShipmentEvent; result: unknown; auth: undefined }> = {
   canHandleEvent: (event: unknown): event is ShipmentEvent => event !== undefined,
-  normalize: (): NormalizedHTTPEvent<undefined> => ({
+  normalize: (): NormalizedHTTPEvent<{ auth: undefined }> => ({
     method: 'GET',
     path: '/shipments',
     headers: {},
@@ -214,14 +243,12 @@ function handlesShipment(_request: ShipmentRequest): Promise<HandlerResponse> {
 }
 
 function handlesReturn(
-  _request: ApiRequest<Record<string, string>, Record<string, string | undefined>, undefined, undefined, ReturnEvent>,
+  _request: ApiRequest<{ auth: undefined; body: undefined; event: ReturnEvent }>,
 ): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
 }
 
-function handlesAnyEvent(
-  _request: ApiRequest<Record<string, string>, Record<string, string | undefined>, undefined, undefined>,
-): Promise<HandlerResponse> {
+function handlesAnyEvent(_request: ApiRequest<{ auth: undefined; body: undefined }>): Promise<HandlerResponse> {
   return Promise.resolve(NoContent());
 }
 
@@ -361,7 +388,7 @@ interface Order {
 
 const order: Order = { orderId: 'ord-1', lines: [{ sku: 'brk-9', quantity: 2 }] };
 
-type OrderRequest = ApiRequest<Record<string, string>, Record<string, string | undefined>, unknown, undefined>;
+type OrderRequest = ApiRequest<{ body: undefined }>;
 
 function handlesWithDefaultResponse(_request: OrderRequest): Promise<HandlerResponse> {
   return Promise.resolve(order);
@@ -550,7 +577,7 @@ suite('error helper types', () => {
 const page: Html = Html('<p>Order ord-1</p>');
 const errors = { html: (): Html => Html('<p>Error</p>') };
 
-function handlesWithHtml(_request: OrderRequest): Promise<HandlerResponse<Html>> {
+function handlesWithHtml(_request: OrderRequest): Promise<HandlerResponse<{ body: Html }>> {
   return Promise.resolve(page);
 }
 
@@ -677,12 +704,7 @@ suite('annotated handler response types', () => {
 });
 
 suite('route object response types', () => {
-  type OrdersApi = RouteDefinition<
-    '/api/orders',
-    PathParams<'/api/orders'>,
-    Record<string, string | undefined>,
-    TeamAuth
-  >;
+  type OrdersApi = RouteDefinition<{ pathPattern: '/api/orders'; auth: TeamAuth }>;
 
   const htmlMatcher = new HTTPMatcher({ adapter: teamAdapter, responseType: 'html', errors });
 
@@ -904,13 +926,7 @@ suite('middleware response types', () => {
     if (!Response.isHTTPResponse(response)) return response;
     return { ...response, headers: { ...response.headers, 'x-trace-id': 'trace-1' } };
   };
-  type JsonMiddleware = HTTPMiddleware<
-    Record<string, string>,
-    Record<string, string | undefined>,
-    unknown,
-    unknown,
-    JsonBody
-  >;
+  type JsonMiddleware = HTTPMiddleware<{ query: Record<string, string | undefined>; response: JsonBody }>;
   // biome-ignore lint/nursery/useExplicitType: HTTPMiddleware types the parameters, which is what this test asserts
   const readsOrder: JsonMiddleware = async (request, next) => next(request);
 
@@ -979,5 +995,80 @@ suite('middleware response types', () => {
   test('rejects middleware typed for JSON on a matcher', () => {
     // @ts-expect-error - a matcher can have routes of any kind, so its middleware cannot expect JSON
     new HTTPMatcher({ adapter: teamAdapter, middleware: [readsOrder] });
+  });
+});
+
+suite('named type arguments', () => {
+  type Query = Record<string, string | undefined>;
+  type OrderEvent = { orderId: string };
+  type RawAuth = { type: 'team'; team: string; seat?: number } | { type: 'guest' } | undefined;
+  type Preset = AuthPreset<{ input: RawAuth; output: TeamAuth }>;
+
+  test('HTTPFilters and HTTPFilterInput name their keys', () => {
+    type Filters = HTTPFilters<{ pathPattern: '/orders'; method: 'GET'; auth: TeamAuth; event: OrderEvent }>;
+
+    expectTypeOf<Filters['method']>().toEqualTypeOf<'GET'>();
+    expectTypeOf<Filters['path']>().toEqualTypeOf<'/orders'>();
+    expectTypeOf<Parameters<NonNullable<Filters['custom']>>[0]>().toEqualTypeOf<
+      HTTPFilterInput<{ event: OrderEvent; auth: TeamAuth }>
+    >();
+  });
+
+  test('ResponseTypeOption names its keys', () => {
+    expectTypeOf<ResponseTypeOption<{ type: 'html'; contentType: 'text/html' }>>().toEqualTypeOf<
+      'html' | { type: 'html'; contentType: 'text/html' }
+    >();
+  });
+
+  test('RouteDefinition names its keys', () => {
+    type Route = RouteDefinition<{
+      pathPattern: '/orders/:id';
+      query: Query;
+      auth: TeamAuth;
+      body: Item;
+      response: Item;
+      method: 'POST';
+      rawAuth: RawAuth;
+      responseType: 'html';
+      contentType: 'text/html';
+      event: OrderEvent;
+    }>;
+
+    expectTypeOf<Parameters<Route['handler']>[0]>().toEqualTypeOf<
+      ApiRequest<{ path: { id: string }; query: Query; auth: TeamAuth; body: Item; event: OrderEvent }>
+    >();
+    expectTypeOf<Awaited<ReturnType<Route['handler']>>>().toEqualTypeOf<HandlerResponse<{ body: Item }>>();
+    expectTypeOf<Route['filters']['method']>().toEqualTypeOf<'POST'>();
+    expectTypeOf<Route['auth']>().toEqualTypeOf<Preset | undefined>();
+    expectTypeOf<Route['responseType']>().toEqualTypeOf<
+      ResponseTypeOption<{ type: 'html'; contentType: 'text/html' }>
+    >();
+  });
+
+  test('HTTPMatcherOptions names its keys', () => {
+    type Options = HTTPMatcherOptions<{
+      event: OrderEvent;
+      result: string;
+      rawAuth: RawAuth;
+      auth: TeamAuth;
+      responseType: 'html';
+      errors: Record<never, never>;
+      contentType: 'text/html';
+    }>;
+
+    expectTypeOf<Options['adapter']>().toEqualTypeOf<
+      HTTPAdapter<{ event: OrderEvent; result: string; auth: RawAuth }>
+    >();
+    expectTypeOf<Options['auth']>().toEqualTypeOf<Preset | undefined>();
+    expectTypeOf<Options['responseType']>().toEqualTypeOf<
+      ResponseTypeOption<{ type: 'html'; contentType: 'text/html' }> | undefined
+    >();
+  });
+
+  test('DefineRouteFn names its keys', () => {
+    expectTypeOf<
+      DefineRouteFn<{ rawAuth: RawAuth; auth: TeamAuth; responseType: 'html'; event: OrderEvent }>
+    >().toEqualTypeOf<DefineRouteFnCore<RawAuth, TeamAuth, 'html', OrderEvent>>();
+    expectTypeOf<DefineRouteFn<{ rawAuth: RawAuth }>>().toEqualTypeOf<DefineRouteFnCore<RawAuth, RawAuth, 'json'>>();
   });
 });

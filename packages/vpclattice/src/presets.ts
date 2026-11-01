@@ -5,7 +5,7 @@ import type { VPCLatticeAuth, VPCLatticeIamAuth } from './auth.js';
 export { noAuth } from '@latcher/http';
 
 // Lattice names no caller for an unsigned request, so a request without auth is the missing case
-export function iamAuth(): AuthPreset<VPCLatticeAuth, VPCLatticeIamAuth> {
+export function iamAuth(): AuthPreset<{ input: VPCLatticeAuth; output: VPCLatticeIamAuth }> {
   return {
     name: 'iamAuth',
     check: async (auth: VPCLatticeAuth) => {

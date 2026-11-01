@@ -8,8 +8,8 @@ import type { WarehouseOrder } from '../utils/warehouse.js';
 // Behind the TOKEN authorizer, so `auth.principalId` is the staff id the token resolved to and
 // `auth.context` is what `staffAuth` read from the context the authorizer attached.
 export async function createOrder(
-  request: ApiRequest<Record<string, never>, Record<string, string | undefined>, AuthOf<typeof staffAuth>, TNewOrder>,
-): Promise<ApiResponse<WarehouseOrder>> {
+  request: ApiRequest<{ path: Record<string, never>; auth: AuthOf<typeof staffAuth>; body: TNewOrder }>,
+): Promise<ApiResponse<{ body: WarehouseOrder }>> {
   const order: WarehouseOrder = {
     orderId: `ord-${request.body.reference.split('-').pop()}`,
     reference: request.body.reference,

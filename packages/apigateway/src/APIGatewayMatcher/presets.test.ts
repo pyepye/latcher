@@ -8,12 +8,11 @@ import type { APIGatewayAuth, CognitoAuth, IamAuth, JwtAuth, LambdaAuth } from '
 import { cognitoAuth, iamAuth, jwtAuth, lambdaAuth, noAuth } from './presets.js';
 import type { ApiRequest } from './types.js';
 
-type OrdersRequest<TAuth extends APIGatewayAuth> = ApiRequest<
-  Record<never, never>,
-  Record<string, string | undefined>,
-  TAuth,
-  undefined
->;
+type OrdersRequest<TAuth extends APIGatewayAuth> = ApiRequest<{
+  path: Record<never, never>;
+  auth: TAuth;
+  body: undefined;
+}>;
 
 // A schema that reads seats as a number, the way a coercing schema library would
 const SeatsSchema: StandardSchemaV1<unknown, { orgId: string; seats: number }> = {
@@ -185,7 +184,7 @@ suite('API Gateway auth presets', () => {
     test('a matcher default checks every route and hands on the schema output', async () => {
       const matcher = createAPIGatewayMatcher({ auth: lambdaAuth(SeatsSchema) }).get({
         filters: { path: '/orders' },
-        handler: async ({ auth }: OrdersRequest<LambdaAuth<{ orgId: string; seats: number }>>) => ({
+        handler: async ({ auth }: OrdersRequest<LambdaAuth<{ context: { orgId: string; seats: number } }>>) => ({
           orgId: auth.context.orgId,
           seats: auth.context.seats,
         }),

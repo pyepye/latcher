@@ -97,30 +97,30 @@ export class Response {
   static Ok<T extends BodyForHeaders<THeaders>, const THeaders extends Record<string, string> = Record<string, string>>(
     body: T,
     headers?: THeaders,
-  ): HTTPResponse<T> {
+  ): HTTPResponse<{ body: T }> {
     return { statusCode: HTTP_STATUS_CODES.OK, body, headers };
   }
 
   static Created<
     T extends BodyForHeaders<THeaders>,
     const THeaders extends Record<string, string> = Record<string, string>,
-  >(body: T, headers?: THeaders): HTTPResponse<T> {
+  >(body: T, headers?: THeaders): HTTPResponse<{ body: T }> {
     return { statusCode: HTTP_STATUS_CODES.CREATED, body, headers };
   }
 
-  static NoContent(): HTTPResponse<undefined> {
+  static NoContent(): HTTPResponse<{ body: undefined }> {
     return { statusCode: HTTP_STATUS_CODES.NO_CONTENT, body: undefined };
   }
 
-  private static httpRedirect(statusCode: number, location: string): HTTPResponse<undefined> {
+  private static httpRedirect(statusCode: number, location: string): HTTPResponse<{ body: undefined }> {
     return { statusCode, body: undefined, headers: { Location: location } };
   }
 
-  static TemporaryRedirect(location: string): HTTPResponse<undefined> {
+  static TemporaryRedirect(location: string): HTTPResponse<{ body: undefined }> {
     return Response.httpRedirect(HTTP_STATUS_CODES.TEMPORARY_REDIRECT, location);
   }
 
-  static PermanentRedirect(location: string): HTTPResponse<undefined> {
+  static PermanentRedirect(location: string): HTTPResponse<{ body: undefined }> {
     return Response.httpRedirect(HTTP_STATUS_CODES.PERMANENT_REDIRECT, location);
   }
 

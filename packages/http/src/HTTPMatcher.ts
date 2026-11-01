@@ -2,10 +2,10 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { EventTypeMatcherCore, MiddlewareCore } from '@latcher/base';
+import type { EventTypeMatcherCore, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 import { handleEventWithMiddleware, logger, validateSchemaResult } from '@latcher/base';
 
-import type { AuthPreset } from './auth.js';
+import type { AuthPresetCore } from './auth.js';
 import { HTTP_STATUS_CODES, statusName } from './constants.js';
 import { buildCorsHeaders, type CorsConfig } from './cors.js';
 import { defaultJsonErrorBody, defaultTextErrorBody, fallbackServerError } from './errorBodies.js';
@@ -27,23 +27,23 @@ import {
 } from './responseType.js';
 import type {
   AnyHttpMethod,
-  ApiHandler,
-  ApiRequest,
+  ApiHandlerCore,
+  ApiRequestCore,
   DefaultBody,
   ErrorFunctions,
   FinalizedHTTPResponse,
-  HandlerResponse,
-  HTTPAdapter,
-  HTTPFilterInput,
+  HandlerResponseCore,
+  HTTPAdapterCore,
+  HTTPFilterInputCore,
   HtmlMatcherErrors,
   HttpMethod,
-  NormalizedHTTPEvent,
+  NormalizedHTTPEventCore,
   OneKind,
   PathParams,
   ResponseBody,
   ResponseKind,
-  ResponseTypeOption,
-  RouteDefinition,
+  ResponseTypeOptionCore,
+  RouteDefinitionCore,
   ValidPath,
 } from './types.js';
 
@@ -55,12 +55,12 @@ type ErrorKind = keyof ErrorFunctions;
 // Config without handler (for builder pattern)
 interface RouteInput<
   TPathString extends string,
-  TMethod extends AnyHttpMethod,
   TQuerySchema extends StandardSchemaV1 | undefined,
+  TAuth,
   TBodySchema extends StandardSchemaV1 | undefined,
   TResponseSchema extends StandardSchemaV1<unknown, ResponseBody<TKind>> | undefined,
+  TMethod extends AnyHttpMethod,
   TRawAuth,
-  TRouteAuth,
   TKind extends ResponseKind,
   TContentType extends string,
   TEvent,
@@ -74,13 +74,13 @@ interface RouteInput<
   filters: {
     method: TMethod;
     path: ValidPath<TPathString>;
-    custom?: (input: HTTPFilterInput<TEvent, TRawAuth>) => boolean | Promise<boolean>;
+    custom?: (input: HTTPFilterInputCore<TEvent, TRawAuth>) => boolean | Promise<boolean>;
   };
-  auth?: AuthPreset<TRawAuth, TRouteAuth>;
-  responseType?: ResponseTypeOption<TKind, TContentType>;
+  auth?: AuthPresetCore<TRawAuth, TAuth>;
+  responseType?: ResponseTypeOptionCore<TKind, TContentType>;
   middleware?: MiddlewareCore<
-    ApiRequest<TPath, TQuery, NoInfer<TRouteAuth>, TBody, TEvent>,
-    HandlerResponse<TResponse>
+    ApiRequestCore<TPath, TQuery, NoInfer<TAuth>, TBody, TEvent>,
+    HandlerResponseCore<TResponse>
   >[];
   querySchema?: TQuerySchema;
   bodySchema?: TBodySchema;
@@ -102,8 +102,8 @@ interface RouteBuilder<
   TEvent,
 > {
   handle(
-    handler: ApiHandler<TPath, TQuery, TAuth, TBody, TResponse, TEvent>,
-  ): RouteDefinition<
+    handler: ApiHandlerCore<TPath, TQuery, TAuth, TBody, TResponse, TEvent>,
+  ): RouteDefinitionCore<
     TPathString,
     TPath,
     TQuery,
@@ -118,7 +118,7 @@ interface RouteBuilder<
   >;
 }
 
-export type DefineRouteFn<
+export type DefineRouteFnCore<
   TRawAuth,
   TDefaultAuth extends TRawAuth = TRawAuth,
   TDefaultKind extends ResponseKind = 'json',
@@ -137,38 +137,26 @@ export type DefineRouteFn<
     : Record<string, string | undefined>,
   TBody = TBodySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TBodySchema> : DefaultBody<TMethod>,
   TResponse = SchemaOutput<TResponseSchema, ResponseBody<TKind>>,
-  TRouteAuth extends TRawAuth = TDefaultAuth,
+  TAuth extends TRawAuth = TDefaultAuth,
 >(
   config: RouteInput<
     TPathString,
-    TMethod,
     TQuerySchema,
+    TAuth,
     TBodySchema,
     TResponseSchema,
+    TMethod,
     TRawAuth,
-    TRouteAuth,
     TKind,
     TContentType,
     TEvent
   > &
     OneKind<NoInfer<TKind>>,
-) => RouteBuilder<
-  TPathString,
-  TPath,
-  TQuery,
-  TRouteAuth,
-  TBody,
-  TResponse,
-  TMethod,
-  TRawAuth,
-  TKind,
-  TContentType,
-  TEvent
->;
+) => RouteBuilder<TPathString, TPath, TQuery, TAuth, TBody, TResponse, TMethod, TRawAuth, TKind, TContentType, TEvent>;
 
 function defineRouteWithDefault<TRawAuth, TDefaultAuth extends TRawAuth, TDefaultKind extends ResponseKind, TEvent>(
-  defaultResponseType: ResponseTypeOption,
-): DefineRouteFn<TRawAuth, TDefaultAuth, TDefaultKind, TEvent> {
+  defaultResponseType: ResponseTypeOptionCore,
+): DefineRouteFnCore<TRawAuth, TDefaultAuth, TDefaultKind, TEvent> {
   return function defineRouteWithAuth<
     TPathString extends string,
     TMethod extends AnyHttpMethod,
@@ -183,43 +171,31 @@ function defineRouteWithDefault<TRawAuth, TDefaultAuth extends TRawAuth, TDefaul
       : Record<string, string | undefined>,
     TBody = TBodySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TBodySchema> : DefaultBody<TMethod>,
     TResponse = SchemaOutput<TResponseSchema, ResponseBody<TKind>>,
-    TRouteAuth extends TRawAuth = TDefaultAuth,
+    TAuth extends TRawAuth = TDefaultAuth,
   >(
     config: RouteInput<
       TPathString,
-      TMethod,
       TQuerySchema,
+      TAuth,
       TBodySchema,
       TResponseSchema,
+      TMethod,
       TRawAuth,
-      TRouteAuth,
       TKind,
       TContentType,
       TEvent
     > &
       OneKind<NoInfer<TKind>>,
-  ): RouteBuilder<
-    TPathString,
-    TPath,
-    TQuery,
-    TRouteAuth,
-    TBody,
-    TResponse,
-    TMethod,
-    TRawAuth,
-    TKind,
-    TContentType,
-    TEvent
-  > {
+  ): RouteBuilder<TPathString, TPath, TQuery, TAuth, TBody, TResponse, TMethod, TRawAuth, TKind, TContentType, TEvent> {
     return {
       // biome-ignore lint/nursery/useExplicitType: handler type is inferred from RouteBuilder return type
       handle(
         handler,
-      ): RouteDefinition<
+      ): RouteDefinitionCore<
         TPathString,
         TPath,
         TQuery,
-        TRouteAuth,
+        TAuth,
         TBody,
         TResponse,
         TMethod,
@@ -229,11 +205,11 @@ function defineRouteWithDefault<TRawAuth, TDefaultAuth extends TRawAuth, TDefaul
         TEvent
       > {
         // The route keeps the kind its handler was typed for, whatever the default of the matcher it joins
-        return { ...config, responseType: config.responseType ?? defaultResponseType, handler } as RouteDefinition<
+        return { ...config, responseType: config.responseType ?? defaultResponseType, handler } as RouteDefinitionCore<
           TPathString,
           TPath,
           TQuery,
-          TRouteAuth,
+          TAuth,
           TBody,
           TResponse,
           TMethod,
@@ -251,13 +227,13 @@ export function createDefineRoute<
   TRawAuth,
   TDefaultAuth extends TRawAuth = TRawAuth,
   TEvent = unknown,
->(): DefineRouteFn<TRawAuth, TDefaultAuth, 'json', TEvent> {
+>(): DefineRouteFnCore<TRawAuth, TDefaultAuth, 'json', TEvent> {
   return defineRouteWithDefault<TRawAuth, TDefaultAuth, 'json', TEvent>('json');
 }
 
-export const defineRoute: DefineRouteFn<unknown> = createDefineRoute<unknown>();
+export const defineRoute: DefineRouteFn<{ rawAuth: unknown }> = createDefineRoute<unknown>();
 
-export interface HTTPMatcherOptions<
+export interface HTTPMatcherOptionsCore<
   TEvent,
   TResult,
   TAuth,
@@ -266,11 +242,11 @@ export interface HTTPMatcherOptions<
   TErrors extends ErrorFunctions,
   TContentType extends string,
 > {
-  adapter: HTTPAdapter<TEvent, TResult, TAuth>;
-  auth?: AuthPreset<TAuth, TDefaultAuth>;
-  responseType?: ResponseTypeOption<TDefaultKind, TContentType>;
+  adapter: HTTPAdapterCore<TEvent, TResult, TAuth>;
+  auth?: AuthPresetCore<TAuth, TDefaultAuth>;
+  responseType?: ResponseTypeOptionCore<TDefaultKind, TContentType>;
   errors?: TErrors & ErrorFunctions;
-  middleware?: MiddlewareCore<MatcherRequest<TAuth, TEvent>, HandlerResponse<ResponseBody>>[];
+  middleware?: MiddlewareCore<MatcherRequest<TAuth, TEvent>, HandlerResponseCore<ResponseBody>>[];
   cors?: CorsConfig;
 }
 
@@ -285,20 +261,20 @@ export class HTTPMatcher<
 > implements EventTypeMatcherCore<TEvent, TResult>
 {
   private router = new PathRouter<TAuth, TDefaultAuth, TDefaultKind, TErrors, TEvent>();
-  private defaultAuth: AuthPreset<TAuth, TDefaultAuth> | undefined;
+  private defaultAuth: AuthPresetCore<TAuth, TDefaultAuth> | undefined;
   private response = new Response();
-  private middleware: MiddlewareCore<MatcherRequest<TAuth, TEvent>, HandlerResponse<ResponseBody>>[];
-  private adapter: HTTPAdapter<TEvent, TResult, TAuth>;
+  private middleware: MiddlewareCore<MatcherRequest<TAuth, TEvent>, HandlerResponseCore<ResponseBody>>[];
+  private adapter: HTTPAdapterCore<TEvent, TResult, TAuth>;
   private corsConfig: CorsConfig | undefined;
   private defaultResponseType: ResolvedResponseType = JSON_RESPONSE_TYPE;
   private errors: ErrorFunctions = {};
 
-  defineRoute: DefineRouteFn<TAuth, TDefaultAuth, TDefaultKind, TEvent>;
+  defineRoute: DefineRouteFnCore<TAuth, TDefaultAuth, TDefaultKind, TEvent>;
 
   constructor(
     options:
-      | HTTPAdapter<TEvent, TResult, TAuth>
-      | (HTTPMatcherOptions<TEvent, TResult, TAuth, TDefaultAuth, TDefaultKind, TErrors, TContentType> &
+      | HTTPAdapterCore<TEvent, TResult, TAuth>
+      | (HTTPMatcherOptionsCore<TEvent, TResult, TAuth, TDefaultAuth, TDefaultKind, TErrors, TContentType> &
           HtmlMatcherErrors<NoInfer<TDefaultKind>>),
   ) {
     if ('canHandleEvent' in options) {
@@ -325,7 +301,7 @@ export class HTTPMatcher<
     );
   }
 
-  private checkRouteResponseType(responseType: ResponseTypeOption | undefined): void {
+  private checkRouteResponseType(responseType: ResponseTypeOptionCore | undefined): void {
     const { kind } = resolveResponseType(responseType, this.defaultResponseType);
     // TypeScript already rejects this. The check is for JavaScript callers and casts
     if (kind === 'html' && !this.errors.html) {
@@ -548,7 +524,7 @@ export class HTTPMatcher<
   }
 
   private async buildPreflightResult(
-    normalizedEvent: NormalizedHTTPEvent<TAuth>,
+    normalizedEvent: NormalizedHTTPEventCore<TAuth>,
     event: TEvent,
   ): Promise<TResult | undefined> {
     const methods = this.router.getMethodsForPath(normalizedEvent.path);
@@ -568,7 +544,7 @@ export class HTTPMatcher<
     const normalizedEvent = this.adapter.normalize(event);
     const { method, path } = normalizedEvent;
 
-    const filterInput: HTTPFilterInput<TEvent, TAuth> = {
+    const filterInput: HTTPFilterInputCore<TEvent, TAuth> = {
       method,
       path,
       headers: normalizedEvent.headers,
@@ -628,3 +604,45 @@ export class HTTPMatcher<
     }
   }
 }
+
+export interface HTTPMatcherOptionsTypes {
+  event: unknown;
+  result: unknown;
+  rawAuth: unknown;
+  auth: unknown;
+  responseType: ResponseKind;
+  errors: ErrorFunctions;
+  contentType: string;
+}
+
+export interface DefineRouteFnTypes {
+  rawAuth: unknown;
+  auth?: unknown;
+  responseType?: ResponseKind;
+  event?: unknown;
+}
+
+interface DefineRouteFnDefaults {
+  responseType: 'json';
+  event: unknown;
+}
+
+export type HTTPMatcherOptions<T extends TypeArgs<T, HTTPMatcherOptionsTypes>> = HTTPMatcherOptionsCore<
+  TypeArg<T, 'event', HTTPMatcherOptionsTypes>,
+  TypeArg<T, 'result', HTTPMatcherOptionsTypes>,
+  TypeArg<T, 'rawAuth', HTTPMatcherOptionsTypes>,
+  Extract<TypeArg<T, 'auth', HTTPMatcherOptionsTypes>, TypeArg<T, 'rawAuth', HTTPMatcherOptionsTypes>>,
+  Extract<TypeArg<T, 'responseType', HTTPMatcherOptionsTypes>, ResponseKind>,
+  Extract<TypeArg<T, 'errors', HTTPMatcherOptionsTypes>, ErrorFunctions>,
+  Extract<TypeArg<T, 'contentType', HTTPMatcherOptionsTypes>, string>
+>;
+
+export type DefineRouteFn<T extends TypeArgs<T, DefineRouteFnTypes>> = DefineRouteFnCore<
+  TypeArg<T, 'rawAuth', DefineRouteFnTypes>,
+  Extract<
+    TypeArg<T, 'auth', { auth: TypeArg<T, 'rawAuth', DefineRouteFnTypes> }>,
+    TypeArg<T, 'rawAuth', DefineRouteFnTypes>
+  >,
+  Extract<TypeArg<T, 'responseType', DefineRouteFnDefaults>, ResponseKind>,
+  TypeArg<T, 'event', DefineRouteFnDefaults>
+>;

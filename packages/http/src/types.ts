@@ -2,9 +2,9 @@ import type { Context } from 'aws-lambda';
 
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-import type { MiddlewareCore } from '@latcher/base';
+import type { MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
-import type { AuthPreset } from './auth.js';
+import type { AuthPresetCore } from './auth.js';
 import type { HTTPException } from './HTTPException.js';
 
 // HTTP method types - more restrictive than aws-lambda's string for better type safety
@@ -118,7 +118,7 @@ export type OneKind<TKind extends ResponseKind> =
     ? { responseType: 'responseType must name one kind: json, html, text or binary' }
     : unknown;
 
-export type ResponseTypeOption<TKind extends ResponseKind = ResponseKind, TContentType extends string = string> =
+export type ResponseTypeOptionCore<TKind extends ResponseKind = ResponseKind, TContentType extends string = string> =
   | TKind
   | { type: TKind; contentType: ValidContentType<TKind, TContentType> };
 
@@ -136,7 +136,7 @@ export type BodyForHeaders<THeaders> = [ContentTypeHeader<THeaders>] extends [ne
       ? JsonBody
       : string | Bytes;
 
-export type HandlerResponse<TResponse = JsonBody> = ApiResponse<TResponse> | TResponse | HTTPException;
+export type HandlerResponseCore<TResponse = JsonBody> = ApiResponseCore<TResponse> | TResponse | HTTPException;
 
 // Any value JSON can carry, because the default JSON error body sends it
 export type ErrorContext =
@@ -174,7 +174,7 @@ export type RouteKind<TErrors> = TErrors extends { html: ErrorFunction<Html> }
   ? ResponseKind
   : Exclude<ResponseKind, 'html'>;
 
-export interface NormalizedHTTPEvent<TAuth = unknown> {
+export interface NormalizedHTTPEventCore<TAuth = unknown> {
   method: string;
   path: string;
   headers: Record<string, string | undefined>;
@@ -193,13 +193,13 @@ export interface FinalizedHTTPResponse {
   isBase64Encoded: boolean;
 }
 
-export interface HTTPAdapter<TEvent, TResult, TAuth = unknown> {
+export interface HTTPAdapterCore<TEvent, TResult, TAuth = unknown> {
   canHandleEvent(event: unknown): event is TEvent;
-  normalize(event: TEvent): NormalizedHTTPEvent<TAuth>;
+  normalize(event: TEvent): NormalizedHTTPEventCore<TAuth>;
   buildResult(response: FinalizedHTTPResponse, event: TEvent): TResult;
 }
 
-export interface ApiRequest<
+export interface ApiRequestCore<
   TPath = Record<string, string>,
   TQuery = Record<string, string | undefined>,
   TAuth = unknown,
@@ -221,15 +221,15 @@ export interface ApiRequest<
   context: Context;
 }
 
-export interface ApiResponse<T = unknown> {
+export interface ApiResponseCore<T = unknown> {
   statusCode: number;
   body: T;
   headers?: Record<string, string>;
 }
 
-export type HTTPResponse<T = unknown> = ApiResponse<T>;
+export type HTTPResponseCore<T = unknown> = ApiResponseCore<T>;
 
-export interface HTTPFilterInput<TEvent = unknown, TAuth = unknown> {
+export interface HTTPFilterInputCore<TEvent = unknown, TAuth = unknown> {
   method: string;
   path: string;
   headers: Record<string, string | undefined>;
@@ -241,7 +241,7 @@ export interface HTTPFilterInput<TEvent = unknown, TAuth = unknown> {
   event: TEvent;
 }
 
-export interface HTTPFilters<
+export interface HTTPFiltersCore<
   TPathString extends string = string,
   TMethod extends AnyHttpMethod = AnyHttpMethod,
   TAuth = unknown,
@@ -249,7 +249,7 @@ export interface HTTPFilters<
 > {
   method: TMethod;
   path: ValidPath<TPathString>;
-  custom?: (input: HTTPFilterInput<TEvent, TAuth>) => boolean | Promise<boolean>;
+  custom?: (input: HTTPFilterInputCore<TEvent, TAuth>) => boolean | Promise<boolean>;
 }
 
 declare const anyResponseKind: unique symbol;
@@ -260,11 +260,11 @@ export type AnyResponseKind = typeof anyResponseKind;
 // Generic in the response, so the middleware can only answer with what next() gives it or an HTTPException
 type AnyKindMiddleware<TRequest> = <TResponse>(
   request: TRequest,
-  next: (request: unknown) => Promise<HandlerResponse<TResponse>>,
-) => Promise<HandlerResponse<TResponse>>;
+  next: (request: unknown) => Promise<HandlerResponseCore<TResponse>>,
+) => Promise<HandlerResponseCore<TResponse>>;
 
 // Middleware that reads or builds a body names the response type, which ties it to routes of that kind
-export type HTTPMiddleware<
+export type HTTPMiddlewareCore<
   TPath = Record<string, string>,
   TQuery = Record<string, unknown>,
   TAuth = unknown,
@@ -272,13 +272,13 @@ export type HTTPMiddleware<
   TResponse = AnyResponseKind,
   TEvent = unknown,
 > = [TResponse] extends [AnyResponseKind]
-  ? AnyKindMiddleware<ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>>
-  : MiddlewareCore<ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>, HandlerResponse<TResponse>>;
+  ? AnyKindMiddleware<ApiRequestCore<TPath, TQuery, TAuth, TBody, TEvent>>
+  : MiddlewareCore<ApiRequestCore<TPath, TQuery, TAuth, TBody, TEvent>, HandlerResponseCore<TResponse>>;
 
 // A handler with no return statement returns Promise<void>, which is allowed only where the response can be undefined
 type NoReturn<TResponse> = undefined extends TResponse ? Promise<void> : never;
 
-export type ApiHandler<
+export type ApiHandlerCore<
   TPath = Record<string, string>,
   TQuery = Record<string, string | undefined>,
   TAuth = unknown,
@@ -286,8 +286,8 @@ export type ApiHandler<
   TResponse = JsonBody,
   TEvent = unknown,
 > = (
-  request: ApiRequest<TPath, TQuery, TAuth, TBody, TEvent>,
-) => Promise<HandlerResponse<TResponse>> | NoReturn<TResponse>;
+  request: ApiRequestCore<TPath, TQuery, TAuth, TBody, TEvent>,
+) => Promise<HandlerResponseCore<TResponse>> | NoReturn<TResponse>;
 
 // A route passed straight to route() with no responseType takes the matcher's kind
 export interface RouteConfig<
@@ -303,18 +303,18 @@ export interface RouteConfig<
   TContentType extends string = string,
   TEvent = unknown,
 > {
-  filters: HTTPFilters<TPathString, TMethod, TRawAuth, TEvent>;
-  auth?: AuthPreset<TRawAuth, TAuth>;
-  responseType?: ResponseTypeOption<TKind, TContentType>;
-  handler: ApiHandler<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
-  middleware?: HTTPMiddleware<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>[];
+  filters: HTTPFiltersCore<TPathString, TMethod, TRawAuth, TEvent>;
+  auth?: AuthPresetCore<TRawAuth, TAuth>;
+  responseType?: ResponseTypeOptionCore<TKind, TContentType>;
+  handler: ApiHandlerCore<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>;
+  middleware?: HTTPMiddlewareCore<TPath, TQuery, NoInfer<TAuth>, NoInfer<TBody>, NoInfer<TResponse>, TEvent>[];
   querySchema?: StandardSchemaV1<unknown, TQuery>;
   bodySchema?: StandardSchemaV1<unknown, TBody>;
   responseSchema?: StandardSchemaV1<unknown, TResponse>;
 }
 
 // A route value always names its kind, so a matcher with a different default still sends what its types say
-export interface RouteDefinition<
+export interface RouteDefinitionCore<
   TPathString extends string = string,
   TPath = PathParams<TPathString>,
   TQuery = Record<string, string | undefined>,
@@ -339,5 +339,203 @@ export interface RouteDefinition<
     TContentType,
     TEvent
   > {
-  responseType: ResponseTypeOption<TKind, TContentType>;
+  responseType: ResponseTypeOptionCore<TKind, TContentType>;
 }
+
+export interface ApiRequestTypes {
+  path?: unknown;
+  query?: unknown;
+  auth?: unknown;
+  body?: unknown;
+  event?: unknown;
+}
+
+interface ApiRequestDefaults {
+  path: Record<string, string>;
+  query: Record<string, string | undefined>;
+  auth: unknown;
+  body: unknown;
+  event: unknown;
+}
+
+export interface ApiHandlerTypes extends ApiRequestTypes {
+  response?: unknown;
+}
+
+interface ApiHandlerDefaults extends ApiRequestDefaults {
+  response: JsonBody;
+}
+
+interface HTTPMiddlewareDefaults {
+  path: Record<string, string>;
+  query: Record<string, unknown>;
+  auth: unknown;
+  body: unknown;
+  response: AnyResponseKind;
+  event: unknown;
+}
+
+export interface HTTPFiltersTypes {
+  pathPattern?: string;
+  method?: AnyHttpMethod;
+  auth?: unknown;
+  event?: unknown;
+}
+
+interface HTTPFiltersDefaults {
+  pathPattern: string;
+  method: AnyHttpMethod;
+  auth: unknown;
+  event: unknown;
+}
+
+export interface HTTPFilterInputTypes {
+  event?: unknown;
+  auth?: unknown;
+}
+
+interface HTTPFilterInputDefaults {
+  event: unknown;
+  auth: unknown;
+}
+
+export interface RouteDefinitionTypes {
+  pathPattern?: string;
+  path?: unknown;
+  query?: unknown;
+  auth?: unknown;
+  body?: unknown;
+  response?: unknown;
+  method?: AnyHttpMethod;
+  rawAuth?: unknown;
+  responseType?: ResponseKind;
+  contentType?: string;
+  event?: unknown;
+}
+
+interface RouteDefinitionDefaults {
+  pathPattern: string;
+  query: Record<string, string | undefined>;
+  auth: unknown;
+  body: unknown;
+  response: JsonBody;
+  method: AnyHttpMethod;
+  responseType: 'json';
+  contentType: string;
+  event: unknown;
+}
+
+export interface ApiResponseTypes {
+  body?: unknown;
+}
+
+interface ApiResponseDefaults {
+  body: unknown;
+}
+
+interface HandlerResponseDefaults {
+  body: JsonBody;
+}
+
+export interface ResponseTypeOptionTypes {
+  type?: ResponseKind;
+  contentType?: string;
+}
+
+interface ResponseTypeOptionDefaults {
+  type: ResponseKind;
+  contentType: string;
+}
+
+export interface NormalizedHTTPEventTypes {
+  auth?: unknown;
+}
+
+interface NormalizedHTTPEventDefaults {
+  auth: unknown;
+}
+
+export interface HTTPAdapterTypes {
+  event: unknown;
+  result: unknown;
+  auth?: unknown;
+}
+
+export type ApiRequest<T extends TypeArgs<T, ApiRequestTypes> = object> = ApiRequestCore<
+  TypeArg<T, 'path', ApiRequestDefaults>,
+  TypeArg<T, 'query', ApiRequestDefaults>,
+  TypeArg<T, 'auth', ApiRequestDefaults>,
+  TypeArg<T, 'body', ApiRequestDefaults>,
+  TypeArg<T, 'event', ApiRequestDefaults>
+>;
+
+export type ApiHandler<T extends TypeArgs<T, ApiHandlerTypes> = object> = ApiHandlerCore<
+  TypeArg<T, 'path', ApiHandlerDefaults>,
+  TypeArg<T, 'query', ApiHandlerDefaults>,
+  TypeArg<T, 'auth', ApiHandlerDefaults>,
+  TypeArg<T, 'body', ApiHandlerDefaults>,
+  TypeArg<T, 'response', ApiHandlerDefaults>,
+  TypeArg<T, 'event', ApiHandlerDefaults>
+>;
+
+export type HTTPMiddleware<T extends TypeArgs<T, ApiHandlerTypes> = object> = HTTPMiddlewareCore<
+  TypeArg<T, 'path', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'query', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'auth', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'body', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'response', HTTPMiddlewareDefaults>,
+  TypeArg<T, 'event', HTTPMiddlewareDefaults>
+>;
+
+export type HTTPFilters<T extends TypeArgs<T, HTTPFiltersTypes> = object> = HTTPFiltersCore<
+  Extract<TypeArg<T, 'pathPattern', HTTPFiltersDefaults>, string>,
+  Extract<TypeArg<T, 'method', HTTPFiltersDefaults>, AnyHttpMethod>,
+  TypeArg<T, 'auth', HTTPFiltersDefaults>,
+  TypeArg<T, 'event', HTTPFiltersDefaults>
+>;
+
+export type HTTPFilterInput<T extends TypeArgs<T, HTTPFilterInputTypes> = object> = HTTPFilterInputCore<
+  TypeArg<T, 'event', HTTPFilterInputDefaults>,
+  TypeArg<T, 'auth', HTTPFilterInputDefaults>
+>;
+
+export type RouteDefinition<T extends TypeArgs<T, RouteDefinitionTypes> = object> = RouteDefinitionCore<
+  Extract<TypeArg<T, 'pathPattern', RouteDefinitionDefaults>, string>,
+  TypeArg<T, 'path', { path: PathParams<Extract<TypeArg<T, 'pathPattern', RouteDefinitionDefaults>, string>> }>,
+  TypeArg<T, 'query', RouteDefinitionDefaults>,
+  TypeArg<T, 'auth', RouteDefinitionDefaults>,
+  TypeArg<T, 'body', RouteDefinitionDefaults>,
+  TypeArg<T, 'response', RouteDefinitionDefaults>,
+  Extract<TypeArg<T, 'method', RouteDefinitionDefaults>, AnyHttpMethod>,
+  TypeArg<T, 'rawAuth', { rawAuth: TypeArg<T, 'auth', RouteDefinitionDefaults> }>,
+  Extract<TypeArg<T, 'responseType', RouteDefinitionDefaults>, ResponseKind>,
+  Extract<TypeArg<T, 'contentType', RouteDefinitionDefaults>, string>,
+  TypeArg<T, 'event', RouteDefinitionDefaults>
+>;
+
+export type ApiResponse<T extends TypeArgs<T, ApiResponseTypes> = object> = ApiResponseCore<
+  TypeArg<T, 'body', ApiResponseDefaults>
+>;
+
+export type HTTPResponse<T extends TypeArgs<T, ApiResponseTypes> = object> = HTTPResponseCore<
+  TypeArg<T, 'body', ApiResponseDefaults>
+>;
+
+export type HandlerResponse<T extends TypeArgs<T, ApiResponseTypes> = object> = HandlerResponseCore<
+  TypeArg<T, 'body', HandlerResponseDefaults>
+>;
+
+export type ResponseTypeOption<T extends TypeArgs<T, ResponseTypeOptionTypes> = object> = ResponseTypeOptionCore<
+  Extract<TypeArg<T, 'type', ResponseTypeOptionDefaults>, ResponseKind>,
+  Extract<TypeArg<T, 'contentType', ResponseTypeOptionDefaults>, string>
+>;
+
+export type NormalizedHTTPEvent<T extends TypeArgs<T, NormalizedHTTPEventTypes> = object> = NormalizedHTTPEventCore<
+  TypeArg<T, 'auth', NormalizedHTTPEventDefaults>
+>;
+
+export type HTTPAdapter<T extends TypeArgs<T, HTTPAdapterTypes>> = HTTPAdapterCore<
+  TypeArg<T, 'event', HTTPAdapterTypes>,
+  TypeArg<T, 'result', HTTPAdapterTypes>,
+  TypeArg<T, 'auth', NormalizedHTTPEventDefaults>
+>;

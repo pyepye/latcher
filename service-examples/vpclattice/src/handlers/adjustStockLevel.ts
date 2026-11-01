@@ -1,12 +1,12 @@
 import { logger } from '@latcher/base';
-import { type ApiRequest, type ApiResponse, NotFound, Ok, type VPCLatticeAuth } from '@latcher/vpclattice';
+import { type ApiRequest, type ApiResponse, NotFound, Ok } from '@latcher/vpclattice';
 
 import { STOCK } from '../utils/inventory.js';
 import type { TStockAdjustment } from '../utils/schemas.js';
 
 export async function adjustStockLevel(
-  request: ApiRequest<{ sku: string }, Record<string, string | undefined>, VPCLatticeAuth, TStockAdjustment>,
-): Promise<ApiResponse<{ sku: string; quantity: number }>> {
+  request: ApiRequest<{ path: { sku: string }; body: TStockAdjustment }>,
+): Promise<ApiResponse<{ body: { sku: string; quantity: number } }>> {
   const item = STOCK[request.path.sku];
   if (!item) throw NotFound(`SKU ${request.path.sku} is not stocked`);
 

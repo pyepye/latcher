@@ -40,14 +40,19 @@ export {
   UnprocessableContent,
 } from '@latcher/http';
 
-export type { ALBMatcherOptions } from './ALBMatcher.js';
+export type { ALBMatcherOptions, ALBMatcherOptionsTypes } from './ALBMatcher.js';
 export { ALBMatcher, createALBMatcher, defineRoute } from './ALBMatcher.js';
 export { albAdapter } from './albAdapter.js';
 export type {
   ApiHandler,
+  ApiHandlerTypes,
   ApiRequest,
+  ApiRequestTypes,
   HTTPFilterInput,
+  HTTPFilterInputTypes,
   HTTPFilters,
+  HTTPFiltersTypes,
   HTTPMiddleware,
   RouteDefinition,
+  RouteDefinitionTypes,
 } from './types.js';
