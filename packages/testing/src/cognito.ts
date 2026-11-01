@@ -17,11 +17,20 @@ import { createMockContext } from './context.js';
 import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
+import type { TypeArg, TypeArgs } from './typeArgs.js';
 
-export interface CognitoHandlerEvent<TEvent> {
+interface CognitoHandlerEventCore<TEvent> {
   event: TEvent;
   context: Context;
 }
+
+export interface CognitoHandlerEventTypes {
+  event: unknown;
+}
+
+export type CognitoHandlerEvent<T extends TypeArgs<T, CognitoHandlerEventTypes>> = CognitoHandlerEventCore<
+  TypeArg<T, 'event', CognitoHandlerEventTypes>
+>;
 
 interface CognitoBaseOverrides {
   version?: string;
@@ -70,7 +79,7 @@ export function createCognitoPreSignUpEvent(overrides: CognitoPreSignUpEventOver
 
 export function createCognitoPreSignUpHandlerEvent(
   options: { event?: CognitoPreSignUpEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<PreSignUpTriggerEvent> {
+): CognitoHandlerEventCore<PreSignUpTriggerEvent> {
   return { event: createCognitoPreSignUpEvent(options.event), context: createMockContext(options.context) };
 }
 
@@ -95,7 +104,7 @@ export function createCognitoPreAuthenticationEvent(
 
 export function createCognitoPreAuthenticationHandlerEvent(
   options: { event?: CognitoPreAuthenticationEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<PreAuthenticationTriggerEvent> {
+): CognitoHandlerEventCore<PreAuthenticationTriggerEvent> {
   return {
     event: createCognitoPreAuthenticationEvent(options.event),
     context: createMockContext(options.context),
@@ -123,7 +132,7 @@ export function createCognitoPostAuthenticationEvent(
 
 export function createCognitoPostAuthenticationHandlerEvent(
   options: { event?: CognitoPostAuthenticationEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<PostAuthenticationTriggerEvent> {
+): CognitoHandlerEventCore<PostAuthenticationTriggerEvent> {
   return {
     event: createCognitoPostAuthenticationEvent(options.event),
     context: createMockContext(options.context),
@@ -151,7 +160,7 @@ export function createCognitoPostConfirmationEvent(
 
 export function createCognitoPostConfirmationHandlerEvent(
   options: { event?: CognitoPostConfirmationEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<PostConfirmationTriggerEvent> {
+): CognitoHandlerEventCore<PostConfirmationTriggerEvent> {
   return {
     event: createCognitoPostConfirmationEvent(options.event),
     context: createMockContext(options.context),
@@ -179,7 +188,7 @@ export function createCognitoDefineAuthChallengeEvent(
 
 export function createCognitoDefineAuthChallengeHandlerEvent(
   options: { event?: CognitoDefineAuthChallengeEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<DefineAuthChallengeTriggerEvent> {
+): CognitoHandlerEventCore<DefineAuthChallengeTriggerEvent> {
   return {
     event: createCognitoDefineAuthChallengeEvent(options.event),
     context: createMockContext(options.context),
@@ -212,7 +221,7 @@ export function createCognitoCreateAuthChallengeEvent(
 
 export function createCognitoCreateAuthChallengeHandlerEvent(
   options: { event?: CognitoCreateAuthChallengeEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<CreateAuthChallengeTriggerEvent> {
+): CognitoHandlerEventCore<CreateAuthChallengeTriggerEvent> {
   return {
     event: createCognitoCreateAuthChallengeEvent(options.event),
     context: createMockContext(options.context),
@@ -246,7 +255,7 @@ export function createCognitoVerifyAuthChallengeResponseEvent(
 
 export function createCognitoVerifyAuthChallengeResponseHandlerEvent(
   options: { event?: CognitoVerifyAuthChallengeResponseEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<VerifyAuthChallengeResponseTriggerEvent> {
+): CognitoHandlerEventCore<VerifyAuthChallengeResponseTriggerEvent> {
   return {
     event: createCognitoVerifyAuthChallengeResponseEvent(options.event),
     context: createMockContext(options.context),
@@ -280,7 +289,7 @@ export function createCognitoCustomMessageEvent(
 
 export function createCognitoCustomMessageHandlerEvent(
   options: { event?: CognitoCustomMessageEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<CustomMessageTriggerEvent> {
+): CognitoHandlerEventCore<CustomMessageTriggerEvent> {
   return { event: createCognitoCustomMessageEvent(options.event), context: createMockContext(options.context) };
 }
 
@@ -310,7 +319,7 @@ export function createCognitoCustomEmailSenderEvent(
 
 export function createCognitoCustomEmailSenderHandlerEvent(
   options: { event?: CognitoCustomEmailSenderEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<CustomEmailSenderTriggerEvent> {
+): CognitoHandlerEventCore<CustomEmailSenderTriggerEvent> {
   return {
     event: createCognitoCustomEmailSenderEvent(options.event),
     context: createMockContext(options.context),
@@ -338,7 +347,7 @@ export function createCognitoPreTokenGenerationEvent(
 
 export function createCognitoPreTokenGenerationHandlerEvent(
   options: { event?: CognitoPreTokenGenerationEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<PreTokenGenerationTriggerEvent> {
+): CognitoHandlerEventCore<PreTokenGenerationTriggerEvent> {
   return {
     event: createCognitoPreTokenGenerationEvent(options.event),
     context: createMockContext(options.context),
@@ -366,7 +375,7 @@ export function createCognitoUserMigrationEvent(
 
 export function createCognitoUserMigrationHandlerEvent(
   options: { event?: CognitoUserMigrationEventOverrides; context?: Partial<Context> } = {},
-): CognitoHandlerEvent<UserMigrationTriggerEvent> {
+): CognitoHandlerEventCore<UserMigrationTriggerEvent> {
   return { event: createCognitoUserMigrationEvent(options.event), context: createMockContext(options.context) };
 }
 

@@ -5,9 +5,11 @@ import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
-// ─── AppSync Events types (local to avoid circular deps) ─────────────────────
+// ─── AppSync Events types ────────────────────────────────────────────────────
 
-// Declared here rather than imported, because base depends on this package.
+// Copy of JsonValue in packages/base/src/utils/data.ts and the AppSync Events types in
+// packages/appsync/src/AppSyncEventsMatcher/types.ts, with each generic set to its default. Change both together.
+// Importing either package here creates a circular dependency.
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export interface AppSyncEventsPublishedEvent {

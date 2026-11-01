@@ -6,8 +6,8 @@ import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
 // Connect delivers channels and initiation methods aws-lambda's unions do not carry, so the fixture
-// widens both to the service model. They match the unions @latcher/connect exports, which
-// cannot be imported here because that package dev-depends on this one.
+// widens both to the service model. Copy of ConnectChannel and ConnectInitiationMethod in
+// packages/connect/src/types.ts. Change both together. Importing @latcher/connect here creates a circular dependency.
 type FixtureChannel = 'CHAT' | 'EMAIL' | 'TASK' | 'VOICE';
 
 type FixtureInitiationMethod =

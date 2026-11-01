@@ -4,6 +4,9 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
+// packages/testing/src/documentdb.ts has a copy of DocumentDBOperationType, DocumentDBUpdateDescription,
+// DocumentDBChangeEvent, DocumentDBEventEntry and DocumentDBEvent. Change both together.
+
 // DocumentDB operation types (lowercase, unlike DynamoDB's uppercase)
 export type DocumentDBOperationType = 'insert' | 'update' | 'replace' | 'delete';
 

@@ -5,7 +5,8 @@ import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
-// RabbitMQ has no @types/aws-lambda types, so we define the event shapes locally
+// Copy of the event types in packages/mq/src/RabbitMQMatcher/types.ts. Change both together.
+// aws-lambda has no RabbitMQ types, and importing @latcher/mq here creates a circular dependency.
 
 // Amazon MQ delivers a string header as its UTF-8 bytes. A timestamp header is the only plain string.
 type RabbitMQHeaderValue =

@@ -6,6 +6,9 @@ import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@la
 
 // --- AWS Event Types (not in @types/aws-lambda) ---
 
+// packages/testing/src/activeMQ.ts has a copy of ActiveMQMessageType, ActiveMQDestination,
+// ActiveMQMessage and ActiveMQEvent. Change both together.
+
 export type ActiveMQMessageType = 'jms/text-message' | 'jms/bytes-message';
 
 export interface ActiveMQDestination {

@@ -6,6 +6,9 @@ import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@la
 
 // --- AWS Event Types (not in @types/aws-lambda) ---
 
+// packages/testing/src/rabbitMQ.ts has a copy of RabbitMQHeaderValue, RabbitMQBasicProperties,
+// RabbitMQMessage and RabbitMQEvent. Change both together.
+
 // Amazon MQ delivers a string header as its UTF-8 bytes. A timestamp header is the only plain string.
 export type RabbitMQHeaderValue =
   | { bytes: number[] }

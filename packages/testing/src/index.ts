@@ -115,6 +115,7 @@ export type {
   CognitoCustomMessageEventOverrides,
   CognitoDefineAuthChallengeEventOverrides,
   CognitoHandlerEvent,
+  CognitoHandlerEventTypes,
   CognitoPostAuthenticationEventOverrides,
   CognitoPostConfirmationEventOverrides,
   CognitoPreAuthenticationEventOverrides,
@@ -176,7 +177,7 @@ export type {
 } from './connect.js';
 export { createConnectEvent, createConnectHandlerEvent } from './connect.js';
 export { createMockContext } from './context.js';
-export type { MockSchema } from './createMockSchema.js';
+export type { MockSchema, MockSchemaTypes } from './createMockSchema.js';
 export { createMockSchema } from './createMockSchema.js';
 export { deepMerge } from './deepMerge.js';
 export type { DeepPartial } from './deepPartial.js';
@@ -213,6 +214,7 @@ export type {
   CreateEventBridgeHandlerEventOptions,
   EventBridgeEvent,
   EventBridgeEventOverrides,
+  EventBridgeEventTypes,
   EventBridgeHandlerEvent,
 } from './eventbridge.js';
 export { createEventBridgeEvent, createEventBridgeHandlerEvent } from './eventbridge.js';

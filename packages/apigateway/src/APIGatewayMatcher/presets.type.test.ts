@@ -9,7 +9,7 @@ import type { ApiRequest } from './types.js';
 type Query = Record<string, string | undefined>;
 type SeatsContext = { orgId: string; seats: number };
 
-const seatsSchema: MockSchema<SeatsContext> = createMockSchema<SeatsContext>();
+const seatsSchema: MockSchema<{ output: SeatsContext }> = createMockSchema<SeatsContext>();
 const orgAuth: AuthPreset<APIGatewayAuth, LambdaAuth<SeatsContext>> = lambdaAuth(seatsSchema);
 
 function handlesOrg(

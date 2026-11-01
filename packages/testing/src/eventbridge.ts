@@ -4,8 +4,9 @@ import { createMockContext } from './context.js';
 import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
+import type { TypeArg, TypeArgs } from './typeArgs.js';
 
-export interface EventBridgeEvent<TDetail = unknown> {
+interface EventBridgeEventCore<TDetail = unknown> {
   version: string;
   id: string;
   source: string;
@@ -17,15 +18,27 @@ export interface EventBridgeEvent<TDetail = unknown> {
   detail: TDetail;
 }
 
+export interface EventBridgeEventTypes {
+  detail?: unknown;
+}
+
+interface EventBridgeEventDefaults {
+  detail: unknown;
+}
+
+export type EventBridgeEvent<T extends TypeArgs<T, EventBridgeEventTypes> = object> = EventBridgeEventCore<
+  TypeArg<T, 'detail', EventBridgeEventDefaults>
+>;
+
 export interface EventBridgeHandlerEvent {
-  event: EventBridgeEvent;
+  event: EventBridgeEventCore;
   context: Context;
 }
 
-export type EventBridgeEventOverrides = DeepPartial<EventBridgeEvent>;
+export type EventBridgeEventOverrides = DeepPartial<EventBridgeEventCore>;
 
-export function createEventBridgeEvent(overrides: EventBridgeEventOverrides = {}): EventBridgeEvent {
-  const defaults: EventBridgeEvent = {
+export function createEventBridgeEvent(overrides: EventBridgeEventOverrides = {}): EventBridgeEventCore {
+  const defaults: EventBridgeEventCore = {
     version: '0',
     id: crypto.randomUUID(),
     source: 'my.app',
@@ -54,7 +67,7 @@ export function createEventBridgeHandlerEvent(
 }
 
 export interface EventBridgeFixtures {
-  eventBridgeEvent: (overrides?: EventBridgeEventOverrides) => EventBridgeEvent;
+  eventBridgeEvent: (overrides?: EventBridgeEventOverrides) => EventBridgeEventCore;
   eventBridgeHandlerEvent: (options?: CreateEventBridgeHandlerEventOptions) => EventBridgeHandlerEvent;
 }
 

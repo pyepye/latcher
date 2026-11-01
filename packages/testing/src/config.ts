@@ -5,6 +5,8 @@ import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
+// Copy of the event types in packages/config/src/ConfigMatcher/types.ts and packages/config/src/types.ts,
+// with each generic set to its default. Change both together. Importing @latcher/config here creates a circular dependency.
 export type ConfigMessageType =
   | 'ConfigurationItemChangeNotification'
   | 'OversizedConfigurationItemChangeNotification'

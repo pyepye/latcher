@@ -5,7 +5,8 @@ import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
-// aws-lambda has no DocumentDB types, and importing from @latcher/documentdb would create a circular dependency
+// Copy of the event types in packages/documentdb/src/types.ts. Change both together.
+// aws-lambda has no DocumentDB types, and importing @latcher/documentdb here creates a circular dependency.
 type DocumentDBOperationType = 'insert' | 'update' | 'replace' | 'delete';
 
 interface DocumentDBUpdateDescription {

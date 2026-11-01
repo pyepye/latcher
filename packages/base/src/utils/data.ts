@@ -3,6 +3,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { SchemaValidationError } from '../errors/SchemaValidationError.js';
 import type { TypeArg, TypeArgs } from './typeArgs.js';
 
+// packages/testing/src/appSync.ts has a copy of this type. Change both together.
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type FilterStringMatcher = string | RegExp | Array<string | RegExp>;

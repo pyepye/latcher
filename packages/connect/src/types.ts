@@ -3,7 +3,8 @@ import type { ConnectContactFlowEvent, ConnectContactFlowResult, Context } from 
 import type { FilterStringMatcher, MiddlewareCore } from '@latcher/base';
 
 // The Connect service model, not the narrower unions aws-lambda carries. A contact can arrive on any
-// of these, so a filter has to be able to name them.
+// of these, so a filter has to be able to name them. packages/testing/src/connect.ts has a copy of
+// ConnectChannel and ConnectInitiationMethod. Change both together.
 export type ConnectChannel = 'CHAT' | 'EMAIL' | 'TASK' | 'VOICE';
 
 export type ConnectInitiationMethod =

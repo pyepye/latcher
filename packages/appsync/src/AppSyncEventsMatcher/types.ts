@@ -4,6 +4,8 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 import type { FilterStringMatcher, JsonValue, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
+// packages/testing/src/appSync.ts has a copy of AppSyncEventsOperation, AppSyncEventsPublishedEventCore,
+// AppSyncEventsIdentity and AppSyncEventsEvent. Change both together.
 export type AppSyncEventsOperation = 'PUBLISH' | 'SUBSCRIBE';
 
 // AppSync refuses a publish whose event is not a stringified JSON value, so a handler is only ever

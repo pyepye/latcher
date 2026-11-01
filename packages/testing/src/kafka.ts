@@ -5,6 +5,8 @@ import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
+// Copy of the event types in packages/kafka/src/types.ts. Change both together.
+// Importing @latcher/kafka here creates a circular dependency.
 export interface KafkaRecordHeader {
   [headerKey: string]: number[];
 }

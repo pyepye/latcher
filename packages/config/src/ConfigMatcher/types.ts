@@ -6,6 +6,9 @@ import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@la
 
 import type { ConfigEvent } from '../types.js';
 
+// packages/testing/src/config.ts has a copy of ConfigMessageType, ConfigurationItemRelationship,
+// ConfigurationItemCore, ConfigurationItemSummary, ConfigChangeType, ConfigurationItemDiff and InvokingEvent.
+// Change both together.
 export type ConfigMessageType =
   | 'ConfigurationItemChangeNotification'
   | 'OversizedConfigurationItemChangeNotification'

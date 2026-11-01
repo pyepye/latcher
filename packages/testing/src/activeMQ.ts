@@ -5,7 +5,8 @@ import { deepMerge } from './deepMerge.js';
 import type { DeepPartial } from './deepPartial.js';
 import { type FixtureMap, fixture } from './fixtureHelper.js';
 
-// ActiveMQ has no @types/aws-lambda types, so we define the event shapes locally
+// Copy of the event types in packages/mq/src/ActiveMQMatcher/types.ts. Change both together.
+// aws-lambda has no ActiveMQ types, and importing @latcher/mq here creates a circular dependency.
 
 type ActiveMQMessageType = 'jms/text-message' | 'jms/bytes-message';
 

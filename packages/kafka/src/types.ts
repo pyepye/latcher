@@ -4,6 +4,8 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 import type { FilterStringMatcher, MiddlewareCore, TypeArg, TypeArgs } from '@latcher/base';
 
+// packages/testing/src/kafka.ts has a copy of KafkaRecordHeader, KafkaRecord, KafkaMSKEvent,
+// KafkaSelfManagedEvent and KafkaRetryEvent. Change both together.
 export interface KafkaRecordHeader {
   [headerKey: string]: number[];
 }

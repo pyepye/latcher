@@ -1,3 +1,4 @@
+// packages/testing/src/config.ts has a copy of this type. Change both together.
 export interface ConfigEvent {
   invokingEvent: string;
   ruleParameters?: string; // Left out when the rule has no parameters
