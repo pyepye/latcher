@@ -47,7 +47,7 @@ async function updateOrder({
   body,
   headers,
   auth,
-}: ApiRequest<PathParams, QueryParams, JwtAuth, OrderUpdate>) {
+}: ApiRequest<{ path: OrderPath; query: OrderQuery; auth: JwtAuth; body: OrderUpdate }>) {
   await orders.update(path.orderId, body, {
     notify: query.notify === 'true',
     idempotencyKey: headers['idempotency-key'], // headers are lowercased for you
@@ -59,7 +59,11 @@ async function updateOrder({
 
 ```ts [DynamoDB]
 // Streams name the request after the event, so a modify carries both images
-async function onOrderModified({ keys, newImage, oldImage }: DynamoDBModifyRequest<OrderKeys, Order, Order>) {
+async function onOrderModified({
+  keys,
+  newImage,
+  oldImage,
+}: DynamoDBModifyRequest<{ keys: OrderKeys; newImage: Order; oldImage: Order }>) {
   if (newImage.status === oldImage.status) return
 
   await audit.record(keys.orderId, { from: oldImage.status, to: newImage.status })
@@ -100,7 +104,10 @@ async function adjustStock({ body }: SQSRequest<{ body: StockChange }>): Promise
 async function getCustomerOrders({
   path,
   query,
-}: ApiRequest<{ customerId: string }, { status?: string }>): Promise<HandlerResponse<OrderSummary[]>> {
+}: ApiRequest<{
+  path: { customerId: string }
+  query: { status?: string }
+}>): Promise<HandlerResponse<{ body: OrderSummary[] }>> {
   const customerOrders = await orders.forCustomer(path.customerId, query.status ?? 'OPEN')
 
   return customerOrders.map(({ orderId, total, placedAt }) => ({ orderId, total, placedAt }))
@@ -127,7 +134,7 @@ async function preSignUp({ event, userAttributes }: PreSignUpRequest): Promise<P
 async function runMigrations({
   userParameters,
   inputArtifacts,
-}: CodePipelineRequest<{ schema: string }>): Promise<CodePipelineResponse> {
+}: CodePipelineRequest<{ userParameters: { schema: string } }>): Promise<CodePipelineResponse> {
   const [bundle] = inputArtifacts
   const applied = await migrate(userParameters.schema, bundle)
 
@@ -150,7 +157,9 @@ The HTTP and authorizer matchers go further and return a thrown response as the 
 ```ts
 import { Conflict, NotFound } from '@latcher/apigateway'
 
-export async function cancelOrderHandler({ path }: ApiRequest<{ orderId: string }>): Promise<OrderCancelled> {
+export async function cancelOrderHandler({
+  path,
+}: ApiRequest<{ path: { orderId: string } }>): Promise<OrderCancelled> {
   const order = await orders.get(path.orderId)
   if (!order) {
     throw NotFound(`Order ${path.orderId} not found`)
@@ -177,7 +186,7 @@ The matcher logs the real error, so its message never reaches the caller.
 
 ```ts
 // A plain Error is not a response, so the matcher logs it and answers with a 500
-export async function getOrderHandler({ path }: ApiRequest<{ orderId: string }>) {
+export async function getOrderHandler({ path }: ApiRequest<{ path: { orderId: string } }>) {
   const order = await orders.get(path.orderId) // Throws Error('connect ETIMEDOUT 10.0.1.5:8000')
 
   return { orderId: order?.orderId, status: order?.status } // Does not get reached

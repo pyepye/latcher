@@ -138,8 +138,8 @@ export async function processOrder(
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `body` | `TBody` | The record body. JSON is parsed for you. If the body is not valid JSON you get the raw string |
-| `messageAttributes` | `TMessageAttributes` | Message attributes converted to real values. See [Message attribute types](#message-attribute-types) |
+| `body` | The `body` key, default `unknown` | The record body. JSON is parsed for you. If the body is not valid JSON you get the raw string |
+| `messageAttributes` | The `messageAttributes` key, default `SQSMessageAttributes` | Message attributes converted to real values. See [Message attribute types](#message-attribute-types) |
 | `record` | `SQSRecord` | The untouched record from AWS, for `messageId`, `attributes` and anything else you need |
 | `context` | `Context` | The Lambda context |
 
@@ -200,7 +200,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`SQSRequest`](#generic-parameters) and your own types.
+[`SQSRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/processOrder.ts

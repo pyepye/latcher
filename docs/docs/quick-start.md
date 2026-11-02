@@ -154,17 +154,17 @@ dynamoMatcher.route({
   },
   {
     path: 'api-handlers/putItem.ts',
-    code: `import type { APIGatewayAuth, ApiRequest } from '@latcher/apigateway'
+    code: `import type { ApiRequest } from '@latcher/apigateway'
 
 import { type Item, type ItemKeys } from '../schemas/item.js'
 import { items } from '../services/items.js'
 
-type PathParams = { itemId: string }
+type ItemPath = { itemId: string }
 type StoredItem = Item & ItemKeys
 
 // query is unknown because the route sets no querySchema
 export async function putItem(
-  request: ApiRequest<PathParams, unknown, APIGatewayAuth, Item>,
+  request: ApiRequest<{ path: ItemPath; query: unknown; body: Item }>,
 ): Promise<StoredItem> {
   const { path, body } = request
 
@@ -182,7 +182,7 @@ import { type Item, type ItemKeys } from '../schemas/item.js'
 import { search } from '../services/search.js'
 
 export async function onItemInserted(
-  request: DynamoDBInsertRequest<ItemKeys, Item>,
+  request: DynamoDBInsertRequest<{ keys: ItemKeys; newImage: Item }>,
 ): Promise<DynamoDBResponse> {
   const { keys, newImage } = request
 

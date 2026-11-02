@@ -82,7 +82,7 @@ eventMatcher.route({
 
 `filters` and `handler` are the only required keys, and `filters` may be an empty object.
 
-`withReportContext` is typed `EventMatcherMiddleware<Report>` above rather than with the bare alias,
+`withReportContext` is typed `EventMatcherMiddleware<{ event: Report }>` above rather than with the bare alias,
 which matters on any route carrying an `eventSchema`. See [Middleware](#middleware) for why.
 
 `route()` returns the matcher, so you can chain registrations.
@@ -140,7 +140,7 @@ Handlers take one argument and return whatever you typed the matcher's response 
 import { logger } from '@latcher/base'
 import type { EventRequest } from '@latcher/base'
 
-export async function generateReport(request: EventRequest<Report>): Promise<ReportResult> {
+export async function generateReport(request: EventRequest<{ event: Report }>): Promise<ReportResult> {
   const { reportId, day } = request.event
   logger.info(`Building report ${reportId} for ${day}`)
 
@@ -152,7 +152,7 @@ export async function generateReport(request: EventRequest<Report>): Promise<Rep
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `event` | `TPayload` | The event, validated by `eventSchema` where you set one and untouched where you did not |
+| `event` | The `event` key, default `unknown` | The event, validated by `eventSchema` where you set one and untouched where you did not |
 | `context` | `Context` | The Lambda context |
 
 `Context` comes from `aws-lambda`, not from this package. There is no `record` field, because a custom
@@ -204,7 +204,7 @@ is written both ways to compare.
 ### Annotated handlers
 
 Annotating the request yourself splits route setup from business logic, using
-[`EventRequest`](#generic-parameters) and your own types.
+[`EventRequest`](#type-arguments) and your own types.
 
 ```ts
 // handlers/generateReport.ts
@@ -218,7 +218,7 @@ export const ReportSchema = z.object({
 })
 type Report = z.infer<typeof ReportSchema>
 
-export async function generateReport(request: EventRequest<Report>): Promise<unknown> {
+export async function generateReport(request: EventRequest<{ event: Report }>): Promise<unknown> {
   logger.info(`Building report ${request.event.reportId}`)
 
   return { reportId: request.event.reportId, status: 'built' }
@@ -331,7 +331,7 @@ import type { EventMatcherMiddleware } from '@latcher/base'
 
 import type { Report } from './schemas/report.js'
 
-export const withReportContext: EventMatcherMiddleware<Report> = async (request, next) => {
+export const withReportContext: EventMatcherMiddleware<{ event: Report }> = async (request, next) => {
   logger.appendKeys({ reportId: request.event.reportId })
 
   return next(request)
@@ -348,31 +348,35 @@ All exported from `@latcher/base`.
 
 | Type | Description |
 | --- | --- |
-| `EventRequest<TPayload>` | The handler argument |
+| `EventRequest<{ event }>` | The handler argument |
 | `EventFilters` | The `filters` object |
 | `EventFilterInput` | What `custom` receives, `{ event: unknown }` |
-| `EventRouteDefinition<TPayload, TResponse>` | A full route passed to `route()` |
-| `EventHandler<TPayload, TResponse>` | The `handler` function |
-| `EventMatcherMiddleware<TPayload, TResponse>` | Matcher and route middleware |
-| `EventMatcherOptions<TResponse>` | Options for `createEventMatcher` |
+| `EventRouteDefinition<{ event, response }>` | A full route passed to `route()` |
+| `EventHandler<{ event, response }>` | The `handler` function |
+| `EventMatcherMiddleware<{ event, response }>` | Matcher and route middleware |
+| `EventMatcherOptions<{ response }>` | Options for `createEventMatcher` |
 
 The `EventMatcher` class and the `createEventMatcher` and `defineEventRoute` functions come from the same
 place.
 
-### Generic parameters
+### Type arguments
 
-`TPayload` and `TResponse` are the two parameters, in that order, and both default to `unknown`.
+The generic types above take one object. Its keys are the names of the properties they type, and both
+default to `unknown`.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TPayload` | `request.event` | `unknown` |
-| `TResponse` | What the handler returns | `unknown` |
+| `event` | `request.event` | `unknown` |
+| `response` | What the handler returns | `unknown` |
 
-`EventMatcher` and `createEventMatcher` take `TResponse` on its own, so `createEventMatcher<void>()` types
-every handler on the matcher as returning nothing.
+Leave a key out and it takes its default, so `EventRequest<{ event: Report }>` types the event. See
+[Typing a request](/docs/handlers#typing-a-request) for the rules.
 
-`defineEventRoute` takes them in the order `TPayload`, `TResponse`. `TPayload` types the handler.
-Filters take neither parameter, since `custom` is always handed an `unknown` event.
+`EventMatcher` and `createEventMatcher` take the response type on its own, so `createEventMatcher<void>()`
+types every handler on the matcher as returning nothing.
+
+`defineEventRoute` takes the event type, then the response type. The event type types the handler.
+Filters take neither, since `custom` is always handed an `unknown` event.
 
 You only need these for [annotated handlers](#annotated-handlers). Inference covers both.
 
@@ -432,21 +436,21 @@ import type { EventRequest } from '@latcher/base'
 
 import type { Purge, Reindex, Report } from '../schemas/operations.js'
 
-export async function generateReport(request: EventRequest<Report>): Promise<unknown> {
+export async function generateReport(request: EventRequest<{ event: Report }>): Promise<unknown> {
   const { reportId, day } = request.event
   logger.info(\`Building report \${reportId} for \${day}\`)
 
   return { reportId, status: 'built' }
 }
 
-export async function reindex(request: EventRequest<Reindex>): Promise<unknown> {
+export async function reindex(request: EventRequest<{ event: Reindex }>): Promise<unknown> {
   const { collection, batchSize } = request.event
   logger.info(\`Reindexing \${collection} in batches of \${batchSize}\`)
 
   return { collection, status: 'reindexed' }
 }
 
-export async function purgeCache(request: EventRequest<Purge>): Promise<unknown> {
+export async function purgeCache(request: EventRequest<{ event: Purge }>): Promise<unknown> {
   logger.info(\`Purging the cache for \${request.event.tenantId}\`)
 
   return { tenantId: request.event.tenantId, status: 'purged' }

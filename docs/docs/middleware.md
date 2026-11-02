@@ -262,7 +262,8 @@ source.
 middleware.
 
 ```ts
-type Middleware<{ request: TRequest; response: TResponse }> = (
+// Middleware<{ request: TRequest; response: TResponse }> is this function type
+type MiddlewareShape = (
   request: TRequest,
   next: (request: TRequest) => Promise<TResponse>,
 ) => Promise<TResponse>
@@ -270,11 +271,11 @@ type Middleware<{ request: TRequest; response: TResponse }> = (
 
 Every package exports an alias with its own request and response filled in, so `SQSMiddleware` is
 `Middleware<{ request: SQSRequest; response: void }>` and `CognitoMiddleware` is `Middleware<{ request: CognitoRequest; response: CognitoEvent }>`.
-Reach for the alias, since the base type leaves you naming both parameters yourself.
+Reach for the alias, since the base type leaves you naming both keys yourself.
 
-Each alias also takes the payload type, so `SQSMiddleware<Order>` reads `request.body` as an `Order`.
+Each alias also takes the payload type, so `SQSMiddleware<{ body: Order }>` reads `request.body` as an `Order`.
 Type route middleware this way when the route has a schema. Matcher middleware takes no type argument,
-because it runs for every route. Each matcher page lists the parameters its alias takes.
+because it runs for every route. Each matcher page lists the keys its alias takes.
 
 ```ts
 import { logger } from '@latcher/base'

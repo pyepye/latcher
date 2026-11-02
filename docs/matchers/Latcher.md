@@ -180,17 +180,17 @@ Exported from `@latcher/base`.
 The `Latcher` class and the `createLatcher` function come from the same place. `Handler` and
 `Context` come from `aws-lambda`, not from this package.
 
-### Generic parameters
+### Type arguments
 
-`EventTypeMatcher` takes two, and both default to `unknown`.
+`EventTypeMatcher` takes one object with two keys, and both default to `unknown`.
 
-| Parameter | Types | Default |
+| Key | Types | Default |
 | --- | --- | --- |
-| `TEvent` | The event `handleEvent` is given | `unknown` |
-| `TResult` | What `handleEvent` resolves to | `unknown` |
+| `event` | The event `handleEvent` is given | `unknown` |
+| `result` | What `handleEvent` resolves to | `unknown` |
 
-`matchers` is typed `EventTypeMatcher[]`, so it takes the bare form with both left off. You only need the
-parameters when you are writing a matcher of your own.
+`matchers` is typed `EventTypeMatcher[]`, so it takes the bare form with both keys left out. You only need
+the keys when you are writing a matcher of your own.
 
 ## Custom matchers
 
@@ -336,12 +336,12 @@ import type { SQSRequest, SQSResponse } from '@latcher/sqs'
 import { type Order, orders } from '../services/orders.js'
 
 export async function getOrder(
-  request: ApiRequest<{ orderId: string }>,
-): Promise<HandlerResponse<Order>> {
+  request: ApiRequest<{ path: { orderId: string } }>,
+): Promise<HandlerResponse<{ body: Order }>> {
   return orders.get(request.path.orderId)
 }
 
-export async function processOrder(request: SQSRequest<Order>): Promise<SQSResponse> {
+export async function processOrder(request: SQSRequest<{ body: Order }>): Promise<SQSResponse> {
   logger.info(\`Processing order \${request.body.orderId} from the queue\`)
   await orders.process(request.body)
 }`,
