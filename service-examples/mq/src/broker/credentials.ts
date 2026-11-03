@@ -7,7 +7,7 @@ const CredentialsSchema = z.object({
   password: z.string().min(1),
 });
 
-export type TBrokerCredentials = z.infer<typeof CredentialsSchema>;
+type TBrokerCredentials = z.infer<typeof CredentialsSchema>;
 
 export async function readBrokerCredentials(secretId: string): Promise<TBrokerCredentials> {
   // An AWS client with no region fails at the point of use, so read it here and say so plainly.

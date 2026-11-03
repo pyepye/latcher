@@ -15,7 +15,7 @@ export const NewStockItemSchema = z.object({
   quantity: z.number().int().nonnegative(),
 });
 
-export const StockItemSchema = z.object({
+const StockItemSchema = z.object({
   sku: z.string(),
   description: z.string(),
   quantity: z.number(),
@@ -42,6 +42,5 @@ export const ReorderSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
-export type TStockQuery = z.infer<typeof StockQuerySchema>;
 export type TNewStockItem = z.infer<typeof NewStockItemSchema>;
 export type TStockAdjustment = z.infer<typeof StockAdjustmentSchema>;

@@ -1,6 +1,6 @@
 import { LEGACY_ACCOUNT_PREFIX, LEGACY_PASSWORD, LEGACY_PROGRAMME, simulatorEmail } from './constants.js';
 
-export interface LegacyApplicant {
+interface LegacyApplicant {
   email: string;
   programme: string;
   password: string;

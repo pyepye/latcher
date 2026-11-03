@@ -18,8 +18,6 @@ export const PaymentSchema = z.object({
   method: z.enum(['card', 'bank-transfer']),
 });
 
-export type TPayment = z.infer<typeof PaymentSchema>;
-
 // Lambda's own envelope for a record that has used its retries. The order or payment that failed sits
 // under `payload.records`, still base64 encoded, so this schema reads the failure rather than the work.
 export const FailedRecordSchema = z.object({
@@ -32,5 +30,3 @@ export const FailedRecordSchema = z.object({
     batchSize: z.number(),
   }),
 });
-
-export type TFailedRecord = z.infer<typeof FailedRecordSchema>;

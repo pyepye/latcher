@@ -1,4 +1,4 @@
-export interface Comment {
+interface Comment {
   id: string;
   author: string;
   body: string;

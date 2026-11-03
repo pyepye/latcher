@@ -6,7 +6,7 @@ export interface ReturnRecord {
   state: 'open' | 'settled';
 }
 
-export interface ReturnLine {
+interface ReturnLine {
   lineId: string;
   returnId: string;
   sku: string;

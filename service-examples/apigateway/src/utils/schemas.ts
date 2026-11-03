@@ -56,5 +56,4 @@ export type TStockAlert = z.infer<typeof StockAlertSchema>;
 export type TOrderQuery = z.infer<typeof OrderQuerySchema>;
 export type TNewOrder = z.infer<typeof NewOrderSchema>;
 export type TOrderAmendment = z.infer<typeof OrderAmendmentSchema>;
-export type TConsignmentBooking = z.infer<typeof ConsignmentBookingSchema>;
 export type TStockAdjustment = z.infer<typeof StockAdjustmentSchema>;

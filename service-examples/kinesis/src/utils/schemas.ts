@@ -19,5 +19,3 @@ export const ReadingSchema = z.object({
   metric: z.enum(['temperature', 'humidity']),
   value: z.number(),
 });
-
-export type TReading = z.infer<typeof ReadingSchema>;

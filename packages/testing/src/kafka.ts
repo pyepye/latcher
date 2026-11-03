@@ -7,13 +7,13 @@ import { type FixtureMap, fixture } from './fixtureHelper.js';
 
 // Copy of the event types in packages/kafka/src/types.ts. Change both together.
 // Importing @latcher/kafka here creates a circular dependency.
-export interface KafkaRecordHeader {
+interface KafkaRecordHeader {
   [headerKey: string]: number[];
 }
 
 // A record produced without a key arrives with a null key, a tombstone with a null value, and a record
 // produced with no headers with null headers.
-export interface KafkaRecord {
+interface KafkaRecord {
   topic: string;
   partition: number;
   offset: number;
@@ -24,14 +24,14 @@ export interface KafkaRecord {
   headers?: KafkaRecordHeader[] | null;
 }
 
-export interface KafkaMSKEvent {
+interface KafkaMSKEvent {
   eventSource: 'aws:kafka';
   eventSourceArn: string;
   bootstrapServers: string;
   records: Record<string, KafkaRecord[]>;
 }
 
-export interface KafkaSelfManagedEvent {
+interface KafkaSelfManagedEvent {
   eventSource: 'SelfManagedKafka';
   bootstrapServers: string;
   records: Record<string, KafkaRecord[]>;
@@ -39,7 +39,7 @@ export interface KafkaSelfManagedEvent {
 
 // Lambda re-delivers a batch reported through `batchItemFailures` as its records alone, with no
 // `eventSource`, `eventSourceArn` or `bootstrapServers`.
-export interface KafkaRetryEvent {
+interface KafkaRetryEvent {
   // Absent, and declared so the union stays discriminated on it.
   eventSource?: undefined;
   records: Record<string, KafkaRecord[]>;

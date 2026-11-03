@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // DocumentDB sends BSON as extended JSON, so an ObjectId arrives as { $oid: '...' }.
-export const ObjectIdSchema = z.object({ $oid: z.string() });
+const ObjectIdSchema = z.object({ $oid: z.string() });
 
 export const DocumentKeySchema = z.object({ _id: ObjectIdSchema });
 
@@ -23,8 +23,6 @@ export const InvoiceSchema = z.object({
   orderReference: z.string().min(1),
   amount: z.coerce.number().nonnegative(),
 });
-
-export type TInvoice = z.infer<typeof InvoiceSchema>;
 
 export const ProductSchema = z.object({
   _id: ObjectIdSchema,

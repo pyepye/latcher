@@ -49,7 +49,7 @@ export type FilterPill = {
 };
 
 // Use Record here to ensure there is at least one pill for each service
-export const filterPillsMap: Record<SupportedAWSServices, FilterPill> = {
+const filterPillsMap: Record<SupportedAWSServices, FilterPill> = {
   eventbridge: {
     name: 'Amazon EventBridge',
     short: 'EventBridge',

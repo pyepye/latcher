@@ -90,11 +90,6 @@ export interface InvokingEvent {
   recordVersion: string;
 }
 
-export interface ConfigHandlerContext {
-  event: ConfigEvent;
-  context: Context;
-}
-
 export interface ConfigRequestCore<TConfig = Record<string, unknown> | null, TParams = Record<string, string>> {
   configurationItem: ConfigurationItemCore<TConfig>;
   configurationItemSummary?: undefined;

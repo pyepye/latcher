@@ -45,7 +45,7 @@ export const StockSchema = z.object({
 
 export type TStock = z.infer<typeof StockSchema>;
 
-export const DbStockSchema = StockSchema.omit({ sku: true }).extend({
+const DbStockSchema = StockSchema.omit({ sku: true }).extend({
   pk: z.string().startsWith(STOCK_PREFIX),
   sk: z.literal('STOCK'),
 });

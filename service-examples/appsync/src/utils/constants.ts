@@ -5,7 +5,7 @@ export const EXPIRED_TOKEN = 'expired-9a55';
 export const BROKEN_TOKEN = 'broken-7e18';
 
 export const AGENT_ROLE = 'agent';
-export const CUSTOMER_ROLE = 'customer';
+const CUSTOMER_ROLE = 'customer';
 
 export const TICKET_NAMESPACE = 'ticket';
 export const PRESENCE_NAMESPACE = 'presence';
@@ -36,7 +36,7 @@ export const TYPING_EVENT = 'typing';
 
 export const ADMIN_OPERATION = 'AdminAudit';
 
-export interface TokenGrant {
+interface TokenGrant {
   role: string;
   actorId: string;
   deniedFields?: string[];

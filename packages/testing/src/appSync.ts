@@ -12,7 +12,7 @@ import { type FixtureMap, fixture } from './fixtureHelper.js';
 // Importing either package here creates a circular dependency.
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-export interface AppSyncEventsPublishedEvent {
+interface AppSyncEventsPublishedEvent {
   id: string;
   payload: JsonValue;
 }

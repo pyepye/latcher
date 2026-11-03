@@ -6,7 +6,7 @@ const GRAVATAR_SIZE = 512;
 const PLACEHOLDER_PIXEL_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-export interface GravatarResult {
+interface GravatarResult {
   buffer: Buffer;
   contentType: string;
 }
@@ -15,7 +15,7 @@ function hashEmail(email: string): string {
   return createHash('md5').update(email.trim().toLowerCase()).digest('hex');
 }
 
-export async function fetchGravatar(email: string): Promise<GravatarResult | null> {
+async function fetchGravatar(email: string): Promise<GravatarResult | null> {
   const url = `https://www.gravatar.com/avatar/${hashEmail(email)}?d=404&s=${GRAVATAR_SIZE}`;
   const response = await fetch(url);
   if (response.status === 404) {

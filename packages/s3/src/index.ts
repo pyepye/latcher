@@ -18,6 +18,8 @@ export type {
   S3BatchResultResult,
   S3BatchResultResultCode,
   S3BatchRouteDefinition,
+  S3BatchV2Event,
+  S3BatchV2EventTask,
   S3FilterInput,
   S3Filters,
   S3FiltersWithoutEventNames,

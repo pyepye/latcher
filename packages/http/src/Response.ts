@@ -22,7 +22,7 @@ function contentTypeHeader(headers: ApiResponse['headers']): string | undefined 
 }
 
 // A body that JSON cannot carry is a handler fault, so it answers 500
-export function bodyToJson(body: unknown): string {
+function bodyToJson(body: unknown): string {
   const bodyType = typeof body;
   let json: string | undefined;
   try {

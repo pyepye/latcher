@@ -6,7 +6,7 @@ export interface WarehouseOrder {
   total: number;
 }
 
-export interface OrderLine {
+interface OrderLine {
   itemId: string;
   sku: string;
   quantity: number;

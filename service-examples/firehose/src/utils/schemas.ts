@@ -10,8 +10,6 @@ export const PageViewSchema = z.object({
   occurredAt: z.iso.datetime(),
 });
 
-export type TPageView = z.infer<typeof PageViewSchema>;
-
 // A sign up carries the visitor's email, which the handler masks before Firehose writes it to S3.
 export const SignUpSchema = z.object({
   runId: z.string().min(1),
@@ -31,5 +29,3 @@ export const AuditEventSchema = z.object({
   action: z.enum(['roleGranted', 'roleRevoked', 'policyChanged']),
   occurredAt: z.iso.datetime(),
 });
-
-export type TAuditEvent = z.infer<typeof AuditEventSchema>;

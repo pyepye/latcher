@@ -17,5 +17,3 @@ export const CanaryParametersSchema = z.object({
   environment: z.enum(['staging', 'production']),
   bundleSha: z.string().min(1),
 });
-
-export type TCanaryParameters = z.infer<typeof CanaryParametersSchema>;

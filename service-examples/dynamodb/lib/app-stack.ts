@@ -76,7 +76,6 @@ export class AppStack extends Stack {
       logGroup: workerLogGroup,
       environment: {
         ORDERS_STREAM_ARN: ordersTable.tableStreamArn ?? '',
-        SEARCH_INDEX_STREAM_ARN: searchIndexTable.tableStreamArn ?? '',
       },
       bundling: sharedBundling,
     });

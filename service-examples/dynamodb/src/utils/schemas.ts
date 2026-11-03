@@ -52,13 +52,9 @@ export const CustomerSchema = z.object({
   marketingOptIn: z.boolean(),
 });
 
-export type TCustomer = z.infer<typeof CustomerSchema>;
-
 // The key pair of a search index entry. A KEYS_ONLY stream carries nothing else, so this is the only
 // schema its route can have.
 export const SearchKeysSchema = z.object({
   pk: z.string().startsWith('PRODUCT#'),
   sk: z.literal('LISTING'),
 });
-
-export type TSearchKeys = z.infer<typeof SearchKeysSchema>;

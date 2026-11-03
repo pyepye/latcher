@@ -8,8 +8,6 @@ export const NotificationSchema = z.object({
   category: z.enum(['transactional', 'marketing']).default('transactional'),
 });
 
-export type TNotification = z.infer<typeof NotificationSchema>;
-
 // Message attributes carried alongside a notification. `channel` drives the messageAttributes filter.
 // `retryCount` is optional, and the filter never reads it, so it is the only attribute a message can
 // fail validation on. Sent as a Number attribute it arrives as a number; sent as a String it does not
@@ -18,8 +16,6 @@ export const NotificationAttributesSchema = z.object({
   channel: z.enum(['email', 'sms', 'push']),
   retryCount: z.coerce.number().int().min(0).optional(),
 });
-
-export type TNotificationAttributes = z.infer<typeof NotificationAttributesSchema>;
 
 // A priority alert delivered in order per tenant on the FIFO queue.
 export const PriorityAlertSchema = z.object({

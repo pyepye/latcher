@@ -20,8 +20,6 @@ export const ChargePaymentSchema = z.object({
   currency: z.enum(['GBP', 'EUR']),
 });
 
-export type TChargePayment = z.infer<typeof ChargePaymentSchema>;
-
 // A fraud review payload with the TaskToken already removed by the matcher.
 export const FraudReviewSchema = z.object({
   task: z.literal(FRAUD_REVIEW_TASK),
@@ -37,5 +35,3 @@ export const ReleaseStockHoldSchema = z.object({
   orderId: z.string().min(1),
   reservationId: z.string().min(1),
 });
-
-export type TReleaseStockHold = z.infer<typeof ReleaseStockHoldSchema>;

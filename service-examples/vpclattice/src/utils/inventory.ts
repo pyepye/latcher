@@ -5,7 +5,7 @@ export interface StockItem {
   depot: string;
 }
 
-export interface StockMovement {
+interface StockMovement {
   movementId: string;
   sku: string;
   delta: number;

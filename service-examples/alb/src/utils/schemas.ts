@@ -16,7 +16,7 @@ export const NewReturnSchema = z.object({
   units: z.number().int().positive(),
 });
 
-export const ReturnRecordSchema = z.object({
+const ReturnRecordSchema = z.object({
   returnId: z.string(),
   orderId: z.string(),
   carrier: z.string(),
@@ -51,6 +51,5 @@ export const RefundSchema = z.object({
   amount: z.number().positive(),
 });
 
-export type TReturnQuery = z.infer<typeof ReturnQuerySchema>;
 export type TNewReturn = z.infer<typeof NewReturnSchema>;
 export type TReturnAmendment = z.infer<typeof ReturnAmendmentSchema>;

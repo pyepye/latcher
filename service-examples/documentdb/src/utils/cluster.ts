@@ -17,7 +17,7 @@ export const COLLECTIONS = {
   carrierWebhooks: 'carrierWebhooks',
 } as const;
 
-export interface ChangeStreamSource {
+interface ChangeStreamSource {
   id: string;
   database: string;
   collection?: string;

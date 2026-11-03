@@ -1,6 +1,62 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreWorkspaces": ["packages/cloudformation", "packages/iot"],
+  "ignoreBinaries": ["sam", "terraform"],
   "workspaces": {
-    ".": {}
+    ".": {},
+    "docs": {},
+    "packages/*": {},
+    "packages/base": {
+      "ignoreDependencies": ["@aws-lambda-powertools/logger"]
+    },
+    "full-examples/*": {},
+    "full-examples/http-api-dynamodb-htmx-todo": {
+      "entry": ["bin/*.ts", "src/index.ts"],
+      "ignoreDependencies": ["esbuild", "tsx"]
+    },
+    "full-examples/http-api-dynamodb-sqs": {
+      "entry": ["bin/*.ts", "src/index.ts"],
+      "ignoreDependencies": ["esbuild", "tsx"]
+    },
+    "service-examples/*": {
+      "entry": ["bin/*.ts", "scripts/*.ts", "src/index.ts"],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "service-examples/apigateway": {
+      "entry": ["bin/*.ts", "scripts/*.ts", "src/index.ts", "src/authorizer.ts"],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "service-examples/appsync": {
+      "entry": ["bin/*.ts", "scripts/*.ts", "src/index.ts", "src/authorizer.ts"],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "service-examples/documentdb": {
+      "entry": [
+        "bin/*.ts",
+        "scripts/*.ts",
+        "src/index.ts",
+        "src/cluster/enableChangeStreams.ts",
+        "src/cluster/seedCollections.ts"
+      ],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "service-examples/kafka": {
+      "entry": ["bin/*.ts", "scripts/*.ts", "src/index.ts", "src/producer.ts", "src/infra/bootstrapBrokers.ts"],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "service-examples/mq": {
+      "entry": [
+        "bin/*.ts",
+        "scripts/*.ts",
+        "src/activeMqWorker.ts",
+        "src/rabbitMqWorker.ts",
+        "src/broker/declareQueues.ts"
+      ],
+      "ignoreDependencies": ["esbuild"]
+    },
+    "service-examples/vpclattice": {
+      "entry": ["bin/*.ts", "scripts/*.ts", "src/index.ts", "src/orderingService.ts"],
+      "ignoreDependencies": ["esbuild"]
+    }
   }
 }

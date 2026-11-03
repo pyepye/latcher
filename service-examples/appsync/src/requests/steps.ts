@@ -35,7 +35,7 @@ export interface ResolverStep {
   expected: Expected;
 }
 
-export interface ResolverBatchStep {
+interface ResolverBatchStep {
   name: string;
   token?: string;
   parentTypeName: string;

@@ -7,9 +7,10 @@
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
     "docs:preview": "vitepress preview",
-    "docs:deploy": "pnpm docs:build && npx gh-pages -d .vitepress/dist/"
+    "docs:deploy": "pnpm docs:build && gh-pages -d .vitepress/dist/"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "shiki": "^4.0.2",
     "vitepress": "^1.6.4",
     "vue": "^3.5.32"

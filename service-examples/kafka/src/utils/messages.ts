@@ -13,7 +13,7 @@ import {
   URGENT_PRIORITY,
 } from '../config.js';
 
-export interface MessageGroup {
+interface MessageGroup {
   topic: string;
   messages: Message[];
 }
