@@ -1,0 +1,35 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+<h1>To-dos</h1>
+
+<div x-data="{ title: '', maxLength: {{ maxTitleLength }} }">
+  <form
+    class="new-todo"
+    hx-post="/todos"
+    hx-target="#todo-list"
+    hx-swap="beforeend"
+    @htmx:after-request="if ($event.detail.successful) title = ''"
+  >
+    <input type="text" name="title" x-model="title" placeholder="What needs doing?" autocomplete="off" required>
+    <button>Add</button>
+  </form>
+  <p class="hint" :class="{ over: title.length > maxLength }" x-text="`${maxLength - title.length} characters left`"></p>
+</div>
+
+<section x-data="{ filter: 'all' }">
+  <div class="filters">
+    {% for option in ['all', 'active', 'done'] %}
+    <button type="button" @click="filter = '{{ option }}'" :aria-pressed="filter === '{{ option }}'">
+      {{ option | capitalize }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <ul id="todo-list" class="todos">
+    {% for todo in todos %}
+    {% include "todoItem.njk" %}
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

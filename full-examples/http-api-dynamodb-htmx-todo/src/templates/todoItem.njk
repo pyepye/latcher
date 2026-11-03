@@ -1,0 +1,35 @@
+{% set state = 'done' if todo.done else 'active' %}
+<li class="todo {{ state }}" x-data="{ editing: false }" x-show="filter === 'all' || filter === '{{ state }}'">
+  <div class="view" x-show="!editing">
+    <input
+      type="checkbox"
+      aria-label="Done"
+      {% if todo.done %}checked{% endif %}
+      hx-patch="/todos/{{ todo.id }}"
+      hx-vals='{"done": "{{ 'false' if todo.done else 'true' }}"}'
+      hx-target="closest li"
+      hx-swap="outerHTML"
+    >
+    <span class="title" @dblclick="editing = true; $nextTick(() => $refs.title.select())">{{ todo.title }}</span>
+    <button type="button" @click="editing = true; $nextTick(() => $refs.title.select())">Rename</button>
+    <button
+      type="button"
+      hx-delete="/todos/{{ todo.id }}"
+      hx-target="closest li"
+      hx-swap="outerHTML"
+      hx-confirm="Delete this to-do?"
+    >Delete</button>
+  </div>
+  <form
+    x-show="editing"
+    x-cloak
+    hx-put="/todos/{{ todo.id }}"
+    hx-target="closest li"
+    hx-swap="outerHTML"
+    @keydown.escape="editing = false"
+  >
+    <input type="text" name="title" value="{{ todo.title }}" x-ref="title" autocomplete="off" required>
+    <button>Save</button>
+    <button type="button" @click="editing = false">Cancel</button>
+  </form>
+</li>

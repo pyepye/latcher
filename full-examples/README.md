@@ -8,11 +8,12 @@ They are intended to demonstrate how latcher works. Some examples may not follow
 
 ## Deploy tools
 
-Each example uses a different deploy tool, so you can see the matcher with the one you already use.
+The examples use different deploy tools, so you can see the matcher with the one you already use.
 
 | Example | Tool |
 | --- | --- |
 | `http-api-dynamodb-sqs` | AWS CDK |
+| `http-api-dynamodb-htmx-todo` | AWS CDK |
 | `cognito-eventbridge-s3-avatars` | AWS SAM |
 | `secretsmanager-eventbridge-cloudwatch-security` | Terraform |
 

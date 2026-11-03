@@ -1,0 +1,19 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+<section id="error" class="error" role="alert" x-data="{ open: true }" x-show="open">
+  <strong>{{ statusCode }} {{ statusText }}</strong>
+  {% if issueMessages | length %}
+  <ul>
+    {% for issueMessage in issueMessages %}
+    <li>{{ issueMessage }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>{{ message }}</p>
+  {% endif %}
+  <button type="button" @click="open = false">Dismiss</button>
+</section>
+
+<p><a href="/">Back to the list</a></p>
+{% endblock %}
