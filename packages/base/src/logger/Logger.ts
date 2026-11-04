@@ -63,7 +63,23 @@ export interface LoggerOptions {
   serviceName?: string;
 }
 
-export class Logger {
+export interface LoggerLike {
+  getLevelName(): LogLevelName;
+  setLogLevel(logLevel: LogLevelName): void;
+  appendKeys(keys: LogMeta): void;
+  removeKeys(keys: string[]): void;
+  resetKeys(): void;
+  appendPersistentKeys(keys: LogMeta): void;
+  removePersistentKeys(keys: string[]): void;
+  trace(message: unknown, ...meta: [] | [LogMeta]): void;
+  debug(message: unknown, ...meta: [] | [LogMeta]): void;
+  info(message: unknown, ...meta: [] | [LogMeta]): void;
+  warn(message: unknown, ...meta: [] | [LogMeta]): void;
+  error(message: unknown, ...meta: [] | [LogMeta]): void;
+  critical(message: unknown, ...meta: [] | [LogMeta]): void;
+}
+
+export class Logger implements LoggerLike {
   private logLevel: LogLevelName;
   private persistentLogAttributes: LogMeta;
   private temporaryKeys: LogMeta;

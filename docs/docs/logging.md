@@ -101,6 +101,9 @@ logger.info('My log');
 
 ### Custom logger
 
+`setLogger` takes any logger with the same methods as the built-in `Logger`, such as the Powertools
+logger. The type is `LoggerLike`.
+
 ```typescript
 import { Logger } from '@aws-lambda-powertools/logger';
 import { setLogger, Latcher } from '@latcher/base';

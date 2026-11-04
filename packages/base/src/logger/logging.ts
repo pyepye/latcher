@@ -1,6 +1,6 @@
-import { Logger } from './Logger.js';
+import { Logger, type LoggerLike } from './Logger.js';
 
-let loggerSingleton: Logger | null = null;
+let loggerSingleton: LoggerLike | null = null;
 
 async function tryResolvePowertools(): Promise<void> {
   if (loggerSingleton) return;
@@ -15,18 +15,18 @@ async function tryResolvePowertools(): Promise<void> {
 
 void tryResolvePowertools();
 
-export function setLogger(clientLogger: Logger): void {
+export function setLogger(clientLogger: LoggerLike): void {
   loggerSingleton = clientLogger;
 }
 
-export function getLogger(): Logger {
+export function getLogger(): LoggerLike {
   if (loggerSingleton) return loggerSingleton;
   loggerSingleton = new Logger();
   return loggerSingleton;
 }
 
-const proxyHandler: ProxyHandler<Logger> = {
-  get(_target: Logger, prop: string | symbol): unknown {
+const proxyHandler: ProxyHandler<LoggerLike> = {
+  get(_target: LoggerLike, prop: string | symbol): unknown {
     const loggerInstance = getLogger();
     const value = Reflect.get(loggerInstance, prop);
     if (typeof value === 'function') return value.bind(loggerInstance);
@@ -34,5 +34,5 @@ const proxyHandler: ProxyHandler<Logger> = {
   },
 };
 
-const proxyTarget: Logger = new Logger();
-export const logger: Logger = new Proxy(proxyTarget, proxyHandler);
+const proxyTarget: LoggerLike = new Logger();
+export const logger: LoggerLike = new Proxy(proxyTarget, proxyHandler);
